@@ -29,7 +29,7 @@ Companion specs:
 |---|---|---|
 | GT-001 | Stall: 1.8 m wide × 0.8 m deep × ~2.2 m tall; counter top at 1.0 m; counter → roof 1.2 m | Prefab bounds validator, `SCN_AssetScaleTest` |
 | GT-002 | Only the **NEW** Tram Chanh sign (`PF_Sign_TramChanh_New`). The old illuminated letters never appear. | Asset validator, scene scan test |
-| GT-003 | Tea is **already pre-portioned in bags** stored in **red racks**. There is no tea-measuring step. | Drink state machine has no measure state; `PF_MeasuringCup_500ml` is non-interactive |
+| GT-003 | Tea is **already pre-portioned in bags** stored in **red racks**. There is no tea-measuring step. | Drink state machine has no measure state; no drink interactable accepts the batter cup `PF_BatterMeasureCup_500ml` (it measures cake batter only) |
 | GT-004 | Every order originates through the **Lobby**. The stall never takes orders from customers. | `OrderService` API has no stall/customer entry path |
 | GT-005 | Dine-in: Lobby takes the order **at the table**. | `OrderOrigin.DineIn(tableId)` |
 | GT-006 | Takeaway: Lobby takes the order **at the customer's vehicle**. | `OrderOrigin.Vehicle(vehicleId)` |
@@ -191,9 +191,10 @@ Stored under `Assets/TramChanh/ScriptableObjects/` ([WF] §7), prefix `SO_` ([WF
 | `ItemDefinition` | `Id`, `DisplayName` (real menu name), `Kind` (`Drink`/`Cake`), `PreparedPrefab` | one drink (name TBD), the cake items below |
 | `DrinkRecipe` | `ItemDefinition`, `TeaBagType`, portions (`CoconutJellyPortion`, `LemonJellyPortion`, `IcePortion`) `[Tbd]`, hold durations `[Tbd]` | `SO_Recipe_Drink_Slice` |
 | `SauceDefinition` | `Id`, `DisplayName`, `SauceBagPrefab`, `MaterialVariant` | Mango, Chocolate, Cheese bags exist as assets ([AP] §32); **no cake mapping is assumed** |
-| `CakeRecipe` | `ItemDefinition`, `Sauce` (`SauceDefinition`, `[Tbd("DEC-008")]`, may be empty until confirmed), `TargetBatterAmount`, `BatterTolerance`, `CookedThreshold`, `BurnThreshold`, `FillRate`, hold durations — all `[Tbd("DEC-007")]` | one per cake menu item |
+| `CakeRecipe` | `ItemDefinition`, `SizeVariant` (`[Tbd("DEC-018")]`), `Sauce` (`SauceDefinition`, `[Tbd("DEC-008")]`, may be empty until confirmed), **`TargetBatterMl`**, **`BatterToleranceMl`**, `CookedThreshold`, `BurnThreshold`, hold durations — all `[Tbd("DEC-007")]` | one per cake menu item **and size** |
+| `MeasureCupDefinition` | `CapacityMl` (500 — the real cup's nominal capacity), `FillRateMlPerSecond` `[Tbd]`, `LevelCurve` (ml → liquid height in the cup mesh) `[Tbd]` until the final mesh exists | `SO_MeasureCup_500ml` |
 | `MenuItem` | `ItemDefinition`, `Recipe`, `AvailableInSlice` | see below |
-| `BalanceConfig` | Grill preheat duration, open-lid cooking factor, reach distance, rack capacity — all `[Tbd]` | `SO_Balance_Slice` |
+| `BalanceConfig` | Grill preheat duration, open-lid cooking factor, reach distance, rack capacity, batter-deviation quality weight, `BatterOutOfTolerancePolicy` — all `[Tbd]` | `SO_Balance_Slice` |
 
 Known real cake menu names (Product Owner, 2026-10-06) — used verbatim as `DisplayName`:
 
@@ -203,6 +204,8 @@ Known real cake menu names (Product Owner, 2026-10-06) — used verbatim as `Dis
 | Bánh Lăn Phô Mai Chảy | `SO_Item_BanhLan_PhoMaiChay` | unconfirmed |
 | Bánh Lăn Choco Chip | `SO_Item_BanhLan_ChocoChip` | unconfirmed |
 | Bánh Lăn Cốm Dẻo | `SO_Item_BanhLan_ComDeo` | unconfirmed |
+
+**Batter quantity is recipe-driven.** Each `CakeRecipe` (menu item × size) owns its `TargetBatterMl` and `BatterToleranceMl`; there is no global batter amount anywhere in code or data. Different cakes and sizes therefore need different measured amounts with the same 500 ml cup. All real amounts are `[Tbd("DEC-007")]` until measured at the real shop; the sizes themselves are DEC-018. See `CAKE_WORKFLOW.md` §2.2.
 
 The names suggest flavours, but no sauce, topping or recipe difference is inferred from them. Until the PO confirms each recipe, a `CakeRecipe` with no sauce assigned is valid data and content validation reports every unconfirmed mapping as a warning; the sauce step uses whatever sauce the recipe data names once filled in. Which cake item is enabled for the slice is the `MenuItem.AvailableInSlice` flag, not code. The drink's real menu name is still to be supplied.
 
@@ -251,7 +254,7 @@ Product Owner decision 2026-10-06: **all architectural defaults accepted**, with
 | DEC-004 | Grill power-on | Automatic at shift start; no player power action. | Accepted | Cakes |
 | DEC-005 | Tools held or station-driven | Station-driven tools; only tea bag, batter cup and finished items are held. | Accepted | Interaction, Drinks, Cakes |
 | DEC-006 | Ruined product handling | `Discard` on the held ruined item; order item returns to Pending. | Accepted | Cakes, Stall |
-| DEC-007 | Real numbers (batter amount/tolerance, cook time, burn time, topping/ice portions, hold durations, open-lid rate, reach) | **Provisional `[Tbd]` data** in recipes / `SO_Balance_Slice`. No guessed number in gameplay code. | Open — values pending | Cakes, Drinks, Interaction |
+| DEC-007 | Real numbers (`TargetBatterMl` / `BatterToleranceMl` per recipe and size, cup fill rate, cook time, burn time, topping/ice portions, hold durations, open-lid rate, reach, batter-deviation quality weight) | **Provisional `[Tbd]` data** in recipes / `SO_Balance_Slice`. No guessed number in gameplay code. | Open — values pending | Cakes, Drinks, Interaction |
 | DEC-008 | Menu names and sauce mapping | Cake names known (§7). Drink name pending. **Sauce-to-cake mapping unconfirmed**: configurable `CakeRecipe.Sauce`, not inferred from names. | Partially confirmed | Content, Cakes |
 | DEC-009 | Batter source container | Correctly sized placeholder (`PF_Placeholder_BatterSource`, size `[Tbd]`) until reference arrives; gameplay never waits for art. | Accepted (placeholder) | Cakes, assets |
 | DEC-010 | Customer and vehicle visuals | Capsule customer placeholder. Vehicle = **generic vehicle interaction point** (`VehicleOrderPoint` on `PF_Placeholder_VehiclePoint`, a sized trigger volume); no specific vehicle model is part of the architecture. | Accepted (placeholder) | Customers, Lobby, assets |
@@ -261,6 +264,8 @@ Product Owner decision 2026-10-06: **all architectural defaults accepted**, with
 | DEC-014 | Ready counter capacity | 1 drink slot + 1 cake slot; domain supports N. | Accepted | Stall, Orders |
 | DEC-015 | Tea rack capacity / refill | Capacity is `[Tbd]` data; no refill gameplay in the slice. | Accepted | Drinks |
 | DEC-016 | Takeaway packaging | None in the slice; no packaging step added. | Accepted | Lobby |
+| DEC-018 | Cake sizes | Recipes support several size variants per menu item, each with its own batter amount. Which sizes exist (names, count) is **not yet known**; the slice ships one unnamed size per item until confirmed. | Open — sizes pending | Content, Cakes |
+| DEC-019 | Out-of-tolerance batter | Measuring is mandatory before pouring. A wrong quantity is **detected and recorded** on the cake (`BatterMeasurement`) and lowers quality. Whether a wrong amount may still be poured is `BatterOutOfTolerancePolicy` data: slice default `AllowWithPenalty`; `BlockPour` available. | Accepted (policy is data) | Cakes, Orders (quality) |
 | DEC-017 | New sign size and artwork | Placeholder volume with the `MAT_Sign_TramChanh_New` material slot; size `[Tbd]`; artwork swapped in later. The old illuminated sign is never recreated. | Open — artwork pending | Stall, assets |
 
 ---

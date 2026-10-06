@@ -1,6 +1,6 @@
 # TRAM CHANH — CAKE WORKFLOW
 
-**Status:** Approved for the slice (REV-000, 2026-10-06). DEC-007, DEC-008 and DEC-013 remain open: their values/forms are provisional data, not ground truth.
+**Status:** Approved for the slice (REV-000, 2026-10-06). Corrected 2026-10-06: the 500 ml measuring cup is the interactive batter tool (§2.2). DEC-007, DEC-008, DEC-013 and DEC-018 remain open: their values/forms are provisional data, not ground truth.
 **Module:** `TramChanh.Cakes`
 **Ground truth:** GT-008
 
@@ -48,8 +48,8 @@ Cooking/Cooked ──(doneness ≥ burn threshold)──► Ruined   (failure, n
 
 | # | From | To | Action (interactable) | Guard | Blocked reason key |
 |---|---|---|---|---|---|
-| C1 | `Waiting` | `BatterMeasured` | Fill cup (`BatterSource`, Continuous hold) while holding `PF_BatterMeasureCup`; on release the amount is evaluated | `\|amount − target\| ≤ tolerance`; `HasPending(Cake)` → claims item | `stall.no_ticket.cake`; if out of tolerance the state stays `Waiting` and the cup shows the wrong level |
-| C2 | `BatterMeasured` | `BatterPoured` | Pour (`Grill`) holding the measured cup | Grill `Open`, lower plate empty | `grill.preheating`, `grill.lid_closed` (prompt offers *Open lid* instead), `grill.occupied`, `cake.batter_wrong_amount` |
+| C1 | `Waiting` | `BatterMeasured` | Measure: fill `PF_BatterMeasureCup_500ml` at `BatterSource` (Continuous hold); on release the measured ml are recorded and evaluated against the bound recipe (§2.2) | `MeasuredMl > 0`; `HasPending(Cake)` → claims item (and so the recipe/size) | `stall.no_ticket.cake`, `cake.cup_not_held` |
+| C2 | `BatterMeasured` | `BatterPoured` | Pour (`Grill`) holding the measured cup; the poured ml = `MeasuredMl` | Batter was measured (an unmeasured/empty cup can never be poured); grill `Open`, lower plate empty; if policy = `BlockPour`, measurement within tolerance | `cake.batter_not_measured`, `grill.preheating`, `grill.lid_closed` (prompt offers *Open lid* instead), `grill.occupied`, `cake.batter_out_of_tolerance` (`BlockPour` only) |
 | C3 | `BatterPoured` | `Cooking` | Close lid (`Grill`) | Grill `Open` with this cake | — |
 | C4 | `Cooking` | `Cooked` | automatic: doneness ≥ `CookedThreshold` | — | — |
 | C5 | `Cooked` | `Flipped` | Flip (performed through `IFlipAction`, §2.3) | Grill `Open`; doneness < `BurnThreshold`; `IFlipAction.CanFlip` | `cake.not_cooked` (when attempted in `Cooking`), `grill.lid_closed` |
@@ -64,13 +64,48 @@ Cooking/Cooked ──(doneness ≥ burn threshold)──► Ruined   (failure, n
 
 `IsFinished` (for `IPreparedItem`) = state `Wrapped`. A cake without sauce cannot be rolled, and an unwrapped cake cannot be placed at Ready ([WF] Phase 5 "Missing sauce", "Missing wrap").
 
-### 2.2 Batter measurement
+### 2.2 Batter measurement — `PF_BatterMeasureCup_500ml`
 
-- The player picks up `PF_BatterMeasureCup` from its spot at `BatterArea` (part of step 2, not a new step).
-- `BatterSource` is a **Continuous** hold: the cup fills at `FillRate` while the button is held; the amount is evaluated on release.
-- Under target: the player may hold again to add more. Over tolerance: `UseHeld` on the cup returns the batter to the source (amount → 0). These are corrections within step 2, not additional steps.
-- After pouring (C2) the cup returns automatically to its spot at `BatterArea`, so hands are free for the grill.
-- `TargetAmount`, `Tolerance` and `FillRate` are provisional recipe data (`[Tbd("DEC-007")]`), never code constants.
+The real shop measures batter with a **500 ml measuring cup**. It is an **interactive gameplay tool** (held item), not a prop. Different cakes and sizes need different quantities, so *how much* to measure always comes from the recipe of the order item being prepared.
+
+**Data (no global amount, no code constants):**
+
+| Where | Field | Status |
+|---|---|---|
+| `CakeRecipe` (per menu item × size) | `TargetBatterMl` | `[Tbd("DEC-007")]` — measured at the real shop |
+| `CakeRecipe` | `BatterToleranceMl` | `[Tbd("DEC-007")]` |
+| `SO_MeasureCup_500ml` (`MeasureCupDefinition`) | `CapacityMl` = 500 | nominal capacity of the real cup (equipment data, not a recipe value) |
+| `SO_MeasureCup_500ml` | `FillRateMlPerSecond` | `[Tbd("DEC-007")]` |
+| `SO_MeasureCup_500ml` | `LevelCurve` (ml → liquid height) | `[Tbd]` until the final cup mesh exists; linear placeholder |
+| `SO_Balance_Slice` | `BatterOutOfTolerancePolicy`, batter-deviation quality weight | `[Tbd]`; policy default `AllowWithPenalty` (DEC-019) |
+
+**Interaction (all inside workflow step 2 "measure batter"; nothing here is a new step):**
+
+1. Pick up `PF_BatterMeasureCup_500ml` from its spot at `BatterArea` (Press).
+2. Hold *Fill* at `BatterSource` (Continuous): the cup gains `FillRateMlPerSecond × heldSeconds` ml, capped at `CapacityMl`. The visible level follows `LevelCurve`, read against the cup's graduation markings — the player judges the amount from the cup, as in the real shop.
+3. On release the domain records a `BatterMeasurement` and the cake enters `BatterMeasured` (C1). Corrections stay possible until pouring: hold *Fill* again to top up, or `UseHeld` → *Empty back* (returns batter to the source, measured ml → 0, cake back to `Waiting`).
+4. Pour at the open grill (C2). **Pouring is impossible without a measurement**; the poured quantity is exactly the measured ml.
+5. After pouring the cup returns automatically to its spot at `BatterArea`.
+
+**Detection of a wrong quantity:**
+
+```csharp
+public readonly struct BatterMeasurement
+{
+    public readonly float MeasuredMl;
+    public readonly float TargetMl;         // from the bound CakeRecipe
+    public readonly float ToleranceMl;      // from the bound CakeRecipe
+    public float DeviationMl => MeasuredMl - TargetMl;
+    public BatterMeasureResult Result { get; } // WithinTolerance | Under | Over
+}
+```
+
+- Evaluated on every measure/top-up/empty; published as `BatterMeasured { PreparationId, BatterMeasurement }` for UI feedback, QA logs and later scoring.
+- Stored on `CakePreparation` and carried to the order item, so quality/scoring can use it (§6) and later systems (economy, feedback, daily report) can read it.
+- `BatterOutOfTolerancePolicy` decides what a wrong amount means at pour time: `AllowWithPenalty` (slice default: pour allowed, quality reduced) or `BlockPour` (pour blocked with `cake.batter_out_of_tolerance` until corrected).
+- Changing a recipe's numbers, adding a size, or switching the policy never requires a code change.
+
+**GT-003 guard:** the cup measures **batter only**. No drink interactable accepts it, and no tea-measuring state exists.
 
 ### 2.3 *Flip* step — name fixed, physical action open (DEC-013)
 
@@ -176,12 +211,15 @@ public sealed class GrillModel
 public sealed class CakePreparation
 {
     public CakeState State { get; }
-    public float BatterAmount { get; }
+    public CakeRecipe Recipe { get; }             // bound order item's recipe (menu item × size)
+    public BatterMeasurement Batter { get; }      // §2.2; default = not measured
     public float Doneness { get; }
     public SauceDefinition RequiredSauce { get; } // from recipe data; may be unconfigured (DEC-008)
     public OrderItemRef BoundItem { get; }
     public int Quality { get; }
-    public Result Measure(float amount);       // C1
+    public Result Measure(float measuredMl);   // C1 (and top-up); evaluates against Recipe
+    public Result EmptyBatter();               // correction: back to Waiting
+    public bool CanPour(BatterOutOfTolerancePolicy policy); // C2 guard
     public Result Cut();                       // C6
     public Result ApplySauce(SauceDefinition s); // C7
     public Result Roll();                      // C8
@@ -198,13 +236,13 @@ Both are plain C#; `GrillController` (MonoBehaviour) calls `Advance(clock.Now)` 
 ## 6. Quality (slice)
 
 ```text
-batterScore   = 100 − 50 × |amount − target| / tolerance                  (50…100)
+batterScore   = 100 − w × min(|MeasuredMl − TargetBatterMl| / BatterToleranceMl, k)   (w, k = [Tbd] weights)
 donenessScore = 100 − 50 × |doneness − mid| / ((Burn − Cooked) / 2)       (50…100)
                 mid = (CookedThreshold + BurnThreshold) / 2
 Quality       = round((batterScore + donenessScore) / 2)
 ```
 
-The weights (50/100) are provisional data in `SO_Balance_Slice`, not constants; the formula's inputs are fixed by [WF] Phase 5.
+All weights (`w`, `k`, 50/100) are provisional data in `SO_Balance_Slice`, not constants; the formula's inputs are fixed by [WF] Phase 5. A wrong batter quantity always lowers `batterScore`; with `AllowWithPenalty` that is how it reaches the order's quality/scoring.
 
 ---
 
@@ -216,7 +254,7 @@ Station hierarchy from [AP] §60:
 PF_CakeStation
 ├── Grill          → GrillController                (PF_Grill_Elmich)
 ├── BatterArea     → BatterSourceInteractable        (placeholder source, DEC-009)
-├── MeasuringCup   → BatterMeasureCup (held)          (PF_BatterMeasureCup + SM_BatterVolume)
+├── MeasuringCup   → BatterMeasureCup (held)          (PF_BatterMeasureCup_500ml + SM_BatterVolume)
 ├── Spatula        → station tool used by the active IFlipAction (PF_Spatula_WoodHandle)
 ├── Scissors       → station tool, animated by RollArea (PF_Scissors_RedGray)
 ├── SauceArea      → SauceBagInteractable per configured SauceDefinition (PF_SauceBag_<Flavour>, DEC-008)
@@ -227,8 +265,8 @@ PF_CakeStation
 
 | Adapter (Codex) | Responsibility |
 |---|---|
-| `BatterMeasureCup` | `IHoldable` + `IHeldItemAction` (empty back); shows fill level via `SM_BatterVolume` scale/morph |
-| `BatterSourceInteractable` | Continuous fill; on release calls `CakePreparation.Measure` (creating + binding the preparation) |
+| `BatterMeasureCup` | On `PF_BatterMeasureCup_500ml`: `IHoldable` + `IHeldItemAction` (empty back); reads `SO_MeasureCup_500ml`; shows the level via `SM_BatterVolume` and `LevelCurve` |
+| `BatterSourceInteractable` | Continuous fill of the held cup; on release calls `CakePreparation.Measure(measuredMl)` (creating + binding the preparation on first measure) |
 | `GrillController` | Owns `GrillModel`; lid `Animator` on `LidPivot`; display; cake visual spawn at `CakePlacementPoint`; holds the station's `IFlipAction` reference |
 | `PlaceholderFlipAction` | Provisional `IFlipAction` (DEC-013): spatula anim, cake to `RollArea`. Replaceable without state-machine changes |
 | `CakeView` | Swaps `PF_Cake_Raw` / `PF_Cake_Cooked` / `SM_Cake_Cut` / `PF_Cake_Rolled` / `PF_Cake_Wrapped` by state; doneness param |
@@ -244,7 +282,11 @@ From [WF] Phase 5:
 
 | ID | Type | Case | Expected |
 |---|---|---|---|
-| TC-CAKE-001 | EditMode | Wrong batter amount | Release outside tolerance → stays `Waiting`; pour blocked `cake.batter_wrong_amount`; empty-back resets to 0 |
+| TC-CAKE-001 | EditMode | Wrong batter amount | Measure under/over a fake recipe's tolerance → `BatterMeasurement.Result` = Under/Over, event published; `AllowWithPenalty`: pour allowed and `batterScore` < within-tolerance score; `BlockPour`: pour blocked `cake.batter_out_of_tolerance`; empty-back → `Waiting`, 0 ml |
+| TC-CAKE-014 | EditMode | Measure before pour | Pour with an unmeasured or emptied cup → `cake.batter_not_measured` |
+| TC-CAKE-015 | EditMode | Recipe-driven quantity | Two recipes (or two sizes) with different `TargetBatterMl`: the same measured ml is within tolerance for one and out for the other |
+| TC-CAKE-016 | EditMode | Cup capacity | Filling past `CapacityMl` caps at capacity |
+| TC-CAKE-017 | EditMode | Batter cup never measures tea (GT-003) | No drink interactable offers an action while the cup is held |
 | TC-CAKE-002 | EditMode | Undercooked | Open lid before `CookedThreshold`; flip → `cake.not_cooked`; close again resumes cooking |
 | TC-CAKE-003 | EditMode | Correct cook | Doneness in window → flip succeeds → `Flipped` on `RollArea` |
 | TC-CAKE-004 | EditMode | Overcooked | Doneness ≥ burn → `Ruined`, grill `Overcooked`; remove + discard → order item back to `Pending` |
@@ -253,8 +295,8 @@ From [WF] Phase 5:
 | TC-CAKE-007 | EditMode | Correct finished product | Full path → `Ready`; quality in range; correct order item marked Ready |
 | TC-CAKE-008 | EditMode | Wrong sauce / unconfigured sauce | `cake.wrong_sauce`; recipe without sauce → `cake.sauce_unconfigured` and a content-validation warning |
 | TC-CAKE-012 | EditMode | Flip isolation | State machine with a fake `IFlipAction` reaches `Flipped` regardless of the action's physical outcome; swapping implementations needs no state-machine change |
-| TC-CAKE-013 | EditMode | No guessed numbers | Cooking/burn/batter values are read only from recipe data (a fake recipe with arbitrary values drives all thresholds) |
+| TC-CAKE-013 | EditMode | No guessed numbers | Cooking/burn/batter values (incl. `TargetBatterMl`, `BatterToleranceMl`, fill rate) are read only from recipe/cup data (a fake recipe with arbitrary values drives all thresholds) |
 | TC-CAKE-009 | EditMode | Grill transitions | G1–G8 valid; preheating blocks everything; pause freezes doneness |
 | TC-CAKE-010 | EditMode | No ticket → cannot measure | `stall.no_ticket.cake` |
 | GT-008 | EditMode | Exact sequence | The only successful path is the GT-008 order |
-| TC-CAKE-011 | PlayMode | Full cake at the real station | Cup → source → grill (open/pour/close/open/flip) → cut → sauce → roll → wrap → Ready counter; lid rotates about the hinge without deformation |
+| TC-CAKE-011 | PlayMode | Full cake at the real station | 500 ml cup → source (measure) → grill (open/pour/close/open/flip) → cut → sauce → roll → wrap → Ready counter; lid rotates about the hinge without deformation |

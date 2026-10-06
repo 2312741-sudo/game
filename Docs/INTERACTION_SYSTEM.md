@@ -113,7 +113,7 @@ Only one interaction runs at a time; while a hold is in progress, focus is locke
 
 - One slot ("hands"). The slot holds at most one `IHoldable`.
 - Held object is re-parented to the camera's `HandSocket`, aligned by its `HandGrip` anchor, on the `HeldItem` layer (no collision with player).
-- Held in the slice: `TeaBag` (drink in preparation), `BatterMeasureCup`, wrapped cake, `ServedOrder` bundle (Lobby carrying a Ready order).
+- Held in the slice: `TeaBag` (drink in preparation), `PF_BatterMeasureCup_500ml` (batter measuring tool), wrapped cake, `ServedOrder` bundle (Lobby carrying a Ready order).
 - **Not held** (DEC-005): ice scoop, spatula, scissors, sauce bag, wipe cloth. These are *station tools*: the station interaction plays the tool's animation at its anchor and returns it.
 - Dropping arbitrary items on the floor is not supported. Items leave the hands only through a valid interaction (place, pour, deliver, discard).
 
@@ -133,7 +133,7 @@ Every row maps to exactly one canonical workflow step or Lobby action; nothing h
 | `TeaBagItem` (held action) | `PF_TeaBag_PrePortioned` | Hold (UseHeld) | bag with ice | Drink: shake |
 | `WipeAreaInteractable` | `PF_DrinkStation/WipeArea` (+ `PF_WipeCloth`) | Hold | shaken bag | Drink: wipe |
 | `ReadyCounterPoint` | `PF_ReadyCounterPoint` | Press | finished drink / cake | Drink & cake: ready; Lobby: pick up |
-| `BatterMeasureCupInteractable` | `PF_BatterMeasureCup` | Press | nothing | Cake: measure (pick up cup) |
+| `BatterMeasureCup` | `PF_BatterMeasureCup_500ml` | Press (pick up) / UseHeld (empty back) | nothing / the cup | Cake: measure batter (recipe-driven ml) |
 | `BatterSourceInteractable` | `BatterSource` placeholder (DEC-009) | Continuous | the cup | Cake: measure (fill) |
 | `GrillInteractable` | `PF_Grill_Elmich` | Press | varies | Cake: pour / cook (lid close/open) / flip (via `IFlipAction`, DEC-013) — see `CAKE_WORKFLOW.md` |
 | `RollAreaInteractable` (+ scissors anim) | `PF_CakeStation/RollArea` + `PF_Scissors_RedGray` | Hold | nothing | Cake: cut |
@@ -145,7 +145,7 @@ Every row maps to exactly one canonical workflow step or Lobby action; nothing h
 
 `RollArea` is one interactable whose current action follows the cake state (Cut → Roll), with the scissors animated only for Cut.
 
-Non-interactive in the slice (static props only): `PF_MeasuringCup_500ml` (must never imply tea measuring — GT-003), `PF_PumpBottle`, menus, snack rack, cooler.
+Non-interactive in the slice (static props only): `PF_PumpBottle`, menus, snack rack, cooler. The 500 ml measuring cup is interactive but measures **cake batter only**; drink interactables reject it (GT-003).
 
 ---
 

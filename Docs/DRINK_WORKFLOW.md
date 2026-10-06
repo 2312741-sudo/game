@@ -22,7 +22,7 @@ From [WF] §5.2 and §32 GT-007:
 9. Place at Ready / hand-off area
 ```
 
-Tea is already portioned. **There is no tea-measuring step**, no tea pouring, no syrup pumping, no sealing step. Pump bottles and the 500 ml measuring cup exist on the counter as static props only.
+Tea is already portioned. **There is no tea-measuring step**, no tea pouring, no syrup pumping, no sealing step. Pump bottles exist on the counter as static props only. The 500 ml measuring cup belongs to the **cake** workflow (batter); drink interactables never accept it.
 
 ---
 
@@ -151,7 +151,7 @@ From [WF] Phase 4 acceptance, plus transition coverage:
 
 | ID | Type | Case | Expected |
 |---|---|---|---|
-| TC-DRINK-001 | EditMode | No tea measuring | `TeaBagState` has no measure/pour state; the only way to obtain tea is D1 from the rack; `PF_MeasuringCup_500ml` has no `IInteractable` (GT-003) |
+| TC-DRINK-001 | EditMode | No tea measuring | `TeaBagState` has no measure/pour state; the only way to obtain tea is D1 from the rack; every drink interactable is Hidden/Blocked while `PF_BatterMeasureCup_500ml` is held (GT-003) |
 | TC-DRINK-002 | EditMode | Bag starts in red rack | New `DrinkPreparation` is `Stored`; D1 only via `TeaRackController` |
 | TC-DRINK-003 | EditMode | Cannot Ready without shake | Place from `IceAdded` → `ready.not_finished` |
 | TC-DRINK-004 | EditMode | Cannot Complete without wipe | Place from `Shaken` → `ready.not_finished` |

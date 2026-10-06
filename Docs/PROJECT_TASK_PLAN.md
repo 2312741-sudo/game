@@ -54,6 +54,7 @@ CC spec (Docs) → CX implement in feature/<task> worktree → AG validate (PASS
 | CX-001 | **Delivered, awaiting first Unity open** | Skeleton, asmdefs, packages, project-setup script, ground-truth constants, provisional/placeholder markers, smoke tests. Compiles against UnityEngine 2021.3 reference DLLs + NUnit with editor/URP stubs; not yet opened in Unity 6 (QA-002 verifies). |
 | QA-000 | **Done** — report `QA/Reports/QA-000-2026-10-06.md` | Repo/docs/asmdef graph PASS. Open: `main` and `develop` branches do not exist on the remote yet. |
 | ART-STALL-001 (A) | **Placeholder workflow delivered** | Unity builder (`Tram Chanh ▸ Placeholders ▸ Build Stall + New Sign Placeholder`) + Blender script `ArtSource/Blender/Scripts/stall_blockout.py`. Prefabs are generated on first Unity open; anchors adjustable and unconfirmed (DEC-011). |
+| DOC-FIX-001 | **Done** 2026-10-06 | 500 ml measuring cup reclassified as the interactive, recipe-driven batter tool `PF_BatterMeasureCup_500ml` (`TargetBatterMl`, `BatterToleranceMl` per recipe/size, all TBD; DEC-018, DEC-019). Affects CX-003, CX-031, CX-040, CX-041, ART-CAKE-002, INT-005, QA-040. |
 | INT-002 (A) | Covered by the ART-STALL-001 builder | Final hierarchy/anchors/colliders; becomes "Done" when QA-011 runs on the generated prefab. |
 
 ---
@@ -127,7 +128,7 @@ REV-000 → CX-001 → CX-002 → CX-010 → CX-020 → CX-021 → CX-022 → CX
 | ART-DRINK-003 | 3D | Topping station + jellies | ART-STALL-001(A) | Yes | No |
 | ART-DRINK-004 | 3D | Ice bin + scoop | ART-STALL-001(A) | Yes | No |
 | ART-DRINK-005 | 3D | Wipe cloth | REV-005 | Yes | No |
-| ART-CAKE-002 | 3D | Batter measure cup + batter | REV-005 | Yes | No |
+| ART-CAKE-002 | 3D | 500 ml batter measuring cup + batter | REV-005 | Yes | No |
 | ART-CAKE-003 | 3D | Spatula | REV-005 | Yes | No |
 | ART-CAKE-004 | 3D | Scissors | REV-005 | Yes | No |
 | ART-CAKE-005 | 3D | Sauce bag (+ variants) | REV-005, DEC-008 | Yes | No |
@@ -220,11 +221,11 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 
 ### CX-003 — Content ScriptableObjects
 - **Owner:** Codex (GPT-5.6 Terra acceptable)
-- **Objective:** `ItemDefinition`, `DrinkRecipe`, `CakeRecipe`, `SauceDefinition`, `MenuItem`, `BalanceConfig`, `ContentDatabase`, a `[Tbd]` inspector drawer, and data instances: the four real cake items (*Bánh Lăn Truyền Thống*, *Bánh Lăn Phô Mai Chảy*, *Bánh Lăn Choco Chip*, *Bánh Lăn Cốm Dẻo*) with one `CakeRecipe` each, `SO_Sauce_Mango/Chocolate/Cheese`, `SO_Recipe_Drink_Slice`, `SO_Balance_Slice`.
+- **Objective:** `ItemDefinition`, `DrinkRecipe`, `CakeRecipe` (per menu item × size, with `TargetBatterMl`, `BatterToleranceMl`), `MeasureCupDefinition` (`SO_MeasureCup_500ml`: `CapacityMl`, `FillRateMlPerSecond`, `LevelCurve`), `SauceDefinition`, `MenuItem`, `BalanceConfig` (incl. `BatterOutOfTolerancePolicy`), `ContentDatabase`, a `[Tbd]` inspector drawer, and data instances: the four real cake items (*Bánh Lăn Truyền Thống*, *Bánh Lăn Phô Mai Chảy*, *Bánh Lăn Choco Chip*, *Bánh Lăn Cốm Dẻo*) with one `CakeRecipe` each, `SO_Sauce_Mango/Chocolate/Cheese`, `SO_Recipe_Drink_Slice`, `SO_Balance_Slice`.
 - **Depends on:** CX-001
 - **Files/modules:** `Scripts/Core/Content/**`, `Scripts/Editor/Content/**`, `ScriptableObjects/**`, `Tests/EditMode/Content/**`
 - **3D assets:** none
-- **Acceptance:** step sequences are **not** editable data (GT-007/008 are code constants); cake recipes ship with **no sauce assigned** (mapping unconfirmed, DEC-008) and content validation reports each as a warning; every unconfirmed value (batter amount/tolerance, cook/burn thresholds, fill rate, topping/ice portions, hold durations, rack capacity, reach) is a `[Tbd("DEC-007")]` field with a visible TBD badge in the inspector; no such value appears in any `.cs` file; which cake is in the slice is the `MenuItem.AvailableInSlice` flag.
+- **Acceptance:** step sequences are **not** editable data (GT-007/008 are code constants); cake recipes ship with **no sauce assigned** (mapping unconfirmed, DEC-008) and content validation reports each as a warning; batter quantity exists only per `CakeRecipe` (no global amount); every unconfirmed value (`TargetBatterMl`, `BatterToleranceMl`, fill rate, cook/burn thresholds, fill rate, topping/ice portions, hold durations, rack capacity, reach) is a `[Tbd("DEC-007")]` field with a visible TBD badge in the inspector; no such value appears in any `.cs` file; which cake is in the slice is the `MenuItem.AvailableInSlice` flag.
 - **Tests:** `ContentDatabaseTests` (unique ids, all references resolved), `MenuNamesTests` (the four names verbatim), `NoProvisionalConstantsTests` (scan of `Scripts/` for recipe/balance field values).
 - **Parallel:** Yes · **Review before impl.:** No — rules now fixed in `ARCHITECTURE.md` §7 and §10.
 
@@ -354,7 +355,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 - **Depends on:** CX-030, CX-022, INT-004 (A: blockout prefabs)
 - **Files/modules:** `Scripts/Drinks/Runtime/**`, `Prefabs/Workstations/*Drink*`, `Prefabs/Items/PF_TeaBag_PrePortioned`, `Tests/PlayMode/Drinks/**`
 - **3D assets:** `PF_RedTeaRack`, `PF_TeaBag_PrePortioned`, `PF_ToppingStation`, `PF_Topping_*`, `PF_IceBin`, `PF_IceScoop`, `PF_WipeCloth` (blockout first, real later)
-- **Acceptance:** each interactable offers exactly the action in the `INTERACTION_SYSTEM.md` §5 table; wrong state → Blocked with the reason key; visuals per `DRINK_WORKFLOW.md` §5; `PF_MeasuringCup_500ml` and pump bottles have no interactable.
+- **Acceptance:** each interactable offers exactly the action in the `INTERACTION_SYSTEM.md` §5 table; wrong state → Blocked with the reason key; visuals per `DRINK_WORKFLOW.md` §5; pump bottles have no interactable; no drink interactable accepts `PF_BatterMeasureCup_500ml` (GT-003).
 - **Tests:** TC-DRINK-009 (PlayMode full drink), TC-DRINK-006 via E2E.
 - **Parallel:** No · **Review before impl.:** No.
 
@@ -364,16 +365,16 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 - **Depends on:** CX-021, REV-004
 - **Files/modules:** `Scripts/Cakes/Domain/**`, `Tests/EditMode/Cakes/**`
 - **3D assets:** none
-- **Acceptance:** `CAKE_WORKFLOW.md` §2–6; all timing via `IGameClock`; only GT-008 path succeeds.
-- **Tests:** TC-CAKE-001…010, GT-008.
+- **Acceptance:** `CAKE_WORKFLOW.md` §2–6; all timing via `IGameClock`; only GT-008 path succeeds; batter is measured in ml against the bound recipe (`BatterMeasurement` recorded and published); pour impossible without a measurement; `BatterOutOfTolerancePolicy` honoured; wrong quantity lowers quality.
+- **Tests:** TC-CAKE-001…010, TC-CAKE-012…017, GT-008.
 - **Parallel:** Yes (with CX-030) · **Review before impl.:** Yes — REV-004.
 
 ### CX-041 — Cake station runtime
 - **Owner:** Codex
-- **Objective:** `BatterMeasureCup`, `BatterSourceInteractable`, `GrillController` (lid animator, display, sizzle hook), `CakeView`, `RollAreaInteractable`, `SauceBagInteractable`, `WrapInteraction`, discard of ruined cake.
+- **Objective:** `BatterMeasureCup` (on `PF_BatterMeasureCup_500ml`: pick up, fill level via `LevelCurve`, empty back), `BatterSourceInteractable` (continuous fill in ml), `GrillController` (lid animator, display, sizzle hook), `CakeView`, `RollAreaInteractable`, `SauceBagInteractable`, `WrapInteraction`, discard of ruined cake.
 - **Depends on:** CX-040, CX-022, INT-005 (A)
 - **Files/modules:** `Scripts/Cakes/Runtime/**`, `Prefabs/Workstations/*Cake*`, `Prefabs/Items/PF_Cake_*`, `Tests/PlayMode/Cakes/**`
-- **3D assets:** `PF_Grill_Elmich`, `PF_BatterMeasureCup`, `PF_BatterPortion`, `PF_Placeholder_BatterSource`, `PF_Spatula_WoodHandle`, `PF_Scissors_RedGray`, `PF_SauceBag_*`, `PF_Cake_Raw/Cooked/Cut/Rolled/Wrapped`, `PF_CakeWrappingPaper`
+- **3D assets:** `PF_Grill_Elmich`, `PF_BatterMeasureCup_500ml`, `PF_BatterPortion`, `PF_Placeholder_BatterSource`, `PF_Spatula_WoodHandle`, `PF_Scissors_RedGray`, `PF_SauceBag_*`, `PF_Cake_Raw/Cooked/Cut/Rolled/Wrapped`, `PF_CakeWrappingPaper`
 - **Acceptance:** grill offers one action per state (`CAKE_WORKFLOW.md` §3.1); lid rotates about the hinge; display shows temperature during preheat and time while cooking; cake visuals per `ASSET_INTEGRATION.md` §8.
 - **Tests:** TC-CAKE-011 (PlayMode full cake).
 - **Parallel:** No · **Review before impl.:** No.
@@ -497,13 +498,13 @@ Phase **A** (blockout) = primitive, true scale, final pivot, no texture — can 
 - **Tests:** QA-012.
 - **Parallel:** Yes · **Review before impl.:** No.
 
-### ART-CAKE-002 — Batter measure cup + batter
+### ART-CAKE-002 — 500 ml batter measuring cup + batter
 - **Owner:** 3D
-- **Objective:** `SM_BatterMeasureCup`, `SM_BatterVolume` (fill level), pour stream/poured portion.
+- **Objective:** `SM_BatterMeasureCup_500ml` — the real 500 ml measuring cup ([AP] §24 look, §28 role) — plus `SM_BatterVolume` (fill level) and pour stream/poured portion. Graduation markings as a texture taken from the real cup.
 - **Depends on:** REV-005
 - **Files/modules:** `Art/Models/CakeStation/`, `Art/Models/Food/`
 - **3D assets:** [AP] §28–29
-- **Acceptance:** transparent/semi-transparent cup with handle, grip pivot; batter volume can scale from 0 to full without visual artefacts; `PourPoint` empty at the lip.
+- **Acceptance:** real-scale 500 ml cup (dimensions from the reference cup, TBD); transparent plastic with handle; grip pivot; empties `LevelBottom`/`LevelTop` at the inner liquid range and `PourPoint` at the lip; batter volume scales from 0 to full capacity without artefacts; markings readable at hand distance; a ml→height table is delivered with the mesh so `LevelCurve` can be filled in.
 - **Tests:** QA-013.
 - **Parallel:** Yes · **Review before impl.:** No.
 
@@ -625,7 +626,7 @@ Not produced in the slice (P1/P2 per [AP] §62): menus, snack rack/bags, pump bo
 
 ### INT-005 — Cake station prefabs + grill animator
 - **Owner:** Codex
-- **Objective:** A: blockouts of `PF_Grill_Elmich` (with real `LidPivot` hinge behaviour), `PF_BatterMeasureCup`, `PF_BatterPortion`, `PF_Placeholder_BatterSource`, `PF_Spatula_WoodHandle`, `PF_Scissors_RedGray`, `PF_SauceBag` + variants, `PF_Cake_*`, `PF_CakeWrappingPaper`, `PF_CakeStation`. B: swap in ART-CAKE-001…007; grill Animator (`AN_Grill_LidOpen/Close`), display material, roll/cut/squeeze/wrap clips.
+- **Objective:** A: blockouts of `PF_Grill_Elmich` (with real `LidPivot` hinge behaviour), `PF_BatterMeasureCup_500ml` (sized placeholder cylinder + linear `LevelCurve`), `PF_BatterPortion`, `PF_Placeholder_BatterSource`, `PF_Spatula_WoodHandle`, `PF_Scissors_RedGray`, `PF_SauceBag` + variants, `PF_Cake_*`, `PF_CakeWrappingPaper`, `PF_CakeStation`. B: swap in ART-CAKE-001…007; grill Animator (`AN_Grill_LidOpen/Close`), display material, roll/cut/squeeze/wrap clips.
 - **Depends on:** INT-002; B on ART-CAKE-001…007
 - **Files/modules:** `Prefabs/Workstations/**`, `Prefabs/Items/**`, `Art/Models/CakeStation/**`, `Art/Models/Food/**`, `Art/Animations/**`
 - **3D assets:** ART-CAKE-001…007
@@ -725,7 +726,7 @@ All QA tasks: read acceptance criteria → check git status → compile → run 
 ### QA-040 — Cake validation (M5)
 - **Owner:** Antigravity
 - **Depends on:** CX-041, INT-005
-- **Acceptance:** [WF] Phase 5 list — wrong batter amount, undercooked, correct cook, overcooked, missing sauce, missing wrap, correct finished product; GT-008 PASS; grill lid hinge check.
+- **Acceptance:** [WF] Phase 5 list — wrong batter amount (detected, recorded, lowers quality; policy honoured), measure-before-pour, recipe-driven quantity, undercooked, correct cook, overcooked, missing sauce, missing wrap, correct finished product; GT-008 PASS; grill lid hinge check.
 - **Files/modules:** read-only · **3D assets:** cake prefabs · **Tests:** TC-CAKE-001…011, GT-008 · **Parallel:** Yes · **Review before impl.:** No.
 
 ### QA-050 — Vertical slice end-to-end

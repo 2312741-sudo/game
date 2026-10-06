@@ -45,7 +45,7 @@ Gameplay code is never blocked on final art: every prefab exists first as a **bl
 
 | [WF] name | [AP] name(s) | **Canonical** | Note |
 |---|---|---|---|
-| `PF_BatterCup` | `PF_BatterMeasureCup` / `SM_BatterMeasureCup` | `PF_BatterMeasureCup` | |
+| `PF_BatterCup`, `PF_MeasuringCup_500ml` | `PF_BatterMeasureCup` / `SM_BatterMeasureCup` (§28), `PF_MeasuringCup_500ml` / `SM_MeasuringCup_500ml` (§24) | **`PF_BatterMeasureCup_500ml`** / `SM_BatterMeasureCup_500ml` | Corrected 2026-10-06: §24 and §28 describe the same real object — the 500 ml cup used to measure cake batter. It is an **interactive** cake-station tool, not a drink-station prop. Use the §24 prompt (clear plastic, handle, measurement markings) with the §28 gameplay role. |
 | `PF_WrappingPaper` | `PF_CakeWrappingPaper` | `PF_CakeWrappingPaper` | |
 | `PF_SauceBag_Mango/Chocolate/Cheese` | `PF_SauceBag` (§73) + three variants (§32) | Base `PF_SauceBag` (neutral geometry `SM_SauceBag`) + **prefab variants** `PF_SauceBag_Mango`, `PF_SauceBag_Chocolate`, `PF_SauceBag_Cheese` | Colour by material only ([AP] §32) |
 | `PF_Stall_Wheel` | `SM_Stall_Wheel`, `SM_Stall_Wheels`, `SM_Stall_CasterWheel`, `PF_Stall_CasterWheel` | `SM_Stall_CasterWheel`, `PF_Stall_CasterWheel` | Detailed spec is [AP] §14 |
@@ -74,7 +74,7 @@ Assets/TramChanh/
 ├── Prefabs/
 │   ├── Stall/            PF_Stall_TramChanh, PF_Sign_TramChanh_New, PF_ReadyCounterPoint, PF_LEDStrip, PF_EdisonBulb
 │   ├── Workstations/     PF_DrinkStation, PF_CakeStation, PF_RedTeaRack, PF_ToppingStation, PF_IceBin, PF_Grill_Elmich
-│   ├── Items/            PF_TeaBag_PrePortioned, PF_BatterMeasureCup, PF_Cake_*, PF_SauceBag*, tools, PF_CakeWrappingPaper
+│   ├── Items/            PF_TeaBag_PrePortioned, PF_BatterMeasureCup_500ml, PF_Cake_*, PF_SauceBag*, tools, PF_CakeWrappingPaper
 │   ├── NPC/              PF_Placeholder_Customer
 │   └── UI/
 └── Scenes/Test/SCN_AssetScaleTest
@@ -161,7 +161,7 @@ Branding: white housing, mustard-orange top, "Trạm" black, "Chanh" mustard-ora
 | `PF_WipeCloth` | bottom centre | none (area has collider) | — | `AN_WipeCloth_Wipe` | — (animated by `WipeInteraction`) |
 | `PF_DrinkStation` | — (logical group) | — | children placed at stall anchors | — | — |
 
-`PF_DrinkStation` hierarchy from [AP] §59 (TeaRack, ToppingStation/{CoconutJellyBin, LemonJellyBin}, IceBin, IceScoop, PumpBottles, WipeArea, ReadyPoint). `WipeArea` = BoxCollider on `Interactable` layer + `PF_WipeCloth` visual + `WipeInteraction`. `PumpBottles` and `PF_MeasuringCup_500ml` are static, non-interactive (GT-003).
+`PF_DrinkStation` hierarchy from [AP] §59 (TeaRack, ToppingStation/{CoconutJellyBin, LemonJellyBin}, IceBin, IceScoop, PumpBottles, WipeArea, ReadyPoint). `WipeArea` = BoxCollider on `Interactable` layer + `PF_WipeCloth` visual + `WipeInteraction`. `PumpBottles` are static and non-interactive. The 500 ml measuring cup is **not** part of the drink station: it is the cake-station batter tool `PF_BatterMeasureCup_500ml` (§5.4), and no drink interactable accepts it (GT-003).
 
 Tea-bag acceptance ([AP] §81): fits in the rack slots; open state exists; jellies and ice visually appear; shake animation possible; wipe possible.
 
@@ -170,7 +170,7 @@ Tea-bag acceptance ([AP] §81): fits in the rack slots; open state exists; jelli
 | Prefab | Pivot | Collider | Anchors | Moving parts / states | Component (Codex) |
 |---|---|---|---|---|---|
 | `PF_Grill_Elmich` | bottom centre | Box (body) + Box on `LidPivot` (moves with lid) | `InteractionPoint`, `CakePlacementPoint`, `SpatulaPoint`, `AudioPoint` | `LidPivot` at the **rear hinge axis**, children `Lid`, `UpperPlate`, `Handle`; `LowerPlate` fixed; `Display` (red LED, emissive + text driven at runtime); `AN_Grill_LidOpen/Close` | `GrillController` |
-| `PF_BatterMeasureCup` | grip point | Box/Capsule | `HandGrip`, `PourPoint`, `PlacementPoint` | child `BatterLevel` = `SM_BatterVolume` (scale/morph by amount) | `BatterMeasureCup` |
+| `PF_BatterMeasureCup_500ml` | grip point (handle) | Box/Capsule (`Interactable` while resting, `HeldItem` while held) | `HandGrip`, `PourPoint` (lip), `PlacementPoint`, `LevelBottom`, `LevelTop` (inner liquid range used by `LevelCurve`) | child `BatterLevel` = `SM_BatterVolume` positioned/scaled from measured ml via `SO_MeasureCup_500ml.LevelCurve`; graduation markings as texture `T_BatterMeasureCup_500ml_Markings` from the real cup (not AI-generated text) | `BatterMeasureCup` (+ `SO_MeasureCup_500ml`) |
 | `PF_BatterPortion` | bottom centre | none | — | pour stream / poured volume (shader or morph, [AP] §29) | — (visual) |
 | `PF_Placeholder_BatterSource` | bottom centre (size `[Tbd]`, DEC-009) | Box | `InteractionPoint` | — | `BatterSourceInteractable` |
 | `PF_Spatula_WoodHandle` | grip point | none (station tool) | `HandGrip` | `AN_Spatula_Flip` (provisional, DEC-013) | — (used by the active `IFlipAction`) |
@@ -249,7 +249,8 @@ URP Lit; masks packed per URP conventions (`T_*_Mask`).
 | `Shaken` | `AN_TeaBag_Shake` |
 | `Wiped` | `AN_WipeCloth_Wipe`; condensation param off |
 | Grill `Open`/closed | `LidPivot` rotation via `AN_Grill_LidOpen/Close` |
-| Cake `BatterPoured`/`Cooking` | `PF_Cake_Raw` + `Doneness01` |
+| Cup fill level (measured ml) | `BatterLevel` height in `PF_BatterMeasureCup_500ml` via `LevelCurve`; read against the markings |
+| Cake `BatterPoured`/`Cooking` | `PF_Cake_Raw` + `Doneness01` (raw sheet size may later scale with poured ml — art decision after real amounts are known) |
 | Cake `Cooked`/`Flipped` | `PF_Cake_Cooked` (grill lines) |
 | Cake `Cut` | `PF_Cake_Cut` |
 | Cake `Sauced` | `PF_Cake_Cut` + sauce decal/mesh layer in `MAT_Food_Sauce` |
