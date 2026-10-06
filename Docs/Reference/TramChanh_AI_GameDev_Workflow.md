@@ -1,4 +1,4 @@
-> **Errata (2026-10-06):** this source document is kept verbatim. The 500 ml measuring cup is the interactive cake-batter tool **`PF_BatterMeasureCup_500ml`** / **`SM_BatterMeasureCup_500ml`**. The names `PF_MeasuringCup_500ml`, `SM_MeasuringCup_500ml`, `PF_BatterCup`, `PF_BatterMeasureCup` and `SM_BatterMeasureCup` below are superseded. See `Docs/Reference/README.md`.
+> **Errata (2026-10-06):** copy of the Product Owner's source document. Content is verbatim except that the 500 ml measuring cup now uses its canonical names **`PF_BatterMeasureCup_500ml`** / **`SM_BatterMeasureCup_500ml`**: it is the interactive cake-batter measuring tool, not a drink-station item. See `Docs/Reference/README.md`.
 
 # TRẠM CHANH — AI GAME DEV WORKFLOW
 ## Phân chia công việc cho Claude Code + Codex + Antigravity và model nên dùng
@@ -359,7 +359,6 @@ PF_Topping_CoconutJelly
 PF_Topping_LemonJelly
 PF_IceBin
 PF_IceScoop
-PF_MeasuringCup_500ml
 PF_PumpBottle
 PF_WipeCloth
 ```
@@ -368,7 +367,7 @@ PF_WipeCloth
 
 ```text
 PF_Grill_Elmich
-PF_BatterCup
+PF_BatterMeasureCup_500ml
 PF_BatterBag
 PF_SauceBag_Mango
 PF_SauceBag_Chocolate
