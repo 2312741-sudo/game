@@ -1,3 +1,5 @@
+> **Errata (2026-10-06):** this source document is kept verbatim. The 500 ml measuring cup is the interactive cake-batter tool **`PF_BatterMeasureCup_500ml`** / **`SM_BatterMeasureCup_500ml`**. The names `PF_MeasuringCup_500ml`, `SM_MeasuringCup_500ml`, `PF_BatterCup`, `PF_BatterMeasureCup` and `SM_BatterMeasureCup` below are superseded. See `Docs/Reference/README.md`.
+
 # TRẠM CHANH — 3D ASSET PIPELINE & PROMPT PACK
 ## Tài liệu chuyên biệt cho dựng 3D, chuẩn hóa asset và tích hợp Unity 6
 

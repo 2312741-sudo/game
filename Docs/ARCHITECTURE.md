@@ -29,12 +29,14 @@ Companion specs:
 |---|---|---|
 | GT-001 | Stall: 1.8 m wide × 0.8 m deep × ~2.2 m tall; counter top at 1.0 m; counter → roof 1.2 m | Prefab bounds validator, `SCN_AssetScaleTest` |
 | GT-002 | Only the **NEW** Tram Chanh sign (`PF_Sign_TramChanh_New`). The old illuminated letters never appear. | Asset validator, scene scan test |
-| GT-003 | Tea is **already pre-portioned in bags** stored in **red racks**. There is no tea-measuring step. | Drink state machine has no measure state; no drink interactable accepts the batter cup `PF_BatterMeasureCup_500ml` (it measures cake batter only) |
+| GT-003 | Tea is **already pre-portioned in bags** stored in **red racks**. There is no tea-measuring step. | Drink state machine has no measure state |
 | GT-004 | Every order originates through the **Lobby**. The stall never takes orders from customers. | `OrderService` API has no stall/customer entry path |
 | GT-005 | Dine-in: Lobby takes the order **at the table**. | `OrderOrigin.DineIn(tableId)` |
 | GT-006 | Takeaway: Lobby takes the order **at the customer's vehicle**. | `OrderOrigin.Vehicle(vehicleId)` |
 | GT-007 | Drink: tea bag → open → coconut jelly → lemon jelly → ice → shake → wipe → ready | `DrinkPreparation` strict sequence |
 | GT-008 | Cake: measure batter → pour → cook → flip → cut → sauce → roll vertically → wrap → ready | `CakePreparation` strict sequence |
+
+**500 ml measuring cup (clarification, not a ground-truth change):** the real 500 ml measuring cup, canonical `PF_BatterMeasureCup_500ml` / `SM_BatterMeasureCup_500ml`, belongs to **cake preparation**. It is an **interactive** held tool used in cake step "measure batter"; the amount measured is recipe-driven (`CAKE_WORKFLOW.md` §2.2). It plays no part in the drink workflow.
 
 Lobby **enters** the order and **sends** it to the stall; the stall prepares; the stall places finished items at the Ready counter; the Lobby picks them up and delivers to the correct table / vehicle.
 

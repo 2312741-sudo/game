@@ -66,7 +66,7 @@ Cooking/Cooked ──(doneness ≥ burn threshold)──► Ruined   (failure, n
 
 ### 2.2 Batter measurement — `PF_BatterMeasureCup_500ml`
 
-The real shop measures batter with a **500 ml measuring cup**. It is an **interactive gameplay tool** (held item), not a prop. Different cakes and sizes need different quantities, so *how much* to measure always comes from the recipe of the order item being prepared.
+The real shop measures batter with a **500 ml measuring cup** — canonical `PF_BatterMeasureCup_500ml` / `SM_BatterMeasureCup_500ml`. It is an **interactive gameplay tool** (held item) belonging to cake preparation, not a prop. Different recipes and sizes may require different target batter amounts, so *how much* to measure always comes from the recipe of the order item being prepared: each `CakeRecipe` (menu item × size) carries its own target batter amount, `TargetBatterMl`, and tolerance, `BatterToleranceMl`. All real quantities stay TBD until supplied by the Product Owner.
 
 **Data (no global amount, no code constants):**
 

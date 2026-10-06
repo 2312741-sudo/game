@@ -1,3 +1,5 @@
+> **Errata (2026-10-06):** this source document is kept verbatim. The 500 ml measuring cup is the interactive cake-batter tool **`PF_BatterMeasureCup_500ml`** / **`SM_BatterMeasureCup_500ml`**. The names `PF_MeasuringCup_500ml`, `SM_MeasuringCup_500ml`, `PF_BatterCup`, `PF_BatterMeasureCup` and `SM_BatterMeasureCup` below are superseded. See `Docs/Reference/README.md`.
+
 # TRẠM CHANH — AI GAME DEV WORKFLOW
 ## Phân chia công việc cho Claude Code + Codex + Antigravity và model nên dùng
 

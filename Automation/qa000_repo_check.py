@@ -209,6 +209,21 @@ def run(report):
         sign_assets += [f for f in files if re.match(r"(PF|SM)_Sign_", f) and "TramChanh_New" not in f]
     report.check("GT-002: every sign asset is the NEW sign", not sign_assets, ", ".join(sign_assets))
 
+    superseded = re.compile(r"\b(PF_MeasuringCup_500ml|SM_MeasuringCup_500ml|PF_BatterCup|PF_BatterMeasureCup|SM_BatterMeasureCup)\b")
+    stale = []
+    for top in ("Docs", "Assets", "ArtSource", "Automation"):
+        for dirpath, _, files in os.walk(os.path.join(ROOT, top)):
+            if os.path.join("Docs", "Reference") in dirpath:
+                continue  # verbatim source documents (errata banner at the top)
+            for f in files:
+                if not f.endswith((".md", ".cs", ".py", ".asset", ".prefab", ".json")) or f == os.path.basename(__file__):
+                    continue
+                path = os.path.join(dirpath, f)
+                for n, line in enumerate(open(path, encoding="utf-8", errors="ignore"), 1):
+                    if superseded.search(line):
+                        stale.append(f"{os.path.relpath(path, ROOT)}:{n}")
+    report.check("Canonical batter cup name only (`PF_BatterMeasureCup_500ml`)", not stale, ", ".join(stale))
+
     gt = os.path.join(TC, "Scripts/Core/GroundTruth/StallDimensions.cs")
     src = open(gt).read() if os.path.isfile(gt) else ""
     report.check("GT-001 constants (1.8 / 0.8 / 1.0 / 1.2) defined once in StallDimensions.cs",
