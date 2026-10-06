@@ -1,0 +1,19 @@
+{
+  "name": "TramChanh.Drinks",
+  "rootNamespace": "TramChanh.Drinks",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content",
+    "TramChanh.Interaction",
+    "TramChanh.Orders"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

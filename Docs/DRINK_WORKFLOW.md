@@ -1,6 +1,6 @@
 # TRAM CHANH — DRINK WORKFLOW
 
-**Status:** Draft for review gate `REV-003`
+**Status:** Approved for the slice (REV-000, 2026-10-06). Workflow unchanged; quantities are provisional data (DEC-007).
 **Module:** `TramChanh.Drinks`
 **Ground truth:** GT-003, GT-007
 
@@ -141,7 +141,7 @@ From [AP] §18 and §81 (bag needs closed/open representation; toppings and ice 
 
 ## 6. Data
 
-`SO_Recipe_Drink_Slice` (`DrinkRecipe`): `ItemDefinition`, `TeaBagType` (one in slice), `ShakeHoldSeconds` (TBD), `WipeHoldSeconds` (TBD). The step sequence is a code constant, not data.
+`SO_Recipe_Drink_Slice` (`DrinkRecipe`): `ItemDefinition`, `TeaBagType` (one in slice), `CoconutJellyPortion`, `LemonJellyPortion`, `IcePortion`, `ShakeHoldSeconds`, `WipeHoldSeconds` — all provisional `[Tbd("DEC-007")]` data. Portions only drive visuals/scoring later; they never add or remove a step. The step sequence is a code constant, not data. The drink's real menu name is pending (DEC-008).
 
 ---
 

@@ -1,0 +1,25 @@
+{
+  "name": "TramChanh.App",
+  "rootNamespace": "TramChanh.App",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Stall",
+    "TramChanh.Drinks",
+    "TramChanh.Cakes",
+    "TramChanh.Lobby",
+    "TramChanh.Customers",
+    "TramChanh.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,6 +1,6 @@
 # TRAM CHANH — INTERACTION SYSTEM
 
-**Status:** Draft for review gate `REV-001`
+**Status:** Approved for the slice (REV-000, 2026-10-06)
 **Module:** `TramChanh.Interaction`
 **Purpose:** one framework through which every interactive object in the game is used ([WF] §10). No object reads input or raycasts on its own.
 
@@ -90,7 +90,7 @@ Rules:
 
 `PlayerInteractor` (MonoBehaviour on the player):
 
-1. Every frame: raycast from camera centre, `Interactable` layer only, max distance `BalanceConfig.ReachDistance` (placeholder 1.5 m, tuned in `INT-008` against the 0.8 m counter depth; DEC-007).
+1. Every frame: raycast from camera centre, `Interactable` layer only, max distance `BalanceConfig.ReachDistance` (provisional `[Tbd]` data, tuned in `INT-008` against the 0.8 m counter depth; DEC-007).
 2. Focus = the `IInteractable` on the hit collider (or its parent via `InteractableRef`).
 3. Calls `Query(ctx)` on the focused object → publishes prompt state to UI only when it changed (no per-frame events).
 4. Input (Unity Input System, action map `Gameplay`):
@@ -135,13 +135,13 @@ Every row maps to exactly one canonical workflow step or Lobby action; nothing h
 | `ReadyCounterPoint` | `PF_ReadyCounterPoint` | Press | finished drink / cake | Drink & cake: ready; Lobby: pick up |
 | `BatterMeasureCupInteractable` | `PF_BatterMeasureCup` | Press | nothing | Cake: measure (pick up cup) |
 | `BatterSourceInteractable` | `BatterSource` placeholder (DEC-009) | Continuous | the cup | Cake: measure (fill) |
-| `GrillInteractable` | `PF_Grill_Elmich` | Press | varies | Cake: pour / cook (lid close/open) / flip — see `CAKE_WORKFLOW.md` |
+| `GrillInteractable` | `PF_Grill_Elmich` | Press | varies | Cake: pour / cook (lid close/open) / flip (via `IFlipAction`, DEC-013) — see `CAKE_WORKFLOW.md` |
 | `RollAreaInteractable` (+ scissors anim) | `PF_CakeStation/RollArea` + `PF_Scissors_RedGray` | Hold | nothing | Cake: cut |
 | `SauceBagInteractable` | `PF_SauceBag_<Flavour>` | Hold | nothing | Cake: sauce |
 | `RollAreaInteractable` | `PF_CakeStation/RollArea` | Hold | nothing | Cake: roll vertically |
 | `WrappingAreaInteractable` | `PF_CakeStation/WrappingArea` + `PF_CakeWrappingPaper` | Press | nothing | Cake: wrap (cake goes into hands) |
 | `TableOrderPoint` | `PF_YellowCrateTable` | Press | nothing / `ServedOrder` | Lobby: take order / deliver |
-| `VehicleOrderPoint` | placeholder vehicle | Press | nothing / `ServedOrder` | Lobby: take order / deliver |
+| `VehicleOrderPoint` | `PF_Placeholder_VehiclePoint` (generic) | Press | nothing / `ServedOrder` | Lobby: take order / deliver |
 
 `RollArea` is one interactable whose current action follows the cake state (Cut → Roll), with the scissors animated only for Cut.
 

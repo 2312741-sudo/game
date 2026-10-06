@@ -1,0 +1,17 @@
+{
+  "name": "TramChanh.Orders",
+  "rootNamespace": "TramChanh.Orders",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

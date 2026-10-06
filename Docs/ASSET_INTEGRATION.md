@@ -1,6 +1,6 @@
 # TRAM CHANH — ASSET INTEGRATION
 
-**Status:** Draft for review gate `REV-005`
+**Status:** Approved for the slice (REV-000, 2026-10-06). Placeholders are first-class: gameplay never waits for finished 3D models.
 **Scope:** how the 3D assets of the vertical slice go from reference photo to a validated Unity prefab that gameplay code can use.
 **Primary source:** [AP] (`Docs/Reference/TramChanh_3D_Asset_Pipeline.md`). This document resolves naming conflicts between [AP] and [WF] and adds the gameplay contract (anchors, components, states) each prefab must satisfy.
 
@@ -55,7 +55,7 @@ Gameplay code is never blocked on final art: every prefab exists first as a **bl
 | — | `SM_Cake_Cut` (no prefab) | `PF_Cake_Cut` (added for consistency with the other cake states) | |
 | Folder `Art/Models/{Stall,Furniture,Equipment,Food,Props}` ([WF] §7) | `Art/Models/{Stall,Branding,DrinkStation,CakeStation,Furniture,Food,Packaging,Props}` ([AP] §69) | [AP] §69 | More specific |
 
-Placeholders for which no asset spec exists (DEC-010): `PF_Placeholder_Customer` (1.7 m capsule), `PF_Placeholder_Vehicle` (box at motorbike scale, size confirmed by PO). Prefix `PF_Placeholder_` is reserved for these and is reported as a warning (not an error) by the validator.
+Placeholders for which no asset spec exists (DEC-010): `PF_Placeholder_Customer` (1.7 m capsule) and `PF_Placeholder_VehiclePoint` — a **generic vehicle interaction point** (trigger volume + anchors, size `[Tbd]`) with no specific vehicle model; any later vehicle art is purely visual and is not referenced by gameplay. Prefix `PF_Placeholder_` is reserved for these and is reported as a warning (not an error) by the validator.
 
 ---
 
@@ -80,7 +80,7 @@ Assets/TramChanh/
 └── Scenes/Test/SCN_AssetScaleTest
 ```
 
-Prefabs that are scene furniture (`PF_PlasticStool`, `PF_YellowCrateTable`, `PF_StainlessTrayTabletop`, `PF_Placeholder_Vehicle`) go in `Prefabs/CustomerArea/` (folder added; [WF] §7 has no furniture prefab folder).
+Prefabs that are scene furniture (`PF_PlasticStool`, `PF_YellowCrateTable`, `PF_StainlessTrayTabletop`, `PF_Placeholder_VehiclePoint`) go in `Prefabs/CustomerArea/` (folder added; [WF] §7 has no furniture prefab folder).
 
 ---
 
@@ -129,7 +129,11 @@ PF_Stall_TramChanh                       pivot: ground centre · layer Environme
     ├── WrapAnchor         └── ReadyCounterAnchor
 ```
 
+Every anchor carries a `StallAnchor` component (id, *Position Confirmed*, *Position Source*). **Anchor transforms are the only source of station positions**: they are edited in the prefab or scene, never hard-coded, and stay *Position Confirmed = off* until the real stall reference is measured (DEC-011). The stall root carries `StallAnchorSet` for lookup by id. Rebuilding the placeholder keeps edited anchor poses.
+
 Hierarchy from [WF] Phase 2. `*` = anchors added because [AP] §59–60 station hierarchies contain areas (`WipeArea`, `BatterArea`, `RollArea`) that the [WF] anchor list lacks. Anchor positions come from the reference photos (DEC-011).
+
+Phase A placeholder (built by `Tram Chanh ▸ Placeholders ▸ Build Stall + New Sign Placeholder`, or `ArtSource/Blender/Scripts/stall_blockout.py`): GT-001 dimensions exact; wheel/post/slab/roof sizes, A-frame lean and counter openings are provisional and come from the real reference in phase B.
 
 Acceptance (GT-001, [AP] §79): renderer bounds 1.80 × 0.80 × ~2.20 m (±0.02 m on width/depth, ±0.05 m on height), counter top 1.00 m (±0.01), old sign absent, new sign mounted, no equipment merged into stall meshes, workspace fits both stations.
 
@@ -139,6 +143,8 @@ Acceptance (GT-001, [AP] §79): renderer bounds 1.80 × 0.80 × ~2.20 m (±0.02 
 PF_Sign_TramChanh_New     pivot: rear centre · BoxCollider · layer Environment · static
 └── SM_Sign_TramChanh_New  geometry only; 500–2,000 tris; MAT_Sign_TramChanh_New with T_Sign_TramChanh_New_BaseColor (2048×512)
 ```
+
+Phase A placeholder: a box volume (size `[Tbd]`, DEC-017) with the final names, rear-centre pivot, BoxCollider, `PlaceholderAsset` marker, and the **`MAT_Sign_TramChanh_New` material slot** that the final artwork texture is assigned to later. No text, no logo, never the old illuminated letters.
 
 Branding: white housing, mustard-orange top, "Trạm" black, "Chanh" mustard-orange, coloured strip under the front edge, softly rounded ends ([AP] §2.2, §11). Text is texture only, from artwork supplied by the PO. GT-002: no other `SM_Sign_*`/`PF_Sign_*` asset may exist in the project.
 
@@ -166,10 +172,10 @@ Tea-bag acceptance ([AP] §81): fits in the rack slots; open state exists; jelli
 | `PF_Grill_Elmich` | bottom centre | Box (body) + Box on `LidPivot` (moves with lid) | `InteractionPoint`, `CakePlacementPoint`, `SpatulaPoint`, `AudioPoint` | `LidPivot` at the **rear hinge axis**, children `Lid`, `UpperPlate`, `Handle`; `LowerPlate` fixed; `Display` (red LED, emissive + text driven at runtime); `AN_Grill_LidOpen/Close` | `GrillController` |
 | `PF_BatterMeasureCup` | grip point | Box/Capsule | `HandGrip`, `PourPoint`, `PlacementPoint` | child `BatterLevel` = `SM_BatterVolume` (scale/morph by amount) | `BatterMeasureCup` |
 | `PF_BatterPortion` | bottom centre | none | — | pour stream / poured volume (shader or morph, [AP] §29) | — (visual) |
-| `PF_Placeholder_BatterSource` | bottom centre | Box | `InteractionPoint` | — | `BatterSourceInteractable` |
-| `PF_Spatula_WoodHandle` | grip point | none (station tool) | `HandGrip` | `AN_Spatula_Flip` | — (animated by `GrillController`) |
+| `PF_Placeholder_BatterSource` | bottom centre (size `[Tbd]`, DEC-009) | Box | `InteractionPoint` | — | `BatterSourceInteractable` |
+| `PF_Spatula_WoodHandle` | grip point | none (station tool) | `HandGrip` | `AN_Spatula_Flip` (provisional, DEC-013) | — (used by the active `IFlipAction`) |
 | `PF_Scissors_RedGray` | grip point | none (station tool) | `HandGrip` | blades separate meshes, pivot at screw; `AN_Scissors_Cut` | — (animated by `RollAreaInteractable`) |
-| `PF_SauceBag` (+3 variants) | grip point | Box | `InteractionPoint`, `PourPoint` | `AN_SauceBag_Squeeze` | `SauceBagInteractable` |
+| `PF_SauceBag` (+3 variants) | grip point | Box | `InteractionPoint`, `PourPoint` | `AN_SauceBag_Squeeze` | `SauceBagInteractable` (sauce identity from `SauceDefinition` data; cake mapping unconfirmed, DEC-008) |
 | `PF_Cake_Raw` / `PF_Cake_Cooked` / `PF_Cake_Cut` / `PF_Cake_Rolled` | bottom centre | none (lives on grill/roll area) | — | `Doneness01` material param on Raw/Cooked; `AN_Cake_RollVertical` | — (shown by `CakeView`) |
 | `PF_CakeWrappingPaper` | bottom centre | Box (area) | `InteractionPoint` | `AN_Paper_Wrap` | `WrapInteraction` |
 | `PF_Cake_Wrapped` | grip point | Capsule | `HandGrip`, `PlacementPoint` | — | `CakeView` (+ `IPreparedItem`) |
@@ -206,7 +212,7 @@ Component: ReadyCounterPoint
 |---|---|---|---|---|
 | `PF_PlasticStool` | 0.28–0.32 × 0.28–0.32 × 0.25–0.30 m ([AP] §39) | ground centre | Box | `SeatPoint` |
 | `PF_YellowCrateTable` (+ `PF_StainlessTrayTabletop` on top) | from reference (crate upside-down) | ground centre | Box | `InteractionPoint`, `DeliveryPoint`, `Seats/*`; `TableOrderPoint` |
-| `PF_Placeholder_Vehicle` | PO to confirm | ground centre | Box | `InteractionPoint`, `CustomerWaitPoint`; `VehicleOrderPoint` |
+| `PF_Placeholder_VehiclePoint` | generic volume, size `[Tbd]` (DEC-010) | ground centre | Box (trigger) | `InteractionPoint`, `CustomerWaitPoint`, optional `Visual` child (any vehicle art, not referenced by code); `VehicleOrderPoint` |
 | `PF_Placeholder_Customer` | 1.7 m capsule | ground centre | Capsule, NPC layer | `SliceCustomerController` |
 
 ---
@@ -227,7 +233,7 @@ No gameplay logic uses tags in the slice (components are used instead), so no ta
 ## 7. Material library
 
 Shared materials from [AP] §51 (no per-object duplicates): `MAT_Wood_Dark`, `MAT_Metal_BlackPainted`, `MAT_Metal_Stainless`, `MAT_Plastic_Red`, `MAT_Plastic_Yellow`, `MAT_Plastic_Transparent`, `MAT_Glass_Clear`, `MAT_Food_JellyWhite`, `MAT_Food_JellyLemon`, `MAT_Food_Tea`, `MAT_Food_Cake`, `MAT_Paper_Kraft`.
-Added for slice needs: `MAT_Sign_TramChanh_New` (branding texture), `MAT_Food_Batter`, `MAT_Food_Sauce` (colour per variant via material variant), `MAT_Grill_Display` (emissive red), `MAT_Placeholder` (blockouts).
+Added for slice needs: `MAT_Sign_TramChanh_New` (material slot for the final branding texture; plain white until the artwork arrives), `MAT_Placeholder_Stall`, `MAT_Placeholder_Wheel`, `MAT_Placeholder_SignTop`, `MAT_Food_Batter`, `MAT_Food_Sauce` (colour per variant via material variant), `MAT_Grill_Display` (emissive red), `MAT_Placeholder` (blockouts).
 URP Lit; masks packed per URP conventions (`T_*_Mask`).
 
 ---

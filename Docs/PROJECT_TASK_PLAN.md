@@ -1,6 +1,6 @@
 # TRAM CHANH — PROJECT TASK PLAN (Vertical Slice)
 
-**Status:** Draft for Product Owner approval
+**Status:** Approved by Product Owner 2026-10-06 — Wave 0 in progress (see §0.1)
 **Owner:** Claude Code (plan) · executed by Codex, 3D production, Antigravity
 **Goal:** the first playable vertical slice defined in `ARCHITECTURE.md` §2. Both the dine-in and the vehicle-takeaway order must run end-to-end with one drink and one cake.
 
@@ -45,6 +45,19 @@ CC spec (Docs) → CX implement in feature/<task> worktree → AG validate (PASS
 
 ---
 
+## 0.1 Status board
+
+| Task | Status | Notes |
+|---|---|---|
+| REV-000 | **Done** 2026-10-06 | Architecture approved. |
+| REV-DEC | **Done (defaults)** 2026-10-06 | All DEC defaults accepted with PO amendments; DEC-007, 008 (sauce mapping, drink name), 011, 013, 017 stay open as provisional data (`ARCHITECTURE.md` §10). |
+| CX-001 | **Delivered, awaiting first Unity open** | Skeleton, asmdefs, packages, project-setup script, ground-truth constants, provisional/placeholder markers, smoke tests. Compiles against UnityEngine 2021.3 reference DLLs + NUnit with editor/URP stubs; not yet opened in Unity 6 (QA-002 verifies). |
+| QA-000 | **Done** — report `QA/Reports/QA-000-2026-10-06.md` | Repo/docs/asmdef graph PASS. Open: `main` and `develop` branches do not exist on the remote yet. |
+| ART-STALL-001 (A) | **Placeholder workflow delivered** | Unity builder (`Tram Chanh ▸ Placeholders ▸ Build Stall + New Sign Placeholder`) + Blender script `ArtSource/Blender/Scripts/stall_blockout.py`. Prefabs are generated on first Unity open; anchors adjustable and unconfirmed (DEC-011). |
+| INT-002 (A) | Covered by the ART-STALL-001 builder | Final hierarchy/anchors/colliders; becomes "Done" when QA-011 runs on the generated prefab. |
+
+---
+
 ## 1. Waves and critical path
 
 ```text
@@ -75,7 +88,7 @@ REV-000 → CX-001 → CX-002 → CX-010 → CX-020 → CX-021 → CX-022 → CX
 | CX-001 | CX | Unity 6 project skeleton | REV-000 | No | Yes (REV-000) |
 | QA-001 | AG | Batch compile/test automation | CX-001 | Yes | No |
 | CX-002 | CX | Core services | CX-001 | Yes | No |
-| CX-003 | CX | Content ScriptableObjects | CX-001, REV-DEC (DEC-007/008) | Yes | Yes (DEC-008) |
+| CX-003 | CX | Content ScriptableObjects | CX-001 | Yes | No |
 | CX-004 | CX | Bootstrap, GameState, SceneLoader | CX-002 | No | Yes (REV-001 lifecycle) |
 | CX-005 | CX | Asset import postprocessor + validator | CX-001 | Yes | No |
 | QA-002 | AG | Foundation validation (M0) | CX-002…CX-005, QA-001 | — | No |
@@ -189,7 +202,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 - **Owner:** Codex (GPT-5.6 Sol High)
 - **Objective:** create the Unity 6 URP project at repo root with the folder structure, assemblies, test assemblies, packages and repo hygiene.
 - **Depends on:** REV-000
-- **Files/modules:** `Assets/TramChanh/**` folders ([WF] §7 + `Scripts/Stall`, `Prefabs/CustomerArea`), all `.asmdef` from `ARCHITECTURE.md` §4, `Packages/manifest.json` (URP, Input System, Test Framework, UI Toolkit), `ProjectSettings/` (layers from `ASSET_INTEGRATION.md` §6, linear colour, URP asset), `.gitignore` (Unity), `.gitattributes` (LFS for fbx/blend/png/tga/psd/wav), `.editorconfig`, `Docs/CODING_CONVENTIONS.md`.
+- **Files/modules:** `Assets/TramChanh/**` folders ([WF] §7 + `Scripts/Stall`, `Prefabs/CustomerArea`), all `.asmdef` from `ARCHITECTURE.md` §4, `Scripts/Editor/ProjectSetup/TramChanhProjectSetup.cs` (layers, linear colour, URP asset — idempotent), `Scripts/Core/GroundTruth/*` (GT-001 constants, layer names), `Scripts/Core/Provisional/*` (`[Tbd]`, `PlaceholderAsset`), `Packages/manifest.json` (URP, Input System, Test Framework, UI Toolkit), `ProjectSettings/` (layers from `ASSET_INTEGRATION.md` §6, linear colour, URP asset), `.gitignore` (Unity), `.gitattributes` (LFS for fbx/blend/png/tga/psd/wav), `.editorconfig`, `Docs/CODING_CONVENTIONS.md`.
 - **3D assets:** none
 - **Acceptance:** project opens in the pinned Unity 6 version with zero errors/warnings from project code; asmdef reference graph matches `ARCHITECTURE.md` §4 exactly; an empty EditMode and PlayMode test each run green; `ProjectVersion.txt` committed.
 - **Tests:** `Smoke_EditMode_Runs`, `Smoke_PlayMode_Runs`; AG verifies asmdef graph.
@@ -207,13 +220,13 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 
 ### CX-003 — Content ScriptableObjects
 - **Owner:** Codex (GPT-5.6 Terra acceptable)
-- **Objective:** `ItemDefinition`, `DrinkRecipe`, `CakeRecipe`, `MenuItem`, `BalanceConfig`, `ContentDatabase` + slice instances `SO_Item_*`, `SO_Recipe_Drink_Slice`, `SO_Recipe_Cake_Slice`, `SO_Balance_Slice`.
-- **Depends on:** CX-001; DEC-008 (which drink/sauce), DEC-007 (values may be TBD placeholders)
-- **Files/modules:** `Scripts/Core/Content/**`, `ScriptableObjects/**`, `Tests/EditMode/Content/**`
+- **Objective:** `ItemDefinition`, `DrinkRecipe`, `CakeRecipe`, `SauceDefinition`, `MenuItem`, `BalanceConfig`, `ContentDatabase`, a `[Tbd]` inspector drawer, and data instances: the four real cake items (*Bánh Lăn Truyền Thống*, *Bánh Lăn Phô Mai Chảy*, *Bánh Lăn Choco Chip*, *Bánh Lăn Cốm Dẻo*) with one `CakeRecipe` each, `SO_Sauce_Mango/Chocolate/Cheese`, `SO_Recipe_Drink_Slice`, `SO_Balance_Slice`.
+- **Depends on:** CX-001
+- **Files/modules:** `Scripts/Core/Content/**`, `Scripts/Editor/Content/**`, `ScriptableObjects/**`, `Tests/EditMode/Content/**`
 - **3D assets:** none
-- **Acceptance:** step sequences are **not** editable data (GT-007/008 are code constants); every TBD value carries a `[Tooltip("TBD — DEC-007")]`; database validates unique ids.
-- **Tests:** `ContentDatabaseTests` (unique ids, all references resolved).
-- **Parallel:** Yes · **Review before impl.:** Yes — DEC-008 confirmed or default accepted.
+- **Acceptance:** step sequences are **not** editable data (GT-007/008 are code constants); cake recipes ship with **no sauce assigned** (mapping unconfirmed, DEC-008) and content validation reports each as a warning; every unconfirmed value (batter amount/tolerance, cook/burn thresholds, fill rate, topping/ice portions, hold durations, rack capacity, reach) is a `[Tbd("DEC-007")]` field with a visible TBD badge in the inspector; no such value appears in any `.cs` file; which cake is in the slice is the `MenuItem.AvailableInSlice` flag.
+- **Tests:** `ContentDatabaseTests` (unique ids, all references resolved), `MenuNamesTests` (the four names verbatim), `NoProvisionalConstantsTests` (scan of `Scripts/` for recipe/balance field values).
+- **Parallel:** Yes · **Review before impl.:** No — rules now fixed in `ARCHITECTURE.md` §7 and §10.
 
 ### CX-004 — Bootstrap, GameState, SceneLoader
 - **Owner:** Codex
@@ -300,7 +313,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 - **Objective:** `TableOrderPoint`, `VehicleOrderPoint`, `LobbyOrderController`, `ActorRole` handling per DEC-001.
 - **Depends on:** CX-021, CX-010, DEC-001, DEC-003
 - **Files/modules:** `Scripts/Lobby/**`, `Tests/EditMode/Lobby/**`
-- **3D assets:** uses blockouts of `PF_YellowCrateTable`, `PF_Placeholder_Vehicle`
+- **3D assets:** uses blockouts of `PF_YellowCrateTable`, `PF_Placeholder_VehiclePoint`
 - **Acceptance:** prompt table in `ORDER_SYSTEM.md` §7; take order only at the order's own point; stall interactables never create or modify orders.
 - **Tests:** `TableOrderPoint_TakeOrder`, `VehicleOrderPoint_TakeOrder`, GT-005, GT-006 (integration level).
 - **Parallel:** Yes (with CX-024) · **Review before impl.:** Yes — DEC-001, DEC-003.
@@ -370,7 +383,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 - **Objective:** `SliceCustomerController`: spawn → go to table seat or vehicle (scenario config) → `RequestService` → wait → receive → `Complete` → leave. Simple NavMesh or waypoint movement; no patience, no payment.
 - **Depends on:** CX-023, CX-025, DEC-010, REV-006
 - **Files/modules:** `Scripts/Customers/**`, `Prefabs/NPC/PF_Placeholder_Customer`, `Tests/PlayMode/Customers/**`
-- **3D assets:** `PF_Placeholder_Customer`, `PF_Placeholder_Vehicle`, `PF_PlasticStool`, `PF_YellowCrateTable`
+- **3D assets:** `PF_Placeholder_Customer`, `PF_Placeholder_VehiclePoint`, `PF_PlasticStool`, `PF_YellowCrateTable`
 - **Acceptance:** customer never interacts with the stall; one customer at a time; scenario config selects dine-in or takeaway and the requested items.
 - **Tests:** `Customer_DineIn_Lifecycle`, `Customer_Vehicle_Lifecycle`.
 - **Parallel:** Yes (with CX-031/041) · **Review before impl.:** Yes — REV-006.
@@ -399,6 +412,7 @@ Phase **A** (blockout) = primitive, true scale, final pivot, no texture — can 
 - **Depends on:** REV-005; B needs DEC-011 (counter openings for recessed topping station and ice bin)
 - **Files/modules:** `ArtSource/**/Stall/*`, export → `Assets/TramChanh/Art/Models/Stall/`
 - **3D assets:** itself ([AP] §10, §12–16)
+- **Phase A delivered as:** `Scripts/Editor/Placeholders/StallPlaceholderBuilder.cs` (Unity prefab builder, keeps edited anchor poses, never overwrites final art), `Scripts/Stall/Anchors/*` (`StallAnchor`, `StallAnchorSet`), `ArtSource/Blender/Scripts/stall_blockout.py` (artist hand-off FBX, asserts GT-001), tests `Tests/EditMode/Placeholders/StallPlaceholderTests.cs`.
 - **Acceptance:** 1.8 × 0.8 m footprint, counter top 1.0 m, total ~2.2 m; old illuminated letters absent; equipment not merged; A-frame silhouette; 15–30k tris; 2K textures; pivot ground centre; [AP] §79 checklist.
 - **Tests:** QA-011 (validator bounds + scale-test scene).
 - **Parallel:** Yes · **Review before impl.:** A: No; B: Yes — DEC-011 layout.
@@ -621,7 +635,7 @@ Not produced in the slice (P1/P2 per [AP] §62): menus, snack rack/bags, pump bo
 
 ### INT-006 — Customer area + placeholders
 - **Owner:** Codex
-- **Objective:** `PF_PlasticStool`, `PF_YellowCrateTable` (+ tray), `PF_Placeholder_Vehicle`, `PF_Placeholder_Customer` with `TableOrderPoint` / `VehicleOrderPoint` anchors (`SeatPoint`, `DeliveryPoint`, `CustomerWaitPoint`).
+- **Objective:** `PF_PlasticStool`, `PF_YellowCrateTable` (+ tray), `PF_Placeholder_VehiclePoint`, `PF_Placeholder_Customer` with `TableOrderPoint` / `VehicleOrderPoint` anchors (`SeatPoint`, `DeliveryPoint`, `CustomerWaitPoint`).
 - **Depends on:** INT-001; ART-FURN-001/002 for B; DEC-010
 - **Files/modules:** `Prefabs/CustomerArea/**`, `Prefabs/NPC/**`, `Art/Models/Furniture/**`
 - **3D assets:** ART-FURN-001/002

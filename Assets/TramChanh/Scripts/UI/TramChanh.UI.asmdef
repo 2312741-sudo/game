@@ -1,0 +1,19 @@
+{
+  "name": "TramChanh.UI",
+  "rootNamespace": "TramChanh.UI",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Content"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

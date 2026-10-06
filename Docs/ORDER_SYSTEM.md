@@ -1,6 +1,6 @@
 # TRAM CHANH — ORDER SYSTEM
 
-**Status:** Draft for review gate `REV-002`
+**Status:** Approved for the slice (REV-000, 2026-10-06)
 **Module:** `TramChanh.Orders` (domain, plain C#) + `TramChanh.Lobby` / `TramChanh.Stall` / `TramChanh.UI` (adapters)
 **Ground truth:** GT-004, GT-005, GT-006 (see `ARCHITECTURE.md` §1)
 
@@ -55,7 +55,7 @@ OrderItem
 ├── OrderItemId        int
 ├── ItemDefinitionId   string (SO_ ItemDefinition id)
 ├── Kind               Drink | Cake
-├── Variant            e.g. SauceType for cakes (from recipe)
+├── RecipeId           SO_ recipe (sauce etc. come from recipe data, DEC-008)
 ├── Status             OrderItemStatus
 ├── PreparationId      int? (set while bound to a drink/cake in preparation)
 └── Quality            int 0..100 (set when the item reaches Ready)
@@ -194,7 +194,7 @@ Pickup (Lobby, empty hands): picks up **all items of one Ready order** as a sing
 | Component | Prefab | Role |
 |---|---|---|
 | `TableOrderPoint` | on `PF_YellowCrateTable` | Holds `TableId`, seat(s) (`PF_PlasticStool`), the seated customer, the active order. Interactable for **take order** (T2) and **deliver** (T8). |
-| `VehicleOrderPoint` | placeholder vehicle (DEC-010) | Holds `VehicleId`, the waiting customer, the active order. Interactable for take order and deliver. |
+| `VehicleOrderPoint` | `PF_Placeholder_VehiclePoint` — generic vehicle interaction point (DEC-010) | Holds `VehicleId`, the waiting customer, the active order. Interactable for take order and deliver. Knows nothing about the vehicle's model or type. |
 | `LobbyOrderController` | on player (DEC-001) | Opens the order-entry UI after T2; performs T3, T4; performs T7/T8 through the points. |
 | `OrderEntryUI` | UI | Shows the customer's request pre-filled; buttons *Enter* (T3) and *Send to stall* (T4). |
 | `StallTicketUI` | UI | Lists tickets with items and item status for the stall side. |

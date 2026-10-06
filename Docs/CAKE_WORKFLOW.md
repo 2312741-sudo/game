@@ -1,6 +1,6 @@
 # TRAM CHANH — CAKE WORKFLOW
 
-**Status:** Draft for review gate `REV-004`
+**Status:** Approved for the slice (REV-000, 2026-10-06). DEC-007, DEC-008 and DEC-013 remain open: their values/forms are provisional data, not ground truth.
 **Module:** `TramChanh.Cakes`
 **Ground truth:** GT-008
 
@@ -52,9 +52,9 @@ Cooking/Cooked ──(doneness ≥ burn threshold)──► Ruined   (failure, n
 | C2 | `BatterMeasured` | `BatterPoured` | Pour (`Grill`) holding the measured cup | Grill `Open`, lower plate empty | `grill.preheating`, `grill.lid_closed` (prompt offers *Open lid* instead), `grill.occupied`, `cake.batter_wrong_amount` |
 | C3 | `BatterPoured` | `Cooking` | Close lid (`Grill`) | Grill `Open` with this cake | — |
 | C4 | `Cooking` | `Cooked` | automatic: doneness ≥ `CookedThreshold` | — | — |
-| C5 | `Cooked` | `Flipped` | Flip (`Grill`, spatula animation) | Grill `Open`; doneness < `BurnThreshold` | `cake.not_cooked` (when attempted in `Cooking`), `grill.lid_closed` |
+| C5 | `Cooked` | `Flipped` | Flip (performed through `IFlipAction`, §2.3) | Grill `Open`; doneness < `BurnThreshold`; `IFlipAction.CanFlip` | `cake.not_cooked` (when attempted in `Cooking`), `grill.lid_closed` |
 | C6 | `Flipped` | `Cut` | Cut (`RollArea`, Hold, scissors animation) | Cake on `RollArea` | `cake.need_flip_first` |
-| C7 | `Cut` | `Sauced` | Sauce (`SauceBag_<Flavour>`, Hold) | Flavour == order item's `SauceType` | `cake.need_cut_first`, `cake.wrong_sauce` |
+| C7 | `Cut` | `Sauced` | Sauce (`SauceBag_<Flavour>`, Hold) | Sauce == the cake recipe's configured `Sauce` (data, DEC-008) | `cake.need_cut_first`, `cake.wrong_sauce`, `cake.sauce_unconfigured` |
 | C8 | `Sauced` | `Rolled` | Roll vertically (`RollArea`, Hold) | — | `cake.need_sauce_first` |
 | C9 | `Rolled` | `Wrapped` | Wrap (`WrappingArea`) → wrapped cake into hands | Hands empty | `cake.need_roll_first`, `hands.full` |
 | C10 | `Wrapped` | `Ready` | Place at `PF_ReadyCounterPoint/CakePlacement` | Bound; slot free | `ready.not_finished`, `ready.no_order`, `ready.slot_full` |
@@ -70,11 +70,24 @@ Cooking/Cooked ──(doneness ≥ burn threshold)──► Ruined   (failure, n
 - `BatterSource` is a **Continuous** hold: the cup fills at `FillRate` while the button is held; the amount is evaluated on release.
 - Under target: the player may hold again to add more. Over tolerance: `UseHeld` on the cup returns the batter to the source (amount → 0). These are corrections within step 2, not additional steps.
 - After pouring (C2) the cup returns automatically to its spot at `BatterArea`, so hands are free for the grill.
-- Values `TargetAmount`, `Tolerance`, `FillRate` are TBD (DEC-007).
+- `TargetAmount`, `Tolerance` and `FillRate` are provisional recipe data (`[Tbd("DEC-007")]`), never code constants.
 
-### 2.3 "Flip" semantics (DEC-013)
+### 2.3 *Flip* step — name fixed, physical action open (DEC-013)
 
-On the contact grill both plates cook at once ([AP] §27, ridged upper and lower plates). *Flip* is therefore the spatula turning the cooked sheet out of the open grill onto the `RollArea`; it does not start a second cooking phase. Grill-mark lines from both plates are visible on `SM_Cake_Cooked`.
+The workflow step is **Flip** (state `Flipped`), exactly as in the source workflow. What the worker physically does at this step on the real contact grill is **not yet confirmed**, so it is not defined here. The architecture isolates it:
+
+```csharp
+public interface IFlipAction                     // TramChanh.Cakes
+{
+    Availability CanFlip(GrillModel grill, CakePreparation cake);
+    FlipOutcome Perform(GrillModel grill, CakePreparation cake);   // where the cake ends up, which visuals/anim to play
+}
+```
+
+- The cake/grill state machines only know "Flip happened" (`C5`). They never encode *how*.
+- Where the cake is afterwards (still on the grill, on the roll area, ...), whether more cooking follows, which tool animation plays — all come from the `IFlipAction` implementation and its data, selected in the cake station prefab.
+- The slice ships `PlaceholderFlipAction`: spatula animation, then the cake is moved to the `RollArea` so cut/sauce/roll can proceed. It is marked provisional and can be replaced by the confirmed real action without changing `CakeState`, the transition table, tests of the step order, or any other station.
+- If the confirmed real action needs extra cooking after the flip, that is recipe data consumed by the `IFlipAction` implementation, not a new workflow step.
 
 ### 2.4 Roll direction
 
@@ -115,7 +128,7 @@ While the grill is `Preheating` every grill interaction is Blocked with `grill.p
 | `Open` | none | measured cup | Pour (C2) |
 | `Open` | none | nothing / other | Close lid (G4) |
 | `Open` | `BatterPoured` / `Cooking` | nothing | Close lid (C3 / G5) |
-| `Open` | `Cooked` | nothing | Flip (C5) |
+| `Open` | `Cooked` | nothing | Flip (C5, via `IFlipAction`) |
 | `Open` | `Ruined` | nothing | Remove burnt cake (C13) |
 | `Cooking`/`Finished`/`Overcooked` | yes | nothing | Open lid (G8) |
 
@@ -129,7 +142,7 @@ Inputs listed in [WF] Phase 5: batter amount, cook duration, heat, doneness, bur
 doneness += dt × heatFactor
 heatFactor = 1.0                when grill closed and heated (Cooking/Finished/Overcooked)
            = OpenLidHeatFactor  when grill Open with the cake on the lower plate
-           = 0                  once the cake has been flipped off the grill
+           = 0                  once the cake has left the grill (decided by IFlipAction — DEC-013)
 
 doneness < CookedThreshold                      → undercooked (state Cooking)
 CookedThreshold ≤ doneness < BurnThreshold      → Cooked
@@ -138,7 +151,7 @@ doneness ≥ BurnThreshold                        → Ruined
 
 - Heat is fixed at the grill's target temperature in the slice (no temperature control action exists in the workflow).
 - `dt` comes from `IGameClock`; paused game = no cooking.
-- All thresholds live in `SO_Recipe_Cake_Slice` and are TBD (DEC-007).
+- All thresholds live in the cake recipe ScriptableObject and are provisional `[Tbd("DEC-007")]` data. Gameplay code contains no cooking, burn or batter numbers.
 
 Visuals: `SM_Cake_Raw` with a material parameter `Doneness01` (pale → golden); swap to `SM_Cake_Cooked` at `Cooked`; burnt tint as the value approaches `BurnThreshold`. Audio hook `SFX_Grill_Sizzle` on while cooking ([WF] §12).
 
@@ -156,7 +169,7 @@ public sealed class GrillModel
     public Result OpenLid();                   // G3/G8
     public Result CloseLid();                  // G4/G5 (+C3)
     public Result Pour(CakePreparation cake);  // C2
-    public Result<CakePreparation> Flip();     // C5 → cake leaves the grill
+    public Result<CakePreparation> Flip(IFlipAction action); // C5 — physical form delegated (DEC-013)
     public Result<CakePreparation> RemoveRuined(); // C13
 }
 
@@ -165,12 +178,12 @@ public sealed class CakePreparation
     public CakeState State { get; }
     public float BatterAmount { get; }
     public float Doneness { get; }
-    public SauceType RequiredSauce { get; }
+    public SauceDefinition RequiredSauce { get; } // from recipe data; may be unconfigured (DEC-008)
     public OrderItemRef BoundItem { get; }
     public int Quality { get; }
     public Result Measure(float amount);       // C1
     public Result Cut();                       // C6
-    public Result ApplySauce(SauceType s);     // C7
+    public Result ApplySauce(SauceDefinition s); // C7
     public Result Roll();                      // C8
     public Result Wrap();                      // C9
     public Result MarkReady();                 // C10
@@ -191,7 +204,7 @@ donenessScore = 100 − 50 × |doneness − mid| / ((Burn − Cooked) / 2)      
 Quality       = round((batterScore + donenessScore) / 2)
 ```
 
-Coefficients are placeholders (DEC-007); the formula's inputs are fixed by [WF] Phase 5.
+The weights (50/100) are provisional data in `SO_Balance_Slice`, not constants; the formula's inputs are fixed by [WF] Phase 5.
 
 ---
 
@@ -204,9 +217,9 @@ PF_CakeStation
 ├── Grill          → GrillController                (PF_Grill_Elmich)
 ├── BatterArea     → BatterSourceInteractable        (placeholder source, DEC-009)
 ├── MeasuringCup   → BatterMeasureCup (held)          (PF_BatterMeasureCup + SM_BatterVolume)
-├── Spatula        → station tool, animated by Grill  (PF_Spatula_WoodHandle)
+├── Spatula        → station tool used by the active IFlipAction (PF_Spatula_WoodHandle)
 ├── Scissors       → station tool, animated by RollArea (PF_Scissors_RedGray)
-├── SauceArea      → SauceBagInteractable ×1 in slice (PF_SauceBag_<Flavour>, DEC-008)
+├── SauceArea      → SauceBagInteractable per configured SauceDefinition (PF_SauceBag_<Flavour>, DEC-008)
 ├── RollArea       → RollAreaInteractable (cut → roll), cake placement point
 ├── WrappingArea   → WrapInteraction                  (PF_CakeWrappingPaper)
 └── ReadyPoint     → shared PF_ReadyCounterPoint
@@ -216,7 +229,8 @@ PF_CakeStation
 |---|---|
 | `BatterMeasureCup` | `IHoldable` + `IHeldItemAction` (empty back); shows fill level via `SM_BatterVolume` scale/morph |
 | `BatterSourceInteractable` | Continuous fill; on release calls `CakePreparation.Measure` (creating + binding the preparation) |
-| `GrillController` | Owns `GrillModel`; lid `Animator` on `LidPivot`; display; cake visual spawn at `CakePlacementPoint` |
+| `GrillController` | Owns `GrillModel`; lid `Animator` on `LidPivot`; display; cake visual spawn at `CakePlacementPoint`; holds the station's `IFlipAction` reference |
+| `PlaceholderFlipAction` | Provisional `IFlipAction` (DEC-013): spatula anim, cake to `RollArea`. Replaceable without state-machine changes |
 | `CakeView` | Swaps `PF_Cake_Raw` / `PF_Cake_Cooked` / `SM_Cake_Cut` / `PF_Cake_Rolled` / `PF_Cake_Wrapped` by state; doneness param |
 | `RollAreaInteractable` | Cut (scissors anim) and roll (`AN_Cake_RollVertical`) |
 | `SauceBagInteractable` | Sauce application anim; flavour from its config |
@@ -237,7 +251,9 @@ From [WF] Phase 5:
 | TC-CAKE-005 | EditMode | Missing sauce | Roll from `Cut` → `cake.need_sauce_first` |
 | TC-CAKE-006 | EditMode | Missing wrap | Place `Rolled` cake at Ready → impossible (not held; `Wrapped` required) / `ready.not_finished` |
 | TC-CAKE-007 | EditMode | Correct finished product | Full path → `Ready`; quality in range; correct order item marked Ready |
-| TC-CAKE-008 | EditMode | Wrong sauce flavour | `cake.wrong_sauce` |
+| TC-CAKE-008 | EditMode | Wrong sauce / unconfigured sauce | `cake.wrong_sauce`; recipe without sauce → `cake.sauce_unconfigured` and a content-validation warning |
+| TC-CAKE-012 | EditMode | Flip isolation | State machine with a fake `IFlipAction` reaches `Flipped` regardless of the action's physical outcome; swapping implementations needs no state-machine change |
+| TC-CAKE-013 | EditMode | No guessed numbers | Cooking/burn/batter values are read only from recipe data (a fake recipe with arbitrary values drives all thresholds) |
 | TC-CAKE-009 | EditMode | Grill transitions | G1–G8 valid; preheating blocks everything; pause freezes doneness |
 | TC-CAKE-010 | EditMode | No ticket → cannot measure | `stall.no_ticket.cake` |
 | GT-008 | EditMode | Exact sequence | The only successful path is the GT-008 order |

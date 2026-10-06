@@ -1,0 +1,28 @@
+{
+  "name": "TramChanh.DevTools",
+  "rootNamespace": "TramChanh.DevTools",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Stall",
+    "TramChanh.Drinks",
+    "TramChanh.Cakes",
+    "TramChanh.Lobby",
+    "TramChanh.Customers",
+    "TramChanh.UI",
+    "TramChanh.App"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "DEVELOPMENT_BUILD || UNITY_EDITOR"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

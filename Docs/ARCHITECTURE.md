@@ -1,6 +1,6 @@
 # TRAM CHANH — ARCHITECTURE
 
-**Status:** Draft for Product Owner + review gate `REV-000`
+**Status:** Approved by Product Owner 2026-10-06 (REV-000). Decision defaults accepted with the amendments in §10.
 **Owner:** Claude Code (Technical Lead / Architect)
 **Engine:** Unity 6 (URP) · **Scale:** `1 Unity unit = 1 meter`
 **Scope of this document:** the first playable vertical slice (M0–M5) and the module boundaries that later milestones build on.
@@ -79,6 +79,7 @@ Customer → Lobby takes order → Lobby enters → Lobby sends to Stall
 7. **Data in ScriptableObjects, state in C# objects.** Recipes, item definitions and balance numbers are `SO_` assets; runtime state is never written back into ScriptableObjects.
 8. **Events are typed and synchronous.** Cross-module notification goes through `IEventBus` with `readonly struct` events. Modules do not hold references to each other's MonoBehaviours.
 9. **Real-world fidelity beats genre convention** ([WF] §34). When unsure, the item goes to the Decision Register (§10), not into code.
+10. **Unknown real-world values are never ground truth.** Only the facts in §1 may become code constants (`TramChanh.Core.GroundTruth`). Everything not yet confirmed from the real shop — station positions, sign size and artwork, batter amount, cooking/burn time, topping quantities, hold durations, sauce-to-cake mapping, vehicle form, the physical form of *Flip* — is **provisional data**: ScriptableObject fields marked `[Tbd("DEC-xxx")]`, prefab/scene transforms (`StallAnchor` with *Position Confirmed* off) or placeholder prefabs (`PlaceholderAsset`). Replacing a provisional value must never require a code change.
 
 ---
 
@@ -100,10 +101,12 @@ All runtime code lives under `Assets/TramChanh/Scripts/<Module>/` ([WF] §7), on
 | `TramChanh.Customers` | `Scripts/Customers` | Slice customer controller (scripted) | Core, Orders, Lobby |
 | `TramChanh.UI` | `Scripts/UI` | Interaction prompt, order entry UI, stall ticket UI, ready list, debug HUD | Core, Interaction, Orders, Content |
 | `TramChanh.App` | `Scripts/Core/Bootstrap` *(own asmdef)* | `GameBootstrap` (composition root), `SceneLoader` | all of the above |
-| `TramChanh.Debug` | `Scripts/Debug` | Dev cheats (spawn customer, skip cook timer), only in Development builds | all of the above |
-| `TramChanh.Editor` | `Scripts/Editor` | Prefab/asset validators, scale-test scene tools | all runtime assemblies |
+| `TramChanh.DevTools` | `Scripts/Debug` | Dev cheats (spawn customer, skip cook timer), only in Editor/Development builds (define constraint) | all of the above |
+| `TramChanh.Editor` | `Scripts/Editor` | Project setup, placeholder builders, prefab/asset validators, scale-test tools (namespace `TramChanh.EditorTools`) | all runtime assemblies |
 | `TramChanh.Tests.EditMode` | `Tests/EditMode` | Domain unit tests, GT tests, asset validators | all runtime + Editor |
 | `TramChanh.Tests.PlayMode` | `Tests/PlayMode` | Smoke + end-to-end slice tests | all runtime |
+
+Naming note: the debug assembly is `TramChanh.DevTools` and the editor namespace is `TramChanh.EditorTools`, because `TramChanh.Debug` / `TramChanh.Editor` namespaces would hide `UnityEngine.Debug` / `UnityEditor.Editor` inside project code.
 
 Note: `Scripts/Stall` is not listed in [WF] §7. It is added because the Ready counter must depend on `Orders` + `Interaction` but must not depend on `Drinks`/`Cakes` (they depend on it via `IPreparedItem`). Review item for `REV-000`.
 
@@ -185,13 +188,25 @@ Stored under `Assets/TramChanh/ScriptableObjects/` ([WF] §7), prefix `SO_` ([WF
 
 | Type | Fields (slice) | Instances in slice |
 |---|---|---|
-| `ItemDefinition` | `Id`, `DisplayNameKey`, `Kind` (`Drink`/`Cake`), `PreparedPrefab` | `SO_Item_LemonTea` (placeholder id), `SO_Item_RolledCake` (placeholder id) |
-| `DrinkRecipe` | `ItemDefinition`, `TeaBagType`, ordered step list (fixed = GT-007, read-only in inspector), hold durations | `SO_Recipe_Drink_Slice` |
-| `CakeRecipe` | `ItemDefinition`, `TargetBatterAmount`, `BatterTolerance`, `CookedThreshold`, `BurnThreshold`, `SauceType`, hold durations | `SO_Recipe_Cake_Slice` |
-| `MenuItem` | `ItemDefinition`, `Recipe` | 2 |
-| `BalanceConfig` | Grill preheat duration, open-lid cooking factor, reach distance, rack capacity | `SO_Balance_Slice` |
+| `ItemDefinition` | `Id`, `DisplayName` (real menu name), `Kind` (`Drink`/`Cake`), `PreparedPrefab` | one drink (name TBD), the cake items below |
+| `DrinkRecipe` | `ItemDefinition`, `TeaBagType`, portions (`CoconutJellyPortion`, `LemonJellyPortion`, `IcePortion`) `[Tbd]`, hold durations `[Tbd]` | `SO_Recipe_Drink_Slice` |
+| `SauceDefinition` | `Id`, `DisplayName`, `SauceBagPrefab`, `MaterialVariant` | Mango, Chocolate, Cheese bags exist as assets ([AP] §32); **no cake mapping is assumed** |
+| `CakeRecipe` | `ItemDefinition`, `Sauce` (`SauceDefinition`, `[Tbd("DEC-008")]`, may be empty until confirmed), `TargetBatterAmount`, `BatterTolerance`, `CookedThreshold`, `BurnThreshold`, `FillRate`, hold durations — all `[Tbd("DEC-007")]` | one per cake menu item |
+| `MenuItem` | `ItemDefinition`, `Recipe`, `AvailableInSlice` | see below |
+| `BalanceConfig` | Grill preheat duration, open-lid cooking factor, reach distance, rack capacity — all `[Tbd]` | `SO_Balance_Slice` |
 
-Display names and the menu product names are **not invented**: they use placeholder keys until the Product Owner supplies the real menu text (DEC-008). All numeric balance values are placeholders marked `TBD` until confirmed (DEC-007).
+Known real cake menu names (Product Owner, 2026-10-06) — used verbatim as `DisplayName`:
+
+| Menu item | `SO_` asset | Sauce mapping |
+|---|---|---|
+| Bánh Lăn Truyền Thống | `SO_Item_BanhLan_TruyenThong` | unconfirmed |
+| Bánh Lăn Phô Mai Chảy | `SO_Item_BanhLan_PhoMaiChay` | unconfirmed |
+| Bánh Lăn Choco Chip | `SO_Item_BanhLan_ChocoChip` | unconfirmed |
+| Bánh Lăn Cốm Dẻo | `SO_Item_BanhLan_ComDeo` | unconfirmed |
+
+The names suggest flavours, but no sauce, topping or recipe difference is inferred from them. Until the PO confirms each recipe, a `CakeRecipe` with no sauce assigned is valid data and content validation reports every unconfirmed mapping as a warning; the sauce step uses whatever sauce the recipe data names once filled in. Which cake item is enabled for the slice is the `MenuItem.AvailableInSlice` flag, not code. The drink's real menu name is still to be supplied.
+
+Display names are **not invented**: only names supplied by the Product Owner are used. All numeric preparation and balance values are provisional `[Tbd]` data until confirmed (DEC-007); gameplay code reads them from these assets and never contains guessed numbers.
 
 The step order for drinks and cakes is **not data-driven** in the slice: it is the ground truth and lives in code as a constant sequence covered by GT-007/GT-008 tests. Recipes only parameterise amounts, durations and variants.
 
@@ -224,28 +239,29 @@ Every test name carries its spec id, e.g. `TC_ORDER_001_DineIn_FullFlow`, `GT_00
 
 ---
 
-## 10. Decision register (needs Product Owner confirmation)
+## 10. Decision register
 
-These are gaps in the source documents. The architecture supports either answer; the **proposed default** is what the slice implements unless the Product Owner says otherwise. None of them adds, removes or reorders a preparation step.
+Product Owner decision 2026-10-06: **all architectural defaults accepted**, with the amendments below. "Provisional" means the value or form is data/prefab-configurable and must not be treated as ground truth (principle 10).
 
-| ID | Question | Proposed default for the slice | Affects |
-|---|---|---|---|
-| DEC-001 | Who plays the Lobby in the slice — player or NPC? ([WF] §27 allows either) | **Player** performs both Lobby and Stall actions with one character; the role is implied by which interactable is used. Domain uses an `ActorRole` so an NPC Lobby can be added later. | Lobby, UI, Customers |
-| DEC-002 | Camera perspective | First-person, keyboard + mouse | Interaction, Player |
-| DEC-003 | Where/how does the Lobby "enter" and "send" the order? No device is specified. | Order-entry UI opens at the table/vehicle after taking the order; *Enter* and *Send to stall* are two explicit confirmations. No physical device asset. | Lobby, UI |
-| DEC-004 | Grill power-on is not a workflow step. | Grill is switched on automatically at shift start (`Off → Preheating → Ready`). No player power action. | Cakes |
-| DEC-005 | Tools (ice scoop, spatula, scissors, sauce bag, wipe cloth) — held items or station-driven? | **Station-driven:** the tool animates as part of the station interaction; only the tea bag, batter cup and finished items are held. | Interaction, Drinks, Cakes, assets |
-| DEC-006 | What happens to a ruined product (overcooked cake)? No bin asset exists. | `Discard` action on the held ruined item; it disappears and its order item returns to Pending. | Cakes, Stall |
-| DEC-007 | Real numbers: batter amount + tolerance, cook time, burn time, shake/wipe/roll durations, open-lid cooking rate. | Placeholders in `SO_Balance_Slice` / recipes, flagged `TBD`. | Cakes, Drinks |
-| DEC-008 | Which drink and which cake (sauce flavour) are in the slice; real menu names. | One tea type, one sauce (flavour chosen by PO from Mango / Chocolate / Cheese). Placeholder text keys until supplied. | Content |
-| DEC-009 | Batter source container (`PF_BatterBag` named in [WF] §6, no spec in [AP]). | Placeholder primitive `BatterSource` at `BatterArea` until PO supplies a reference photo. | Cakes, assets |
-| DEC-010 | Customer and vehicle visuals — no asset spec exists. | Primitive placeholders (capsule customer, box vehicle) in the slice. | Customers, Lobby, assets |
-| DEC-011 | Exact positions of each station on the 1.8 × 0.8 m counter. | Taken from reference photos by PO; until then, blockout positions proposed in `INT-002`. | Stall prefab |
-| DEC-012 | Can the Lobby enter a different item than the customer asked for? | No in the slice: the entry UI is pre-filled from the customer's request and the Lobby confirms. Data model keeps `Requested` and `Entered` separately for later. | Orders, UI |
-| DEC-013 | "Flip" on a contact grill — is there a second cooking phase? | No second cook timer. *Flip* = spatula turns the cooked sheet out of the open grill onto the roll area. | Cakes |
-| DEC-014 | Ready counter capacity. | 1 drink slot + 1 cake slot ([AP] §49). Domain supports N slots. | Stall, Orders |
-| DEC-015 | Tea rack capacity and refill. | Capacity from `SO_Balance_Slice`; no refill gameplay in the slice. | Drinks |
-| DEC-016 | Is the takeaway drink/cake handed over in a paper bag (`PF_PaperBag`, P1 in [AP])? | Not in the slice; no packaging step is added. | Lobby |
+| ID | Question | Decision for the slice | Status | Affects |
+|---|---|---|---|---|
+| DEC-001 | Who plays the Lobby? | Player performs both Lobby and Stall actions; `ActorRole` keeps an NPC Lobby possible later. | Accepted | Lobby, UI, Customers |
+| DEC-002 | Camera perspective | First-person, keyboard + mouse. | Accepted | Interaction, Player |
+| DEC-003 | Where the Lobby enters/sends the order | Order-entry UI at the table/vehicle; *Enter* and *Send to stall* are two confirmations. No device asset. | Accepted | Lobby, UI |
+| DEC-004 | Grill power-on | Automatic at shift start; no player power action. | Accepted | Cakes |
+| DEC-005 | Tools held or station-driven | Station-driven tools; only tea bag, batter cup and finished items are held. | Accepted | Interaction, Drinks, Cakes |
+| DEC-006 | Ruined product handling | `Discard` on the held ruined item; order item returns to Pending. | Accepted | Cakes, Stall |
+| DEC-007 | Real numbers (batter amount/tolerance, cook time, burn time, topping/ice portions, hold durations, open-lid rate, reach) | **Provisional `[Tbd]` data** in recipes / `SO_Balance_Slice`. No guessed number in gameplay code. | Open — values pending | Cakes, Drinks, Interaction |
+| DEC-008 | Menu names and sauce mapping | Cake names known (§7). Drink name pending. **Sauce-to-cake mapping unconfirmed**: configurable `CakeRecipe.Sauce`, not inferred from names. | Partially confirmed | Content, Cakes |
+| DEC-009 | Batter source container | Correctly sized placeholder (`PF_Placeholder_BatterSource`, size `[Tbd]`) until reference arrives; gameplay never waits for art. | Accepted (placeholder) | Cakes, assets |
+| DEC-010 | Customer and vehicle visuals | Capsule customer placeholder. Vehicle = **generic vehicle interaction point** (`VehicleOrderPoint` on `PF_Placeholder_VehiclePoint`, a sized trigger volume); no specific vehicle model is part of the architecture. | Accepted (placeholder) | Customers, Lobby, assets |
+| DEC-011 | Station positions on the counter | **Adjustable placeholder anchors** (`StallAnchor`, *Position Confirmed* off). Positions are prefab/scene data, never code; final positions come from the real stall reference. | Open — positions pending | Stall prefab |
+| DEC-012 | Lobby entering a different item than requested | Not in the slice; entry pre-filled from the request. `Requested` and `Entered` kept separately. | Accepted | Orders, UI |
+| DEC-013 | Physical form of the cake *Flip* step | **Not defined yet.** The workflow step stays named `Flip` (state `Flipped`); its physical action is isolated behind `IFlipAction` (`CAKE_WORKFLOW.md` §2.3). The slice ships a placeholder implementation that can be replaced without changing the state machine. | Open — real action pending | Cakes |
+| DEC-014 | Ready counter capacity | 1 drink slot + 1 cake slot; domain supports N. | Accepted | Stall, Orders |
+| DEC-015 | Tea rack capacity / refill | Capacity is `[Tbd]` data; no refill gameplay in the slice. | Accepted | Drinks |
+| DEC-016 | Takeaway packaging | None in the slice; no packaging step added. | Accepted | Lobby |
+| DEC-017 | New sign size and artwork | Placeholder volume with the `MAT_Sign_TramChanh_New` material slot; size `[Tbd]`; artwork swapped in later. The old illuminated sign is never recreated. | Open — artwork pending | Stall, assets |
 
 ---
 

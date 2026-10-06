@@ -1,0 +1,32 @@
+{
+  "name": "TramChanh.Tests.PlayMode",
+  "rootNamespace": "TramChanh.Tests.PlayMode",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Stall",
+    "TramChanh.Drinks",
+    "TramChanh.Cakes",
+    "TramChanh.Lobby",
+    "TramChanh.Customers",
+    "TramChanh.UI",
+    "TramChanh.App",
+    "TramChanh.DevTools",
+    "UnityEngine.TestRunner"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,31 @@
+{
+  "name": "TramChanh.Editor",
+  "rootNamespace": "TramChanh.EditorTools",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Content",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Stall",
+    "TramChanh.Drinks",
+    "TramChanh.Cakes",
+    "TramChanh.Lobby",
+    "TramChanh.Customers",
+    "TramChanh.UI",
+    "TramChanh.App",
+    "TramChanh.DevTools",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Core.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
