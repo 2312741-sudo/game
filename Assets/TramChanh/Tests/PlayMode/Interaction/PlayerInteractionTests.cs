@@ -286,6 +286,136 @@ namespace TramChanh.Tests.PlayMode.Interaction
             yield return SceneManager.UnloadSceneAsync(_scene);
             Assert.Throws<ObjectDisposedException>(() => services.Get<IEventBus>());
         }
+        [UnityTest]
+        public IEnumerator TC_INT_009_FUsesHeldItemWhileAimingAtNothing()
+        {
+            var held = new HeldAction();
+            _interactor.Context.Hands.TryPickUp(held);
+            _motion.enabled = false;
+            _motion.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.up);
+            _interactor.RefreshFocus();
+            Assert.That(_interactor.Focused, Is.Null);
+            Assert.That(_view.PromptText, Does.Contain("F"));
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+            yield return null;
+            Assert.That(held.Executions, Is.EqualTo(1));
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            yield return null;
+            InputSystem.QueueStateEvent(_mouse, new MouseState().WithButton(MouseButton.Right));
+            yield return null;
+            Assert.That(held.Executions, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator TC_INT_009_HeldHoldCancelsOnReleaseCaptureLossAndDisable()
+        {
+            var held = new HeldAction { Kind = InteractionKind.Hold };
+            _interactor.Context.Hands.TryPickUp(held);
+            foreach (string cancellation in new[] { "release", "capture", "disable" })
+            {
+                _input.SetCaptured(true);
+                InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+                yield return null;
+                Assert.That(held.Starts, Is.GreaterThan(held.Cancels));
+                if (cancellation == "release")
+                {
+                    InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+                }
+                else if (cancellation == "capture")
+                {
+                    _input.SetCaptured(false);
+                }
+                else
+                {
+                    _interactor.enabled = false;
+                }
+                yield return null;
+                Assert.That(held.Starts, Is.EqualTo(held.Cancels), cancellation);
+                Assert.That(held.Executions, Is.Zero, cancellation);
+                InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+                _interactor.enabled = true;
+                yield return null;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TC_INT_009_TargetPromptTakesPriorityAndHiddenTargetFallsBackToHeld()
+        {
+            var held = new HeldAction();
+            _interactor.Context.Hands.TryPickUp(held);
+            InspectionInteractable cube = Target("PF_Placeholder_InteractionCube");
+            Aim(cube);
+            Assert.That(_view.PromptText, Does.Contain("E"));
+            Assert.That(_view.PromptText, Does.Contain("test cube"));
+            var serialized = new SerializedObject(cube);
+            serialized.FindProperty("_availability").intValue = (int)AvailabilityStatus.Hidden;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            _interactor.RefreshFocus();
+            Assert.That(_view.PromptText, Does.Contain("F"));
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TC_INT_009_SimultaneousEFExecutesOnlyTargetAction()
+        {
+            var held = new HeldAction();
+            _interactor.Context.Hands.TryPickUp(held);
+            InspectionInteractable cube = Target("PF_Placeholder_InteractionCube");
+            Aim(cube);
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.E, Key.F));
+            yield return null;
+            Assert.That(cube.IsHighlighted, Is.True);
+            Assert.That(held.Executions, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator TC_INT_009_EscapeFreezesHeldHoldAndReleaseWhilePausedCancels()
+        {
+            var held = new HeldAction { Kind = InteractionKind.Hold };
+            _interactor.Context.Hands.TryPickUp(held);
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+            yield return null;
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F, Key.Escape));
+            yield return null;
+            Assert.That(_input.IsCaptured, Is.False);
+            Assert.That(held.Starts, Is.EqualTo(1));
+            Assert.That(held.Cancels, Is.Zero);
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+            yield return null;
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F, Key.Escape));
+            yield return null;
+            Assert.That(_input.IsCaptured, Is.True);
+            Assert.That(held.Starts, Is.EqualTo(1), "Resume keeps the original action while F remains down.");
+            Assert.That(held.Cancels, Is.Zero);
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+            yield return null;
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F, Key.Escape));
+            yield return null;
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            yield return null;
+            Assert.That(held.Cancels, Is.EqualTo(1));
+            Assert.That(held.Executions, Is.Zero);
+        }
+
+        private sealed class HeldAction : IHoldable, IHeldItemAction, IInteractable
+        {
+            public Transform HandGrip => null;
+            public InteractionKind Kind;
+            public int Starts;
+            public int Cancels;
+            public int Executions;
+            public void OnPickedUp(IHeldItemSlot hands) { }
+            public void OnReleased() { }
+            public InteractionQuery QueryUse(InteractionContext context) => new InteractionQuery(Availability.Available, "preview.inspect", Kind, 10f);
+            public void ExecuteUse(InteractionContext context) => Executions++;
+            public InteractableId Id => new InteractableId(100);
+            public Transform InteractionPoint => null;
+            public InteractionQuery Query(InteractionContext context) => QueryUse(context);
+            public void Execute(InteractionContext context) => ExecuteUse(context);
+            public void OnHoldStarted(InteractionContext context) => Starts++;
+            public void OnHoldCancelled(InteractionContext context) => Cancels++;
+        }
+
         private InspectionInteractable Target(string name)
         {
             return _scene.GetRootGameObjects().SelectMany(o => o.GetComponentsInChildren<InspectionInteractable>()).Single(t => t.name == name);

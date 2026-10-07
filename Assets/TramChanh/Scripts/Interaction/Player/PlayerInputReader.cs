@@ -13,15 +13,21 @@ namespace TramChanh.Interaction.Player
         private InputAction _move;
         private InputAction _look;
         private InputAction _interact;
+        private InputAction _useHeld;
         private InputAction _pause;
         private IGameClock _clock;
         private bool _resumedThisFrame;
         public InputActionAsset Actions => _actions;
         public bool IsCaptured { get; private set; }
+        public bool IsPausedByUser { get; private set; }
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 Look => _look.ReadValue<Vector2>();
         public bool InteractPressed => IsCaptured && !_resumedThisFrame && _interact.WasPressedThisFrame();
         public bool InteractReleased => _interact.WasReleasedThisFrame();
+        public bool UseHeldPressed => IsCaptured && !_resumedThisFrame && _useHeld.WasPressedThisFrame();
+        public bool UseHeldReleased => _useHeld.WasReleasedThisFrame();
+        public bool InteractIsHeld => _interact.IsPressed();
+        public bool UseHeldIsHeld => _useHeld.IsPressed();
 
         public void Initialize(IGameClock clock)
         {
@@ -40,6 +46,7 @@ namespace TramChanh.Interaction.Player
             _move = _gameplay.FindAction("Move", true);
             _look = _gameplay.FindAction("Look", true);
             _interact = _gameplay.FindAction("Interact", true);
+            _useHeld = _gameplay.FindAction("UseHeld", true);
             _pause = _gameplay.FindAction("Pause", true);
         }
         private void OnEnable()
@@ -56,6 +63,7 @@ namespace TramChanh.Interaction.Player
             if (_pause.WasPressedThisFrame())
             {
                 SetCaptured(!IsCaptured);
+                IsPausedByUser = !IsCaptured;
                 _resumedThisFrame = IsCaptured;
             }
             else if (!IsCaptured && _interact.WasPressedThisFrame())
@@ -66,6 +74,7 @@ namespace TramChanh.Interaction.Player
         }
         public void SetCaptured(bool captured)
         {
+            IsPausedByUser = false;
             IsCaptured = captured;
             Cursor.lockState = captured ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !captured;

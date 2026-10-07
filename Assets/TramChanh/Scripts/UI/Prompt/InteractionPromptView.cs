@@ -21,6 +21,7 @@ namespace TramChanh.UI.Prompt
         private ProgressBar _progress;
         private InteractionQuery _renderedQuery;
         private bool _hasRenderedQuery;
+        private bool _renderedHeldUse;
         public PromptLocalizationTable Table => _table;
         public string Language => _language;
         public bool IsPromptVisible => _panel != null && _panel.style.display.value == DisplayStyle.Flex;
@@ -98,12 +99,13 @@ namespace TramChanh.UI.Prompt
                 _hasRenderedQuery = false;
                 return;
             }
-            if (!_hasRenderedQuery || !_renderedQuery.Equals(state.Query))
+            if (!_hasRenderedQuery || !_renderedQuery.Equals(state.Query) || _renderedHeldUse != state.IsHeldUse)
             {
-                _text.text = _table.Resolve("preview.key", _language) + "  " + _table.Resolve(state.Query.PromptKey, _language);
+                _text.text = (state.IsHeldUse ? "[F]" : _table.Resolve("preview.key", _language)) + "  " + _table.Resolve(state.Query.PromptKey, _language);
                 _reason.text = _table.Resolve(state.Query.BlockedReasonKey, _language);
                 _progress.style.display = state.Query.Kind == InteractionKind.Hold ? DisplayStyle.Flex : DisplayStyle.None;
                 _renderedQuery = state.Query;
+                _renderedHeldUse = state.IsHeldUse;
                 _hasRenderedQuery = true;
             }
             _progress.value = state.Progress * 100f;
