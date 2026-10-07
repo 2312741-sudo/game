@@ -166,6 +166,7 @@ namespace TramChanh.EditorTools.Placeholders
             {
                 ("preview.controls", "WASD: move   Mouse: look   E / click: inspect   Esc: release cursor", "WASD: di chuyển   Chuột: nhìn   E / nhấp: kiểm tra   Esc: thả chuột"),
                 ("preview.key", "[E / LMB]", "[E / chuột trái]"),
+                ("preview.held_key", "[F / RMB]", "[F / chuột phải]"),
                 ("preview.tea_rack.inspect", "Inspect tea rack placeholder", "Kiểm tra giá trà tạm"),
                 ("preview.tea_rack.reset", "Tea rack inspected — reset highlight", "Đã kiểm tra giá trà — bỏ đánh dấu"),
                 ("preview.grill.inspect", "Inspect grill placeholder", "Kiểm tra bếp nướng tạm"),

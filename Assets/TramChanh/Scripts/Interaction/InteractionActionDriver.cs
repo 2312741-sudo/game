@@ -56,6 +56,13 @@ namespace TramChanh.Interaction
             {
                 return;
             }
+            if (_context.Clock.IsPaused) { return; }
+            InteractionQuery query = action.QueryUse(_context);
+            if (query.Kind == InteractionKind.Continuous)
+            {
+                _context.Events.Publish(new ActionBlocked((action as IInteractable)?.Id ?? default, "interaction.held_continuous_not_supported"));
+                return;
+            }
             _heldTarget.Bind(action);
             Begin(_heldTarget);
         }

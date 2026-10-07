@@ -209,6 +209,34 @@ namespace TramChanh.Tests.EditMode.Interaction
             Assert.That(target.Cancels, Is.EqualTo(1));
         }
 
+        [Test]
+        public void TC_INT_009_HeldContinuousIsBlockedWithoutStarting()
+        {
+            _item.Kind = InteractionKind.Continuous;
+            ActionBlocked blocked = default;
+            using (_events.Subscribe<ActionBlocked>(e => blocked = e))
+            {
+                _driver.BeginHeld();
+            }
+            Assert.That(_driver.IsRunning, Is.False);
+            Assert.That(_item.Starts, Is.Zero);
+            Assert.That(_item.Executions, Is.Zero);
+            Assert.That(blocked.ReasonKey, Is.EqualTo("interaction.held_continuous_not_supported"));
+        }
+
+        [Test]
+        public void TC_INT_009_PromptTracksBothQueriesAndHeldProgress()
+        {
+            var target = new InteractionQuery(Availability.Available, "target");
+            var held = new InteractionQuery(Availability.Available, "held", InteractionKind.Hold, 1f);
+            var original = new InteractionPromptChanged(new InteractableId(1), target, 0f, false, held, 0.5f);
+            Assert.That(original.HasHeldPrompt, Is.True);
+            Assert.That(original.HeldQuery, Is.EqualTo(held));
+            Assert.That(original.HeldProgress, Is.EqualTo(0.5f));
+            Assert.That(original.Equals(new InteractionPromptChanged(new InteractableId(1), target, 0f)), Is.False);
+            Assert.That(original.Equals(new InteractionPromptChanged(new InteractableId(1), target, 0f, false, held, 0.75f)), Is.False);
+        }
+
         private sealed class HeldOnlyAction : IHoldable, IHeldItemAction
         {
             public Transform HandGrip => null;
