@@ -74,11 +74,7 @@ namespace TramChanh.Drinks.Runtime
 
         private bool AllowsUnboundTestPickup()
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            return _allowUnboundPickupForTest;
-#else
-            return false;
-#endif
+            return _allowUnboundPickupForTest && Debug.isDebugBuild;
         }
 
         public void Execute(InteractionContext context)
