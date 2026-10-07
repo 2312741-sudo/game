@@ -210,6 +210,16 @@ namespace TramChanh.Tests.EditMode.Ready
             Assert.That(_item.Ready, Is.False);
         }
 
+        [Test]
+        public void TC_READY_009_ReentrantFailureDoesNotLeaveStaleReadyVisual()
+        {
+            _shelf.FailDuringPlacement = true; _hands.TryPickUp(_item);
+            _counter.Execute(_context);
+            Assert.That(_hands.Current, Is.Null); Assert.That(_shelf.Stored, Is.Null);
+            Assert.That(_counter.DrinkPlacementPoint.childCount, Is.Zero);
+            Assert.That(_item == null || !_item.gameObject.activeSelf, Is.True);
+        }
+
         private InteractionContext Context(IHeldItemSlot hands, ActorRole role) => new InteractionContext(new ActorRef(1), role, hands, _clock, _events);
         private GameObject Child(string name)
         {
@@ -272,6 +282,7 @@ namespace TramChanh.Tests.EditMode.Ready
             public int PickupCalls;
             public int DomainEvents;
             public bool PlacementFailure;
+            public bool FailDuringPlacement;
             public bool PickupFailure;
             public OrderId NextReadyOrder => Stored != null ? Stored.BoundItem.OrderId : default;
             public Shelf(IEventBus events) => _events = events;
@@ -288,6 +299,7 @@ namespace TramChanh.Tests.EditMode.Ready
                 Stored = item;
                 DomainEvents++;
                 _events.Publish(new OrderStatusChanged(item.BoundItem.OrderId, OrderStatus.Ready));
+                if (FailDuringPlacement) { Stored = null; _events.Publish(new OrderStatusChanged(item.BoundItem.OrderId, OrderStatus.Failed)); }
                 return Result.Success();
             }
             public Result<IReadOnlyList<IPreparedItem>> PickUp(OrderId orderId, ActorRef actor)
