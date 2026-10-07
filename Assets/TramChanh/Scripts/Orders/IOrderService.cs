@@ -12,6 +12,7 @@ namespace TramChanh.Orders
         Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point);
         Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered);
         Result SendToStall(OrderId id);
+        // Unbind preparations and clear their shelf slots before publishing any failure event.
         Result Fail(OrderId id, FailureReason reason);
     }
 }

@@ -17,7 +17,7 @@ namespace TramChanh.Tests.EditMode.Orders
             Assert.That(first.IsValid, Is.True);
             Assert.That(default(OrderItemRef).IsValid, Is.False);
             Assert.That(first, Is.Not.EqualTo(second));
-            IStallTicketQueue queue = new TicketFixture(first);
+            IStallTicketQueue queue = new StallTicketContractFake(first);
             Assert.That(queue.IsBound(first), Is.True);
             Assert.That(queue.IsBound(second), Is.False);
             Assert.That(queue.Release(second).IsSuccess, Is.False);
@@ -27,7 +27,7 @@ namespace TramChanh.Tests.EditMode.Orders
         [Test]
         public void TC_ORDER_005_PreparedContractCanRejectReadinessWithoutMutation()
         {
-            var fixture = new PreparedFixture();
+            var fixture = new PreparedItemContractFake();
             IPreparedItem item = fixture;
             Assert.That(item.MarkReady().ReasonKey, Is.EqualTo("ready.not_finished"));
             Assert.That(fixture.WasMarkedReady, Is.False);
@@ -70,33 +70,47 @@ namespace TramChanh.Tests.EditMode.Orders
         }
 
         [Test]
-        public void TC_ORDER_005_FinishedPreparedFixtureObeysSharedContract()
+        public void TC_ORDER_005_FinishedPreparedItemContractFakeObeysSharedContract()
         {
-            var item = new PreparedFixture { Finished = true };
+            var item = new PreparedItemContractFake { Finished = true };
             PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1, () => item.EventCount);
         }
 
         [Test]
-        public void TC_ORDER_005_UnfinishedPreparedFixtureObeysSharedContract()
+        public void TC_ORDER_005_UnfinishedPreparedItemContractFakeObeysSharedContract()
         {
-            var item = new PreparedFixture();
+            var item = new PreparedItemContractFake();
             PreparedItemContractAssertions.AssertUnfinishedTransition(item, () => item.State, () => item.EventCount);
         }
 
-        [TestCase(ContractFault.FailureChangesKind)]
-        [TestCase(ContractFault.FailureChangesSourceState)]
-        [TestCase(ContractFault.LatchUnfinishedRejection)]
-        public void TC_ORDER_005_SharedFixtureDetectsMutationOnUnfinishedFailure(ContractFault fault)
+        [Test]
+        public void TC_ORDER_005_SamePreparedInstanceCanFinishAfterRejectedReady()
         {
-            var item = new FaultyPrepared(fault, false);
+            var item = new PreparedItemContractFake();
+            PreparedItemContractAssertions.AssertLifecycle(item, () => item.Finished = true, () => item.State, 1, () => item.EventCount);
+        }
+
+        [Test]
+        public void TC_ORDER_005_SharedLifecycleDetectsRejectedLatchPoisoningLaterSuccess()
+        {
+            var item = new FaultyPreparedContractFake(PreparedContractFault.RejectedLatchPoisonsSuccess, false);
+            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertLifecycle(item, () => item.Finished = true, () => item.State, 1, () => item.EventCount));
+        }
+
+        [TestCase(PreparedContractFault.FailureChangesKind)]
+        [TestCase(PreparedContractFault.FailureChangesSourceState)]
+        [TestCase(PreparedContractFault.LatchUnfinishedRejection)]
+        public void TC_ORDER_005_SharedFixtureDetectsMutationOnUnfinishedFailure(PreparedContractFault fault)
+        {
+            var item = new FaultyPreparedContractFake(fault, false);
             Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedTransition(item, () => item.State, () => item.EventCount));
         }
 
-        [TestCase(ContractFault.SuccessChangesBinding)]
-        [TestCase(ContractFault.RepeatedFailureChangesQuality)]
-        public void TC_ORDER_005_SharedFixtureDetectsMutationDuringSuccessfulOrRepeatedReady(ContractFault fault)
+        [TestCase(PreparedContractFault.SuccessChangesBinding)]
+        [TestCase(PreparedContractFault.RepeatedFailureChangesQuality)]
+        public void TC_ORDER_005_SharedFixtureDetectsMutationDuringSuccessfulOrRepeatedReady(PreparedContractFault fault)
         {
-            var item = new FaultyPrepared(fault, true);
+            var item = new FaultyPreparedContractFake(fault, true);
             Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1, () => item.EventCount));
         }
 
@@ -107,7 +121,7 @@ namespace TramChanh.Tests.EditMode.Orders
             using var events = new EventBus();
             int count = 0;
             using var subscription = events.Subscribe<OrderStatusChanged>(_ => count++);
-            var item = new FaultyPrepared(finished ? ContractFault.EventsOnSuccess : ContractFault.EventsOnFailure, finished,
+            var item = new FaultyPreparedContractFake(finished ? PreparedContractFault.EventsOnSuccess : PreparedContractFault.EventsOnFailure, finished,
                 () => events.Publish(new OrderStatusChanged(new OrderId(1), OrderStatus.Ready)));
             if (finished)
             {
@@ -123,7 +137,7 @@ namespace TramChanh.Tests.EditMode.Orders
         [TestCase(false)]
         public void TC_ORDER_005_SharedFixtureRequiresSourceStateAndEventObservers(bool omitState)
         {
-            var item = new PreparedFixture { Finished = true };
+            var item = new PreparedItemContractFake { Finished = true };
             Func<object> state = omitState ? null : () => item.State;
             Func<int> count = omitState ? () => item.EventCount : null;
             Assert.Throws<ArgumentNullException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, state, 1, count));
@@ -151,76 +165,12 @@ namespace TramChanh.Tests.EditMode.Orders
             foreach (Type argument in type.GetGenericArguments()) { AssertBoundary(argument); }
         }
 
-        private sealed class PreparedFixture : IPreparedItem
-        {
-            public ItemKind Kind => ItemKind.Drink;
-            public OrderItemRef BoundItem => default;
-            public bool Finished { get; set; }
-            public bool IsFinished => Finished;
-            public int Quality => 100;
-            public bool WasMarkedReady { get; private set; }
-            public int State => WasMarkedReady ? 1 : 0;
-            public int EventCount => 0;
-            public Result MarkReady()
-            {
-                if (!Finished) { return Result.Fail("ready.not_finished"); }
-                if (WasMarkedReady) { return Result.Fail("ready.already_ready"); }
-                WasMarkedReady = true;
-                return Result.Success();
-            }
-        }
 
-        private sealed class TicketFixture : IStallTicketQueue
-        {
-            private OrderItemRef _binding;
-            public IReadOnlyList<OrderId> Tickets { get; }
-            public TicketFixture(OrderItemRef binding) { _binding = binding; Tickets = new[] { binding.OrderId }; }
-            public bool HasPending(ItemKind kind) => false;
-            public Result<OrderItemRef> ClaimNext(ItemKind kind, PreparationId preparationId) => Result<OrderItemRef>.Fail("stall.no_ticket.drink");
-            public bool IsBound(OrderItemRef item) => item.IsValid && item == _binding;
-            public Result Release(OrderItemRef item)
-            {
-                if (!IsBound(item)) { return Result.Fail("stall.ticket.not_bound"); }
-                _binding = default;
-                return Result.Success();
-            }
-        }
 
-        public enum ContractFault { FailureChangesKind, FailureChangesSourceState, SuccessChangesBinding, RepeatedFailureChangesQuality, LatchUnfinishedRejection, EventsOnSuccess, EventsOnFailure }
 
-        private sealed class FaultyPrepared : IPreparedItem
-        {
-            private readonly ContractFault _fault;
-            private readonly Action _publish;
-            private bool _rejected;
-            public ItemKind Kind { get; private set; } = ItemKind.Drink;
-            public OrderItemRef BoundItem { get; private set; } = new OrderItemRef(new OrderId(1), new OrderItemId(2), new PreparationId(3));
-            public bool IsFinished { get; }
-            public int Quality { get; private set; } = 100;
-            public int State { get; private set; }
-            public int EventCount { get; private set; }
-            public FaultyPrepared(ContractFault fault, bool finished, Action publish = null) { _fault = fault; IsFinished = finished; _publish = publish; }
-            public Result MarkReady()
-            {
-                if (!IsFinished)
-                {
-                    if (_fault == ContractFault.LatchUnfinishedRejection && _rejected) { return Result.Fail("ready.already_ready"); }
-                    _rejected = true;
-                    if (_fault == ContractFault.FailureChangesKind) { Kind = ItemKind.Cake; }
-                    if (_fault == ContractFault.FailureChangesSourceState) { State++; }
-                    if (_fault == ContractFault.EventsOnFailure) { EventCount++; _publish?.Invoke(); }
-                    return Result.Fail("ready.not_finished");
-                }
-                if (State == 1)
-                {
-                    if (_fault == ContractFault.RepeatedFailureChangesQuality) { Quality--; }
-                    return Result.Fail("ready.already_ready");
-                }
-                State = 1;
-                if (_fault == ContractFault.SuccessChangesBinding) { BoundItem = default; }
-                if (_fault == ContractFault.EventsOnSuccess) { EventCount++; _publish?.Invoke(); }
-                return Result.Success();
-            }
-        }
+
+
+
+
     }
 }

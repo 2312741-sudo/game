@@ -8,6 +8,14 @@ namespace TramChanh.Tests.EditMode.Orders
     /// <summary>Every preparation module runs this fixture with a finished, not-yet-Ready item.</summary>
     public static class PreparedItemContractAssertions
     {
+        public static void AssertLifecycle(IPreparedItem item, Action finish, Func<object> readState, object expectedReadyState, Func<int> readEventCount)
+        {
+            if (finish == null) { throw new ArgumentNullException(nameof(finish)); }
+            AssertUnfinishedTransition(item, readState, readEventCount);
+            finish();
+            AssertReadyTransition(item, readState, expectedReadyState, readEventCount);
+        }
+
         public static void AssertReadyTransition(IPreparedItem item, Func<object> readState, object expectedReadyState, Func<int> readEventCount)
         {
             RequireObservers(readState, readEventCount);
