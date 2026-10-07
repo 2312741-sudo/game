@@ -9,7 +9,7 @@
 | Reviewed against | Amended `ORDER_SYSTEM.md` §5–§6.4 and §10 (TC-READY-001…009), `DRINK_WORKFLOW.md`, `INTERACTION_SYSTEM.md`, `ARCHITECTURE.md`, `CODING_CONVENTIONS.md`, `ASSET_INTEGRATION.md`, `Reviews/PR-8-claude-review.md`, plan review C1–C12; the real shelf is PR #10 `3fd62e8` (read only, not reviewed) |
 | Reviewer | Claude Code (independent review) |
 | Date | 2026-10-07 |
-| **Verdict** | **CHANGES REQUESTED** — three small, local blockers (B1–B3). The architecture, capability narrowing, post-commit ordering and the `5c2f4b4` Failed-path fix are sound; the defects are in exception safety of the post-commit presentation, in the new `PickedUp` branch of the fix, and in missing tests for the headline bundle requirement |
+| **Verdict (initial, head `3421f3d`)** | **CHANGES REQUESTED** — three small, local blockers (B1–B3). The architecture, capability narrowing, post-commit ordering and the `5c2f4b4` Failed-path fix are sound; the defects are in exception safety of the post-commit presentation, in the new `PickedUp` branch of the fix, and in missing tests for the headline bundle requirement |
 
 ## Scope inspected
 
@@ -100,5 +100,20 @@ I re-check only the follow-up commit once these are in; no redesign is needed.
 ## Lead verification (Claude Code, Technical Lead)
 
 This review was produced by a delegated reviewer and checked by the lead before posting. Re-checked in source: **B1** — `HeldItemSlot.TryRelease` clears `Current`, then publishes `HeldItemChanged`; a throwing listener propagates out of `ReadyCounterPoint.Execute` at `:102`, before the presentation block (`:117-141`), so the item is committed on the shelf but still parented in the hand and untracked. **B2** — `ServedOrder` re-parents every picked-up visual under the bundle (`ServedOrder.cs:56`); the new `PickedUpByLobby` branch then calls `SetParent(null, true)` on the same visual (`ReadyCounterPoint.cs:108`). The harness reproduction and the 5 mutation probes are the reviewer's; Unity results are the author's and were not re-run. Severity note: B1 and B2 are fault/re-entrancy paths of the post-commit step, which is exactly what ORDER_SYSTEM §6.4 (4)–(6) requires to be safe, so they are blocking even though normal play does not hit them.
+
+## Re-verification after fixes (2026-10-07)
+
+| | |
+|---|---|
+| Fix commit | `4dd9daf` on `feature/DRINK-WAVE-ready`, rebased onto `develop` `01e50b4` (commits `6e4a501`, `8b89821`, `1083af5`, then the fix). Diff against `develop`: the same 14 files as before plus this change |
+| Authored by | Claude Code at the root integrator's request (implementation, not the reviewer's own work product) |
+| Verdict | **B1–B3 resolved; verdict upgraded to APPROVED**, merge still gated on the root's Unity run, the real-service integration run and a fresh checkout. An independent check of the fixes by the root or the original reviewer is recommended because the author of the fixes is also the lead reviewer |
+
+- **B1 resolved.** `ReadyCounterPoint.ReleaseFromHand` isolates the release after a committed `PlaceReady`: a throwing `HeldItemChanged` listener is logged and no longer skips presentation or reconciliation; the slot's actual state is read back (an already released hand is not released twice; a slot that still holds the item gets a `LogError` and the committed placement is still presented).
+- **B2 resolved.** The pre-commit parent (the hand anchor) is captured; on `PickedUpByLobby` the item is detached only if it is still under that anchor, so an item a `ServedOrder` adopted is never unparented. `Failed` still discards the visual.
+- **B3 resolved.** Adapter tests `B1_*`, `B2_*`, `B3_PickupRequests…` (fake shelf) and, against the real `OrderService` / `StallTicketQueue` / `ReadyShelf`, `ReadyRealServiceTests` (drink + cake bundle in ascending item ids, partial order not pickable, capacity-2 oldest first, a newer Ready order cannot jump the queue, throwing `HeldItemChanged`, order observer fault plus release fault, real Lobby pickup inside the placement flush, reentrant failure).
+- **Evidence.** Out-of-Unity harness with the real PR #10 services and a managed `UnityEngine` stand-in: 25/25 pass. On the unfixed adapter the new real-service B1 and B2 tests failed (RED, 3 failures), then passed with the fix. Mutations "always unparent on pickup" and "release not isolated" each fail 2 and 4 of the new tests. One mutation (repeat the release when a listener already released) survives; it is an equivalent mutant because `HeldItemSlot.TryRelease` is a no-op when empty.
+- **Where the real-service tests live.** They need PR #10's classes, so they are in `Tests/EditMode/Ready/ReadyRealServiceTests.cs` on `feature/DRINK-WAVE-ready-realservice` (`7c70b04`, PR #13 + PR #10 head `3fd62e8` merged + that file). Apply them after PR #10 and PR #13 merge.
+- **Remaining limitations (carried, non-blocking):** `ServedOrder` still does not observe `Failed` (CX-025 acceptance item); one visual per kind (capacity 1) is assumed by `ReadyCounterPoint`; `Query` says Available when `Anchors/PlacementPoint` is missing (only `Execute` blocks); bundle items overlap at local zero; cake placement and cake `Failed` remain untested at adapter level; the fixture-shelf tests still use their own fakes. The Unity results quoted in `DRINK-WAVE-ready.md` predate the fix.
 
 _Generated by [Claude Code](https://claude.ai/code)_
