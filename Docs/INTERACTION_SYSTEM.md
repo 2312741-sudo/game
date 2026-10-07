@@ -115,7 +115,10 @@ Only one interaction runs at a time; while a hold is in progress, focus is locke
 - The target is the held item, so a held Hold action is **not** focus-locked to the object being looked at. It is cancelled on release, when the held item changes, or when availability becomes Blocked.
 - **Pause freezes** hold progress (TC-INT-006); it does not cancel it. (PR #3 cancels holds on pause; the held-use branch fixes this for both kinds of action.)
 - `PlayerInputReader` exposes `UseHeld` pressed/released from the existing `UseHeld` action (F / right mouse); the input asset is unchanged.
-- Prompt: the focused interactable's prompt and the held action's prompt are shown together (two lines) so the held step stays discoverable.
+- Prompt: the focused interactable's prompt and the held action's prompt are shown together (two lines) so the held step stays discoverable. *(PR #9 shows the target prompt with priority and falls back to the held prompt; the two-line HUD is delivered with the integration branch, by adding a held query to `InteractionPromptChanged`.)*
+- A running hold is cancelled when its query changes in **any** way (availability, kind, duration, prompt key): the prompt key is the action's identity, so a hold-capable interactable must not change it mid-hold.
+- Held use supports **Press and Hold only**; a held-only action has no release callback, so a `Continuous` held query is rejected.
+- **Esc pause freezes** a running hold; losing application focus, disabling the interactor, or physically releasing the button **cancels** it.
 
 ---
 
