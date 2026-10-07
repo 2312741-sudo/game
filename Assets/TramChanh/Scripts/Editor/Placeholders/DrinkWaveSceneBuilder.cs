@@ -109,6 +109,10 @@ namespace TramChanh.EditorTools.Placeholders
             EditorSceneManager.SaveScene(scene, ScenePath); AssetDatabase.SaveAssets();
             Debug.Log("[TramChanh] Saved additive drink gameplay: " + ScenePath);
         }
+        public static void RepairShakeVisual()
+        {
+            ConfigureBag(); AssetDatabase.SaveAssets();
+        }
         public static void RepairSavedSceneReferences()
         {
             CreateText(); AssetDatabase.SaveAssets();
@@ -290,22 +294,28 @@ namespace TramChanh.EditorTools.Placeholders
         {
             string folder = "Assets/TramChanh/Art/Animations/DrinkWave/";
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(folder + "AC_" + name + ".controller");
-            if (controller != null) { return controller; }
+            if (controller != null && controller.layers.Length > 0) { return controller; }
             // Provisional display motion curves, independent of recipe hold completion.
             var idle = new AnimationClip { name = "AN_" + name + "_Idle" };
             idle.SetCurve(path, typeof(Transform), property, AnimationCurve.Constant(0f, 0.25f, rest));
-            AssetDatabase.CreateAsset(idle, folder + idle.name + ".anim");
+            var savedIdle = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + idle.name + ".anim");
+            if (savedIdle != null) { Object.DestroyImmediate(idle); idle = savedIdle; }
+            else { AssetDatabase.CreateAsset(idle, folder + idle.name + ".anim"); }
             var motion = new AnimationClip { name = "AN_" + name };
             motion.SetCurve(path, typeof(Transform), property, new AnimationCurve(new Keyframe(0f, rest), new Keyframe(0.125f, moved), new Keyframe(0.25f, rest)));
             var settings = AnimationUtility.GetAnimationClipSettings(motion); settings.loopTime = loop; AnimationUtility.SetAnimationClipSettings(motion, settings);
-            AssetDatabase.CreateAsset(motion, folder + motion.name + ".anim");
-            controller = AnimatorController.CreateAnimatorControllerAtPath(folder + "AC_" + name + ".controller");
+            var savedMotion = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + motion.name + ".anim");
+            if (savedMotion != null) { Object.DestroyImmediate(motion); motion = savedMotion; }
+            else { AssetDatabase.CreateAsset(motion, folder + motion.name + ".anim"); }
+            if (controller == null) { controller = AnimatorController.CreateAnimatorControllerAtPath(folder + "AC_" + name + ".controller"); }
+            if (controller.layers.Length == 0) { controller.AddLayer("Base Layer"); }
             controller.AddParameter(parameter, loop ? AnimatorControllerParameterType.Bool : AnimatorControllerParameterType.Trigger);
             var machine = controller.layers[0].stateMachine; var idleState = machine.AddState("Idle"); idleState.motion = idle; machine.defaultState = idleState;
             var activeState = machine.AddState("Active"); activeState.motion = motion;
             var enter = idleState.AddTransition(activeState); enter.hasExitTime = false; enter.duration = 0f; enter.AddCondition(AnimatorConditionMode.If, 0f, parameter);
             var exit = activeState.AddTransition(idleState); exit.duration = 0f; exit.hasExitTime = !loop;
             if (loop) { exit.AddCondition(AnimatorConditionMode.IfNot, 0f, parameter); } else { exit.exitTime = 1f; }
+            EditorUtility.SetDirty(controller); AssetDatabase.SaveAssets();
             return controller;
         }
         private static void Hook(Object target, string field, UnityAction callback)

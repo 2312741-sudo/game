@@ -100,7 +100,11 @@ namespace TramChanh.Tests.PlayMode.Integration
             Assert.That(bag.State, Is.EqualTo(TeaBagState.IceAdded));
             counter.Execute(context); Assert.That(context.Hands.Current, Is.SameAs(bag));
             Assert.That(_bootstrap.Shelf.Occupied(ItemKind.Drink), Is.False);
-            driver.BeginHeld(); yield return CompleteHold(driver, null, bag.Recipe.ShakeHoldSeconds);
+            driver.BeginHeld();
+            Assert.That(bag.GetComponent<TeaBagStateView>().IsShaking, Is.True);
+            Assert.That(bag.GetComponent<Animator>().GetBool("Shaking"), Is.True);
+            yield return CompleteHold(driver, null, bag.Recipe.ShakeHoldSeconds);
+            Assert.That(bag.GetComponent<Animator>().GetBool("Shaking"), Is.False);
             Assert.That(bag.State, Is.EqualTo(TeaBagState.Shaken));
             counter.Execute(context); Assert.That(context.Hands.Current, Is.SameAs(bag));
             driver.Begin(wipe); yield return CompleteHold(driver, wipe, bag.Recipe.WipeHoldSeconds);

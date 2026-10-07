@@ -1,6 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using TramChanh.App;
 using TramChanh.UI.Orders;
@@ -35,6 +36,18 @@ namespace TramChanh.Tests.EditMode.Integration
                 Assert.That(found, Is.True);
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
+        }
+
+        [Test]
+        public void TC_DRINK_009_SavedShakeAnimationHasPlayableStates()
+        {
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>("Assets/TramChanh/Art/Animations/DrinkWave/AC_TeaBag_Shake.controller");
+            Assert.That(controller, Is.Not.Null);
+            Assert.That(controller.layers, Has.Length.EqualTo(1));
+            Assert.That(controller.layers[0].stateMachine.states, Has.Length.EqualTo(2));
+            foreach (var state in controller.layers[0].stateMachine.states) { Assert.That(state.state.motion, Is.Not.Null); }
+            Assert.That(controller.parameters, Has.Length.EqualTo(1));
+            Assert.That(controller.parameters[0].name, Is.EqualTo("Shaking"));
         }
 
         [Test]
