@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52532542070784b29a5107a8d0354b3e, type: 3}
+  m_Name: SO_PromptText_OrderEntry
+  m_EditorClassIdentifier: TramChanh.UI::TramChanh.UI.Localization.PromptLocalizationTable
+  _entries:
+  - _key: order.entry.title
+    _en: "Order entry"
+    _vi: "Ghi order"
+  - _key: order.entry.enter
+    _en: "Enter order"
+    _vi: "Nh\u1EADp \u0111\u01A1n"
+  - _key: order.entry.send
+    _en: "Send to stall"
+    _vi: "G\u1EEDi cho qu\u1EA7y"
+  - _key: order.entry.close
+    _en: "Close"
+    _vi: "\u0110\u00F3ng"
+  - _key: order.point.take
+    _en: "Take order"
+    _vi: "Nh\u1EADn order"
+  - _key: order.point.continue
+    _en: "Continue order"
+    _vi: "Ti\u1EBFp t\u1EE5c order"
+  - _key: interaction.lobby_role_required
+    _en: "Only the Lobby role can take orders"
+    _vi: "Ch\u1EC9 vai tr\u00F2 Lobby m\u1EDBi nh\u1EADn \u0111\u01B0\u1EE3c order"
+  - _key: interaction.paused
+    _en: "Game paused"
+    _vi: "Tr\u00F2 ch\u01A1i \u0111ang t\u1EA1m d\u1EEBng"
+  - _key: hands.full
+    _en: "Hands full \u2014 already holding an item"
+    _vi: "Tay \u0111ang c\u1EA7m \u0111\u1ED3 \u2014 kh\u00F4ng th\u1EC3 c\u1EA7m th\u00EAm"
+  - _key: order.point.not_configured
+    _en: "Order point is not set up"
+    _vi: "\u0110i\u1EC3m g\u1ECDi m\u00F3n ch\u01B0a \u0111\u01B0\u1EE3c thi\u1EBFt l\u1EADp"
+  - _key: order.wrong_point
+    _en: "This order belongs to another place"
+    _vi: "Order n\u00E0y thu\u1ED9c v\u1ECB tr\u00ED kh\u00E1c"
+  - _key: order.entry.not_available
+    _en: "This order can no longer be edited"
+    _vi: "Order n\u00E0y kh\u00F4ng th\u1EC3 ch\u1EC9nh s\u1EEDa n\u1EEFa"
+  - _key: order.transition.invalid
+    _en: "Not possible at this step \u2014 enter the order before sending"
+    _vi: "Ch\u01B0a l\u00E0m \u0111\u01B0\u1EE3c \u1EDF b\u01B0\u1EDBc n\u00E0y \u2014 h\u00E3y nh\u1EADp \u0111\u01A1n tr\u01B0\u1EDBc khi g\u1EEDi"
+  - _key: order.origin.invalid
+    _en: "This order point is not valid"
+    _vi: "\u0110i\u1EC3m g\u1ECDi m\u00F3n kh\u00F4ng h\u1EE3p l\u1EC7"
+  - _key: order.point.wrong
+    _en: "Wrong place for this order"
+    _vi: "Sai v\u1ECB tr\u00ED c\u1EE7a order n\u00E0y"
+  - _key: order.point.occupied
+    _en: "This place already has an order"
+    _vi: "V\u1ECB tr\u00ED n\u00E0y \u0111\u00E3 c\u00F3 order"
+  - _key: order.actor.invalid
+    _en: "Invalid server"
+    _vi: "Ng\u01B0\u1EDDi ph\u1EE5c v\u1EE5 kh\u00F4ng h\u1EE3p l\u1EC7"
+  - _key: order.items.empty
+    _en: "The order has no items"
+    _vi: "Order ch\u01B0a c\u00F3 m\u00F3n n\u00E0o"
+  - _key: order.items.invalid
+    _en: "The order has an unknown item"
+    _vi: "Order c\u00F3 m\u00F3n kh\u00F4ng h\u1EE3p l\u1EC7"
+  - _key: order.items.request_mismatch
+    _en: "Entered items differ from the customer's request"
+    _vi: "M\u00F3n \u0111\u00E3 nh\u1EADp kh\u00E1c y\u00EAu c\u1EA7u c\u1EE7a kh\u00E1ch"
+  - _key: order.too_many_for_shelf
+    _en: "Too many of one kind for the ready shelf"
+    _vi: "Qu\u00E1 nhi\u1EC1u m\u00F3n c\u00F9ng lo\u1EA1i cho k\u1EC7 ch\u1EDD giao"
+  - _key: order.failure.invalid
+    _en: "Invalid failure reason"
+    _vi: "L\u00FD do th\u1EA5t b\u1EA1i kh\u00F4ng h\u1EE3p l\u1EC7"
+  - _key: order.not_found
+    _en: "Order not found"
+    _vi: "Kh\u00F4ng t\u00ECm th\u1EA5y order"
+  - _key: order.entry.empty
+    _en: "Nothing to enter"
+    _vi: "Kh\u00F4ng c\u00F3 m\u00F3n \u0111\u1EC3 nh\u1EADp"
+  - _key: order.lobby.not_configured
+    _en: "Order entry is not set up"
+    _vi: "Ghi order ch\u01B0a \u0111\u01B0\u1EE3c thi\u1EBFt l\u1EADp"
+  - _key: order.point.invalid_customer
+    _en: "Invalid customer"
+    _vi: "Kh\u00E1ch kh\u00F4ng h\u1EE3p l\u1EC7"
+  - _key: order.point.empty_request
+    _en: "The customer asked for nothing"
+    _vi: "Kh\u00E1ch ch\u01B0a g\u1ECDi m\u00F3n"
+  - _key: order.point.invalid_service_result
+    _en: "The order service returned an invalid order"
+    _vi: "D\u1ECBch v\u1EE5 order tr\u1EA3 v\u1EC1 order kh\u00F4ng h\u1EE3p l\u1EC7"
