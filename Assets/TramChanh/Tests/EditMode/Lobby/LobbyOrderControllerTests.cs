@@ -45,7 +45,7 @@ namespace TramChanh.Tests.EditMode.Lobby
             _kit.Events.Publish(new OrderSendRequested(_order));
             Assert.That(_kit.Service.Calls, Is.EqualTo(new[] { "SendToStall" }));
             Assert.That(_kit.Service.Get(_order).Status, Is.EqualTo(OrderStatus.TakingOrder), "Not entered yet, so the service rejects.");
-            Assert.That(_kit.Blocked[_kit.Blocked.Count - 1].ReasonKey, Is.EqualTo("order.invalid_transition"));
+            Assert.That(_kit.Blocked[_kit.Blocked.Count - 1].ReasonKey, Is.EqualTo("order.transition.invalid"));
             Assert.That(_kit.Controller.HasEntrySession, Is.True);
             _kit.Events.Publish(new OrderEntryConfirmed(_order, _kit.Requested[0].RequestedItems));
             _kit.Events.Publish(new OrderSendRequested(_order));

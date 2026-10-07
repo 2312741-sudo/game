@@ -130,7 +130,13 @@ namespace TramChanh.Tests.EditMode.UI
             {
                 OrderEntryUI.TitleKey, OrderEntryUI.EnterKey, OrderEntryUI.SendKey, OrderEntryUI.CloseKey,
                 "order.point.take", "order.point.continue", "interaction.lobby_role_required", "interaction.paused",
-                "hands.full", "order.point.not_configured", "order.wrong_point", "order.entry.not_available", "order.invalid_transition",
+                "hands.full", "order.point.not_configured", "order.wrong_point", "order.entry.not_available", "order.transition.invalid",
+                // Reason keys emitted by the real OrderService (ORDER_SYSTEM section 6.5).
+                "order.origin.invalid", "order.point.wrong", "order.point.occupied", "order.actor.invalid", "order.items.empty",
+                "order.items.invalid", "order.items.request_mismatch", "order.too_many_for_shelf", "order.failure.invalid",
+                // Reason keys owned by the Lobby controller and points.
+                "order.not_found", "order.entry.empty", "order.lobby.not_configured", "order.point.invalid_customer",
+                "order.point.empty_request", "order.point.invalid_service_result",
             })
             {
                 string en = table.Resolve(key, "en");
@@ -142,13 +148,25 @@ namespace TramChanh.Tests.EditMode.UI
         }
 
         [Test]
+        public void StaleReasonLabelDisappearsWhenAnEnterRetryClearsIt()
+        {
+            OrderEntryUI ui = Create(Table(), "en");
+            _events.Publish(new OrderEntryRequested(new OrderId(3), new[] { new ItemRequest("drink.demo", 1) }));
+            _events.Publish(new TramChanh.Interaction.ActionBlocked(new InteractableId(1), "order.transition.invalid"));
+            Assert.That(ui.ReasonText, Is.Not.Empty);
+            Assert.That(ui.Enter(), Is.True);
+            Assert.That(ui.BlockedReasonKey, Is.Null);
+            Assert.That(ui.ReasonText, Is.Empty);
+        }
+
+        [Test]
         public void ReasonTextAndDisconnectBehave()
         {
             OrderEntryUI ui = Create(Table(), "vi");
             _events.Publish(new OrderEntryRequested(new OrderId(3), new[] { new ItemRequest("drink.demo", 1) }));
-            _events.Publish(new TramChanh.Interaction.ActionBlocked(new InteractableId(1), "order.invalid_transition"));
+            _events.Publish(new TramChanh.Interaction.ActionBlocked(new InteractableId(1), "order.transition.invalid"));
             Assert.That(ui.ReasonText, Is.Not.Empty);
-            Assert.That(ui.ReasonText, Is.Not.EqualTo("order.invalid_transition"));
+            Assert.That(ui.ReasonText, Is.Not.EqualTo("order.transition.invalid"));
             int hidden = 0;
             ui.Hidden += () => hidden++;
             ui.Disconnect();

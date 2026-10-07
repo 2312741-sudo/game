@@ -91,7 +91,7 @@ namespace TramChanh.Tests.EditMode.Lobby
         private Result Transition(OrderId id, OrderStatus from, OrderStatus to)
         {
             if (!(Get(id) is FakeOrder order)) { return Result.Fail("order.not_found"); }
-            if (order.Status != from) { return Result.Fail("order.invalid_transition"); }
+            if (order.Status != from) { return Result.Fail("order.transition.invalid"); }
             SetStatus(id, to);
             return Result.Success();
         }

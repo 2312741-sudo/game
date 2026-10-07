@@ -35,7 +35,7 @@ namespace TramChanh.UI.Orders
         public bool Enter()
         {
             if (!IsOpen) { return false; }
-            BlockedReasonKey = null;
+            ClearReason();
             _events.Publish(new OrderEntryConfirmed(OrderId, Items));
             return true;
         }
@@ -43,9 +43,18 @@ namespace TramChanh.UI.Orders
         public bool Send()
         {
             if (!IsOpen) { return false; }
-            BlockedReasonKey = null;
+            ClearReason();
             _events.Publish(new OrderSendRequested(OrderId));
             return true;
+        }
+
+        // A retry hides the previous failure at once; a failure published by the service while this
+        // call runs sets the key again afterwards and renders through the ActionBlocked handler.
+        private void ClearReason()
+        {
+            if (BlockedReasonKey == null) { return; }
+            BlockedReasonKey = null;
+            Changed?.Invoke();
         }
 
         /// <summary>Hides the panel; the order stays as it is (TakingOrder remains TakingOrder).</summary>

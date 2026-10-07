@@ -117,6 +117,45 @@ namespace TramChanh.Tests.EditMode.UI
         }
 
         [Test]
+        public void SuccessfulEnterAfterAFailedSendRefreshesTheUiWhenTheReasonIsCleared()
+        {
+            _events.Publish(new OrderEntryRequested(new OrderId(5), Items()));
+            _events.Publish(new ActionBlocked(new InteractableId(1), "order.transition.invalid"));
+            int before = _changes;
+            string reasonSeenByTheRefresh = "unset";
+            _model.Changed += () => reasonSeenByTheRefresh = _model.BlockedReasonKey;
+            Assert.That(_model.Enter(), Is.True);
+            Assert.That(_changes, Is.EqualTo(before + 1), "Clearing the reason must notify the view.");
+            Assert.That(reasonSeenByTheRefresh, Is.Null);
+            Assert.That(_model.BlockedReasonKey, Is.Null);
+            Assert.That(_confirmed.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SendClearsAStaleReasonAndNotifiesOnlyWhenThereWasOne()
+        {
+            _events.Publish(new OrderEntryRequested(new OrderId(5), Items()));
+            int afterOpen = _changes;
+            _model.Send();
+            Assert.That(_changes, Is.EqualTo(afterOpen), "No reason to clear, so no refresh.");
+            _events.Publish(new ActionBlocked(new InteractableId(1), "order.transition.invalid"));
+            int afterBlocked = _changes;
+            _model.Send();
+            Assert.That(_changes, Is.EqualTo(afterBlocked + 1));
+            Assert.That(_model.BlockedReasonKey, Is.Null);
+        }
+
+        [Test]
+        public void FailureReportedWhileSendingIsShownAfterTheClear()
+        {
+            _events.Publish(new OrderEntryRequested(new OrderId(5), Items()));
+            _events.Publish(new ActionBlocked(new InteractableId(1), "order.items.request_mismatch"));
+            _events.Subscribe<OrderSendRequested>(_ => _events.Publish(new ActionBlocked(new InteractableId(1), "order.transition.invalid")));
+            _model.Send();
+            Assert.That(_model.BlockedReasonKey, Is.EqualTo("order.transition.invalid"));
+        }
+
+        [Test]
         public void SecondRequestReplacesTheOpenOrderAndInvalidRequestsAreIgnored()
         {
             _events.Publish(new OrderEntryRequested(new OrderId(5), Items()));
