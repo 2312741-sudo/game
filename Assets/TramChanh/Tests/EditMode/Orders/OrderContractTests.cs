@@ -83,6 +83,7 @@ namespace TramChanh.Tests.EditMode.Orders
 
         [TestCase(ContractFault.FailureChangesKind)]
         [TestCase(ContractFault.FailureChangesSourceState)]
+        [TestCase(ContractFault.LatchUnfinishedRejection)]
         public void TC_ORDER_005_SharedFixtureDetectsMutationOnUnfinishedFailure(ContractFault fault)
         {
             var item = new FaultyPrepared(fault, false);
@@ -95,6 +96,25 @@ namespace TramChanh.Tests.EditMode.Orders
         {
             var item = new FaultyPrepared(fault, true);
             Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void TC_ORDER_005_SharedFixtureDetectsEventsBeforeShelfCommit(bool finished)
+        {
+            using var events = new EventBus();
+            int count = 0;
+            using var subscription = events.Subscribe<OrderStatusChanged>(_ => count++);
+            var item = new FaultyPrepared(finished ? ContractFault.EventsOnSuccess : ContractFault.EventsOnFailure, finished,
+                () => events.Publish(new OrderStatusChanged(new OrderId(1), OrderStatus.Ready)));
+            if (finished)
+            {
+                Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1, () => count));
+            }
+            else
+            {
+                Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(item, () => item.State, () => count));
+            }
         }
 
         [Test]
@@ -150,23 +170,28 @@ namespace TramChanh.Tests.EditMode.Orders
             }
         }
 
-        public enum ContractFault { FailureChangesKind, FailureChangesSourceState, SuccessChangesBinding, RepeatedFailureChangesQuality }
+        public enum ContractFault { FailureChangesKind, FailureChangesSourceState, SuccessChangesBinding, RepeatedFailureChangesQuality, LatchUnfinishedRejection, EventsOnSuccess, EventsOnFailure }
 
         private sealed class FaultyPrepared : IPreparedItem
         {
             private readonly ContractFault _fault;
+            private readonly Action _publish;
+            private bool _rejected;
             public ItemKind Kind { get; private set; } = ItemKind.Drink;
             public OrderItemRef BoundItem { get; private set; } = new OrderItemRef(new OrderId(1), new OrderItemId(2), new PreparationId(3));
             public bool IsFinished { get; }
             public int Quality { get; private set; } = 100;
             public int State { get; private set; }
-            public FaultyPrepared(ContractFault fault, bool finished) { _fault = fault; IsFinished = finished; }
+            public FaultyPrepared(ContractFault fault, bool finished, Action publish = null) { _fault = fault; IsFinished = finished; _publish = publish; }
             public Result MarkReady()
             {
                 if (!IsFinished)
                 {
+                    if (_fault == ContractFault.LatchUnfinishedRejection && _rejected) { return Result.Fail("ready.already_ready"); }
+                    _rejected = true;
                     if (_fault == ContractFault.FailureChangesKind) { Kind = ItemKind.Cake; }
                     if (_fault == ContractFault.FailureChangesSourceState) { State++; }
+                    if (_fault == ContractFault.EventsOnFailure) { _publish(); }
                     return Result.Fail("ready.not_finished");
                 }
                 if (State == 1)
@@ -176,6 +201,7 @@ namespace TramChanh.Tests.EditMode.Orders
                 }
                 State = 1;
                 if (_fault == ContractFault.SuccessChangesBinding) { BoundItem = default; }
+                if (_fault == ContractFault.EventsOnSuccess) { _publish(); }
                 return Result.Success();
             }
         }
