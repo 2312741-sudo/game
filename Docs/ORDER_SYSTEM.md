@@ -238,6 +238,16 @@ Partial pickup is not supported in the slice. The items' own state stays `Ready`
 5. **Re-entrancy.** A listener may call back into the shelf or order service. A mutation started from a listener opens a new transaction whose events are delivered after the current flush finishes (first-in first-out), so events of one order are never interleaved or reordered.
 6. **Adapters act after the call returns.** `ReadyCounterPoint` calls `PlaceReady` and only then releases the hand slot (`HeldItemChanged`). The release cannot fail because `Query` verified that the hand holds the item; a failure is an invariant violation.
 
+### 6.5 Reason keys emitted by the Orders services (as implemented in PR #10)
+
+Reason keys are data (localization keys, `ActionBlocked.ReasonKey`). UI and adapters must use these exact strings.
+
+| Area | Keys |
+|---|---|
+| Intake (`RequestService`, `BeginTaking`, `Enter`, `SendToStall`, `Fail`) | `order.origin.invalid`, `order.point.occupied`, `order.point.wrong`, `order.actor.invalid`, `order.transition.invalid`, `order.items.empty`, `order.items.invalid`, `order.items.request_mismatch`, `order.too_many_for_shelf`, `order.failure.invalid` |
+| Ticket queue | `stall.no_ticket.drink`, `stall.no_ticket.cake`, `stall.ticket.not_bound`, `stall.ticket.preparation_invalid`, `stall.ticket.preparation_bound`, `stall.ticket.kind_invalid` |
+| Ready shelf | `ready.not_finished`, `ready.no_order`, `ready.already_ready`, `ready.slot_full`, `ready.quality.invalid`, `ready.no_complete_order` (pickup of a non-Ready, incomplete or not-oldest order) |
+
 ---
 
 ## 7. Lobby adapters
