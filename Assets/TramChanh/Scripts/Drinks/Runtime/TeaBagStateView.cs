@@ -94,7 +94,7 @@ namespace TramChanh.Drinks.Runtime
         public void SetShaking(bool shaking)
         {
             IsShaking = shaking;
-            if (_animator != null && _animator.runtimeAnimatorController != null)
+            if (_animator != null && _animator.isActiveAndEnabled && _animator.isInitialized && _animator.runtimeAnimatorController != null)
             {
                 _animator.SetBool(ShakingParameter, shaking);
             }
