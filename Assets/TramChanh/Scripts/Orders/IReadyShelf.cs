@@ -1,14 +1,7 @@
-using System.Collections.Generic;
-using TramChanh.Core;
-
 namespace TramChanh.Orders
 {
-    public interface IReadyShelf
+    /// <summary>Composition-root union; Stall and Lobby receive their narrow interfaces.</summary>
+    public interface IReadyShelf : IReadyShelfPlacement, IReadyShelfPickup
     {
-        OrderId NextReadyOrder { get; }
-        Availability CanPlace(IPreparedItem item);
-        Result PlaceReady(IPreparedItem item);
-        bool Occupied(ItemKind kind);
-        Result<IReadOnlyList<IPreparedItem>> PickUp(OrderId orderId, ActorRef actor);
     }
 }

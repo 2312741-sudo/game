@@ -12,7 +12,6 @@ namespace TramChanh.Orders
         Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point);
         Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered);
         Result SendToStall(OrderId id);
-        Result PickUp(OrderId id, ActorRef actor);
         Result Fail(OrderId id, FailureReason reason);
     }
 }

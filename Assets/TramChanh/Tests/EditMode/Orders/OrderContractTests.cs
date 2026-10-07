@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System;
+using System.Reflection;
 using NUnit.Framework;
 using TramChanh.Core;
 using TramChanh.Orders;
@@ -44,6 +46,42 @@ namespace TramChanh.Tests.EditMode.Orders
             Assert.Throws<System.ArgumentException>(() => OrderOrigin.ForVehicle(default));
         }
 
+        [Test]
+        public void ARCH001_PublicContractsReferenceOnlyCoreOrdersAndSystemTypes()
+        {
+            foreach (Type contract in new[] { typeof(IOrderService), typeof(IStallTicketQueue), typeof(IReadyShelfPlacement), typeof(IReadyShelfPickup), typeof(IPreparedItem) })
+            {
+                foreach (MethodInfo method in contract.GetMethods())
+                {
+                    AssertBoundary(method.ReturnType);
+                    foreach (ParameterInfo parameter in method.GetParameters()) { AssertBoundary(parameter.ParameterType); }
+                }
+            }
+            Assert.That(typeof(IOrderService).GetMethod("PickUp"), Is.Null, "Only the ready-shelf transaction exposes T7.");
+            Assert.That(typeof(IReadyShelfPlacement).GetMethod("PickUp"), Is.Null);
+            Assert.That(typeof(IReadyShelfPickup).GetMethod("PlaceReady"), Is.Null);
+        }
+
+        [Test]
+        public void ARCH001_ItemKindValuesAreStableAcrossSerializedAssets()
+        {
+            Assert.That((int)ItemKind.Drink, Is.Zero);
+            Assert.That((int)ItemKind.Cake, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TC_ORDER_005_FinishedPreparedFixtureObeysSharedContract()
+        {
+            PreparedItemContractAssertions.AssertReadyTransition(new PreparedFixture { Finished = true });
+        }
+
+        private static void AssertBoundary(Type type)
+        {
+            string assembly = type.Assembly.GetName().Name;
+            Assert.That(assembly == "TramChanh.Core" || assembly == "TramChanh.Orders" || assembly == "mscorlib" || assembly.StartsWith("System"), Is.True, type.FullName);
+            foreach (Type argument in type.GetGenericArguments()) { AssertBoundary(argument); }
+        }
+
         private sealed class PreparedFixture : IPreparedItem
         {
             public ItemKind Kind => ItemKind.Drink;
@@ -55,6 +93,7 @@ namespace TramChanh.Tests.EditMode.Orders
             public Result MarkReady()
             {
                 if (!Finished) { return Result.Fail("ready.not_finished"); }
+                if (WasMarkedReady) { return Result.Fail("ready.already_ready"); }
                 WasMarkedReady = true;
                 return Result.Success();
             }
