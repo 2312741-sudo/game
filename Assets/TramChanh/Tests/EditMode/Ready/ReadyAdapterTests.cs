@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TramChanh.Core;
 using TramChanh.Core.GroundTruth;
@@ -9,6 +10,7 @@ using TramChanh.Orders;
 using TramChanh.Stall.Runtime;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace TramChanh.Tests.EditMode.Ready
 {
@@ -220,6 +222,94 @@ namespace TramChanh.Tests.EditMode.Ready
             Assert.That(_item == null || !_item.gameObject.activeSelf, Is.True);
         }
 
+        [Test]
+        public void B1_ThrowingHeldItemChangedListenerDoesNotSkipPresentationAfterCommit()
+        {
+            _hands.TryPickUp(_item);
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null) { throw new InvalidOperationException("view fault"); } });
+            LogAssert.Expect(LogType.Exception, new Regex("view fault"));
+            Assert.DoesNotThrow(() => _counter.Execute(_context));
+            Assert.That(_shelf.Stored, Is.SameAs(_item), "The committed placement is not undone.");
+            Assert.That(_hands.Current, Is.Null, "The hand result is the slot's actual state.");
+            Assert.That(_item.transform.parent, Is.SameAs(_drinkPlacement), "Presentation still ran.");
+            Assert.That(_item.gameObject.layer, Is.EqualTo(TramChanhLayers.EnvironmentIndex));
+            Assert.That(_item.GetComponent<Collider>().enabled, Is.True);
+        }
+
+        [Test]
+        public void B1_HandThatStillHoldsTheItemAfterAFaultedReleaseIsReportedAndPresentationStillRuns()
+        {
+            var stuck = new StuckHands(_item);
+            LogAssert.Expect(LogType.Exception, new Regex("release fault"));
+            LogAssert.Expect(LogType.Error, new Regex("did not release"));
+            _counter.Execute(Context(stuck, ActorRole.Stall));
+            Assert.That(_shelf.Stored, Is.SameAs(_item));
+            Assert.That(_item.transform.parent, Is.SameAs(_drinkPlacement));
+            Assert.That(stuck.Current, Is.SameAs(_item), "The adapter reports the invariant break instead of hiding it.");
+        }
+
+        [Test]
+        public void B1_ReleaseAlreadyDoneByAListenerIsNotRepeated()
+        {
+            _hands.TryPickUp(_item);
+            int releases = 0;
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null) { releases++; } });
+            _shelf.OnPlaced = () => _hands.TryRelease();
+            _counter.Execute(_context);
+            Assert.That(releases, Is.EqualTo(1));
+            Assert.That(_item.transform.parent, Is.SameAs(_drinkPlacement));
+        }
+
+        [Test]
+        public void B2_LobbyPickupInsideThePlacementFlushKeepsTheItemInTheBundle()
+        {
+            _hands.TryPickUp(_item);
+            var lobbyHands = new HeldItemSlot(_events);
+            InteractionContext lobby = new InteractionContext(new ActorRef(2), ActorRole.Lobby, lobbyHands, _clock, _events);
+            _shelf.OnPlaced = () => _pickup.Execute(lobby);
+            _counter.Execute(_context);
+            var bundle = lobbyHands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null, "The Lobby pickup committed during the flush.");
+            Assert.That(bundle.Items, Is.EqualTo(new IPreparedItem[] { _item }));
+            Assert.That(_item.transform.parent, Is.SameAs(bundle.transform), "The adopted item is never unparented.");
+            Assert.That(_item.gameObject.layer, Is.EqualTo(TramChanhLayers.HeldItemIndex));
+            Assert.That(_hands.Current, Is.Null);
+            Assert.That(_drinkPlacement.childCount, Is.Zero);
+            Assert.That(_item.gameObject.activeSelf, Is.True);
+        }
+
+        [Test]
+        public void B2_PickupWithoutAnyAdopterLeavesTheOriginalHandOnlyOnce()
+        {
+            _hands.TryPickUp(_item);
+            Transform handParent = _item.transform.parent;
+            _shelf.OnPlaced = () => _events.Publish(new OrderStatusChanged(_item.BoundItem.OrderId, OrderStatus.PickedUpByLobby));
+            _counter.Execute(_context);
+            Assert.That(handParent, Is.Not.Null);
+            Assert.That(_item.transform.parent, Is.Null, "No bundle adopted it, so it leaves the hand it was in.");
+            Assert.That(_drinkPlacement.childCount, Is.Zero);
+        }
+
+        [Test]
+        public void B3_PickupRequestsTheOldestReadyOrderAndCarriesItsItemsInSnapshotOrder()
+        {
+            var drink = Child("SnapshotDrink").AddComponent<PreparedHoldable>();
+            drink.Initialize(ItemKind.Drink, 7, 1);
+            var cake = Child("SnapshotCake").AddComponent<PreparedHoldable>();
+            cake.Initialize(ItemKind.Cake, 7, 2);
+            _shelf.NextOverride = new OrderId(7);
+            _shelf.Snapshot = new IPreparedItem[] { drink, cake };
+            _pickup.Execute(_context);
+            var bundle = _hands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null);
+            Assert.That(_shelf.PickedOrders, Is.EqualTo(new[] { new OrderId(7) }), "Only the shelf's oldest Ready order is requested.");
+            Assert.That(bundle.OrderId, Is.EqualTo(new OrderId(7)));
+            Assert.That(bundle.Items, Is.EqualTo(new IPreparedItem[] { drink, cake }));
+            Assert.That(bundle.Items[0].BoundItem.OrderItemId.Value, Is.LessThan(bundle.Items[1].BoundItem.OrderItemId.Value));
+            Assert.That(drink.transform.parent, Is.SameAs(bundle.transform));
+            Assert.That(cake.transform.parent, Is.SameAs(bundle.transform));
+        }
+
         private InteractionContext Context(IHeldItemSlot hands, ActorRole role) => new InteractionContext(new ActorRef(1), role, hands, _clock, _events);
         private GameObject Child(string name)
         {
@@ -248,10 +338,11 @@ namespace TramChanh.Tests.EditMode.Ready
             public int Quality => 100;
             public bool Ready;
             public Transform HandGrip => transform;
-            public void Initialize(ItemKind kind)
+            public void Initialize(ItemKind kind) => Initialize(kind, 1, 1);
+            public void Initialize(ItemKind kind, int order, int orderItem)
             {
                 Kind = kind;
-                BoundItem = new OrderItemRef(new OrderId(1), new OrderItemId(1), new PreparationId(1));
+                BoundItem = new OrderItemRef(new OrderId(order), new OrderItemId(orderItem), new PreparationId(orderItem));
                 if (GetComponent<Collider>() == null)
                 {
                     gameObject.AddComponent<BoxCollider>();
@@ -265,6 +356,14 @@ namespace TramChanh.Tests.EditMode.Ready
             public Result MarkReady() { Ready = true; return Result.Success(); }
             public void OnPickedUp(IHeldItemSlot hands) { }
             public void OnReleased() { }
+        }
+
+        private sealed class StuckHands : IHeldItemSlot
+        {
+            public IHoldable Current { get; }
+            public StuckHands(IHoldable item) => Current = item;
+            public bool TryPickUp(IHoldable item) => false;
+            public bool TryRelease() => throw new InvalidOperationException("release fault");
         }
 
         private sealed class RefusingHands : IHeldItemSlot
@@ -284,7 +383,11 @@ namespace TramChanh.Tests.EditMode.Ready
             public bool PlacementFailure;
             public bool FailDuringPlacement;
             public bool PickupFailure;
-            public OrderId NextReadyOrder => Stored != null ? Stored.BoundItem.OrderId : default;
+            public Action OnPlaced;
+            public OrderId NextOverride;
+            public IReadOnlyList<IPreparedItem> Snapshot;
+            public readonly List<OrderId> PickedOrders = new List<OrderId>();
+            public OrderId NextReadyOrder => NextOverride.IsValid ? NextOverride : Stored != null ? Stored.BoundItem.OrderId : default;
             public Shelf(IEventBus events) => _events = events;
             public Availability CanPlace(IPreparedItem item) => Stored == null ? Availability.Available : Availability.Blocked("ready.occupied");
             public bool Occupied(ItemKind kind) => Stored != null && Stored.Kind == kind;
@@ -299,12 +402,15 @@ namespace TramChanh.Tests.EditMode.Ready
                 Stored = item;
                 DomainEvents++;
                 _events.Publish(new OrderStatusChanged(item.BoundItem.OrderId, OrderStatus.Ready));
+                OnPlaced?.Invoke();
                 if (FailDuringPlacement) { Stored = null; _events.Publish(new OrderStatusChanged(item.BoundItem.OrderId, OrderStatus.Failed)); }
                 return Result.Success();
             }
             public Result<IReadOnlyList<IPreparedItem>> PickUp(OrderId orderId, ActorRef actor)
             {
                 PickupCalls++;
+                PickedOrders.Add(orderId);
+                if (Snapshot != null) { return Result<IReadOnlyList<IPreparedItem>>.Success(Snapshot); }
                 if (PickupFailure)
                 {
                     return Result<IReadOnlyList<IPreparedItem>>.Fail("ready.rejected");

@@ -78,6 +78,9 @@ namespace TramChanh.Stall.Runtime
                 context.Events.Publish(new ActionBlocked(Id, "ready.item_missing_placement_point"));
                 return;
             }
+            // The visual's parent before the commit: the receiving hand anchor. It is the only parent
+            // this adapter may later detach from; anything else adopted the item in the meantime.
+            Transform handParent = visual.transform.parent;
             _placingOrder = prepared.BoundItem.OrderId;
             _placementDisposition = null;
             Result result;
@@ -97,20 +100,24 @@ namespace TramChanh.Stall.Runtime
                 context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
                 return;
             }
-            if (ReferenceEquals(context.Hands.Current, held))
-            {
-                context.Hands.TryRelease();
-            }
+            // The shelf has committed. A faulting HeldItemChanged observer must not skip the presentation
+            // or reconciliation below, so the release is isolated and its actual outcome is read back.
+            ReleaseFromHand(context, held);
             // A notification can fail or pick up the order before PlaceReady returns.
             // Reconcile that newer committed state before presenting the original placement.
             if (disposition.HasValue)
             {
-                visual.transform.SetParent(null, true);
                 if (disposition.Value == OrderStatus.Failed)
                 {
+                    // The order failed: discard the product wherever it is (never re-parent an adopted item).
                     visual.gameObject.SetActive(false);
                     if (Application.isPlaying) { Destroy(visual.gameObject); }
                     else { DestroyImmediate(visual.gameObject); }
+                }
+                else if (visual.transform.parent == handParent)
+                {
+                    // Picked up, but no bundle adopted the visual: leave the hand it no longer belongs to.
+                    visual.transform.SetParent(null, true);
                 }
                 return;
             }
@@ -138,6 +145,24 @@ namespace TramChanh.Stall.Runtime
             {
                 _cakeVisual = visual;
                 _cakeOrder = prepared.BoundItem.OrderId;
+            }
+        }
+
+        private static void ReleaseFromHand(InteractionContext context, IHoldable held)
+        {
+            if (!ReferenceEquals(context.Hands.Current, held)) { return; }
+            try
+            {
+                context.Hands.TryRelease();
+            }
+            catch (Exception fault)
+            {
+                Debug.LogException(fault);
+            }
+            if (ReferenceEquals(context.Hands.Current, held))
+            {
+                // Invariant violation: the slot still holds an item the shelf already owns.
+                Debug.LogError("Ready placement committed but the hand slot did not release the item.");
             }
         }
 
