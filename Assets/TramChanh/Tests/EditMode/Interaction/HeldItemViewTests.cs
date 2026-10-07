@@ -29,14 +29,16 @@ namespace TramChanh.Tests.EditMode.Interaction
                 grip.localRotation = Quaternion.Euler(10f, 20f, 30f);
                 var item = bag.AddComponent<TeaBagItem>();
                 SetReference(item, "_handGrip", grip);
-                item.Initialize(new TeaBagPickup());
+                var preparation = new DrinkPreparation(new PreparationId(1));
+                preparation.TryPickUp();
+                item.Initialize(preparation);
                 var collider = bag.AddComponent<BoxCollider>();
                 var view = player.AddComponent<HeldItemView>();
                 SetReference(view, "_holdAnchor", anchor);
                 var hands = new HeldItemSlot(events);
                 view.Initialize(hands, events);
                 Assert.That(hands.TryPickUp(item), Is.True);
-                Assert.That(item.State, Is.EqualTo(TeaBagState.Held));
+                Assert.That(item.State, Is.EqualTo(TeaBagState.PickedUp));
                 Assert.That(bag.transform.parent, Is.SameAs(anchor));
                 Assert.That(Vector3.Distance(grip.position, anchor.position), Is.LessThan(0.0001f));
                 Assert.That(Quaternion.Angle(grip.rotation, anchor.rotation), Is.LessThan(0.001f));

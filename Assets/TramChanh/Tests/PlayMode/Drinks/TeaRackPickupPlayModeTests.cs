@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using TramChanh.App;
@@ -10,6 +11,7 @@ using TramChanh.Drinks.Domain;
 using TramChanh.Drinks.Runtime;
 using TramChanh.Interaction;
 using TramChanh.Interaction.Player;
+using TramChanh.Orders;
 using TramChanh.UI.Prompt;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -86,7 +88,7 @@ namespace TramChanh.Tests.PlayMode.Drinks
             yield return null;
             var held = _interactor.Context.Hands.Current as TeaBagItem;
             Assert.That(held, Is.SameAs(first), "Pickup transfers a stocked bag, not a new quantity of tea.");
-            Assert.That(held.State, Is.EqualTo(TeaBagState.Held));
+            Assert.That(held.State, Is.EqualTo(TeaBagState.PickedUp));
             Assert.That(_rack.Stock, Is.EqualTo(stock - 1));
             Assert.That(_rack.GetComponentsInChildren<TeaBagItem>().Length, Is.EqualTo(stock - 1));
             Transform anchor = _player.GetComponent<HeldItemView>().HoldAnchor;
@@ -152,10 +154,10 @@ namespace TramChanh.Tests.PlayMode.Drinks
                 rackData.FindProperty("_id").intValue = 99;
                 rackData.FindProperty("_balance").objectReferenceValue = balance;
                 rackData.FindProperty("_bagPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab").GetComponent<TeaBagItem>();
-                rackData.FindProperty("_allowUnboundPickupForTest").boolValue = true;
                 rackData.FindProperty("_bagSlots").arraySize = balance.TeaRackCapacity;
                 rackData.ApplyModifiedPropertiesWithoutUndo();
                 root.SetActive(true);
+                rack.Initialize(new NoPendingTickets(), new SequentialIdGenerator(), _interactor.Context.Events);
                 Assert.That(rack.Stock, Is.Zero);
                 Assert.That(rack.Query(_interactor.Context).BlockedReasonKey, Is.EqualTo("drink.rack.empty"));
                 ActionBlocked blocked = default;
@@ -176,16 +178,40 @@ namespace TramChanh.Tests.PlayMode.Drinks
         }
 
         [UnityTest]
-        public IEnumerator TC_DRINK_008_TicketFreePickupIsOptInAndCannotCreateAnOrder()
+        public IEnumerator TC_DRINK_008_ProductionRackWithoutPendingTicketCannotConsumeStock()
         {
-            var serialized = new SerializedObject(_rack);
-            serialized.FindProperty("_allowUnboundPickupForTest").boolValue = false;
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            int stock = _rack.Stock;
-            Assert.That(_rack.Query(_interactor.Context).BlockedReasonKey, Is.EqualTo("stall.no_ticket.drink"));
-            _rack.Execute(_interactor.Context);
-            Assert.That(_rack.Stock, Is.EqualTo(stock));
-            Assert.That(_interactor.Context.Hands.Current, Is.Null);
+            var root = new GameObject("TicketlessRack");
+            root.SetActive(false);
+            BalanceConfig balance = _scene.GetRootGameObjects().SelectMany(o => o.GetComponentsInChildren<PlayerInteractionTestBootstrap>()).Single().Balance;
+            try
+            {
+                var rack = root.AddComponent<TeaRackController>();
+                var data = new SerializedObject(rack);
+                data.FindProperty("_id").intValue = 98;
+                data.FindProperty("_balance").objectReferenceValue = balance;
+                data.FindProperty("_bagPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab").GetComponent<TeaBagItem>();
+                SerializedProperty slots = data.FindProperty("_bagSlots");
+                slots.arraySize = balance.TeaRackCapacity;
+                for (int i = 0; i < slots.arraySize; i++)
+                {
+                    var slot = new GameObject("Slot").transform;
+                    slot.SetParent(root.transform, false);
+                    slots.GetArrayElementAtIndex(i).objectReferenceValue = slot;
+                }
+                data.ApplyModifiedPropertiesWithoutUndo();
+                rack.Initialize(new NoPendingTickets(), new SequentialIdGenerator(), _interactor.Context.Events);
+                root.SetActive(true);
+                int stock = rack.Stock;
+                Assert.That(stock, Is.GreaterThan(0));
+                Assert.That(rack.Query(_interactor.Context).BlockedReasonKey, Is.EqualTo("stall.no_ticket.drink"));
+                rack.Execute(_interactor.Context);
+                Assert.That(rack.Stock, Is.EqualTo(stock));
+                Assert.That(_interactor.Context.Hands.Current, Is.Null);
+            }
+            finally
+            {
+                Object.Destroy(root);
+            }
             yield return null;
         }
 
@@ -209,6 +235,14 @@ namespace TramChanh.Tests.PlayMode.Drinks
             Assert.That(_interactor.Context.Hands.Current, Is.Null);
             yield return null;
             LogAssert.NoUnexpectedReceived();
+        }
+        private sealed class NoPendingTickets : IStallTicketQueue
+        {
+            public IReadOnlyList<OrderId> Tickets => System.Array.Empty<OrderId>();
+            public bool HasPending(ItemKind kind) => false;
+            public Result<OrderItemRef> ClaimNext(ItemKind kind, PreparationId preparationId) => Result<OrderItemRef>.Fail("stall.no_ticket.drink");
+            public Result Release(OrderItemRef item) => Result.Fail("stall.ticket.not_bound");
+            public bool IsBound(OrderItemRef item) => false;
         }
     }
 }

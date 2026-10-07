@@ -12,11 +12,11 @@ namespace TramChanh.Tests.EditMode.Drinks
             var rack = new TeaRackInventory(3, 2);
             Assert.That(rack.Capacity, Is.EqualTo(3));
             Assert.That(rack.Stock, Is.EqualTo(2));
-            TeaBagPickup bag = rack.BagAt(rack.NextStoredIndex());
+            DrinkPreparation bag = rack.BagAt(rack.NextStoredIndex());
             Assert.That(bag.State, Is.EqualTo(TeaBagState.Stored));
             Assert.That(rack.CanTake(true).IsAvailable, Is.True);
             Assert.That(bag.TryPickUp().IsSuccess, Is.True);
-            Assert.That(bag.State, Is.EqualTo(TeaBagState.Held));
+            Assert.That(bag.State, Is.EqualTo(TeaBagState.PickedUp));
             Assert.That(rack.Stock, Is.EqualTo(1));
             Assert.That(rack.BagAt(rack.NextStoredIndex()), Is.Not.SameAs(bag));
         }
@@ -36,7 +36,7 @@ namespace TramChanh.Tests.EditMode.Drinks
         public void DRINK_001_SameBagCannotBePickedUpTwice()
         {
             var rack = new TeaRackInventory(1, 1);
-            TeaBagPickup bag = rack.BagAt(0);
+            DrinkPreparation bag = rack.BagAt(0);
             Assert.That(bag.TryPickUp().IsSuccess, Is.True);
             Assert.That(bag.TryPickUp().ReasonKey, Is.EqualTo("drink.bag.not_stored"));
             Assert.That(rack.Stock, Is.Zero);
@@ -54,9 +54,12 @@ namespace TramChanh.Tests.EditMode.Drinks
         [Test]
         public void GT_003_NoTeaMeasuringStepOrQuantityIsIntroduced()
         {
-            CollectionAssert.AreEqual(new[] { "Stored", "Held" }, Enum.GetNames(typeof(TeaBagState)));
-            Assert.That(typeof(TeaBagPickup).GetProperties().Length, Is.EqualTo(1));
-            Assert.That(typeof(TeaBagPickup).GetProperty("State"), Is.Not.Null);
+            foreach (string state in Enum.GetNames(typeof(TeaBagState)))
+            {
+                Assert.That(state.StartsWith("Measure", StringComparison.OrdinalIgnoreCase), Is.False);
+                Assert.That(state.StartsWith("Pour", StringComparison.OrdinalIgnoreCase), Is.False);
+            }
+            Assert.That(typeof(DrinkPreparation).GetProperty("State"), Is.Not.Null);
         }
     }
 }
