@@ -307,7 +307,7 @@ namespace TramChanh.Tests.EditMode.Ready
             _hands.TryPickUp(_item);
             var lobbyHands = new HeldItemSlot(_events);
             InteractionContext lobby = new InteractionContext(new ActorRef(2), ActorRole.Lobby, lobbyHands, _clock, _events);
-            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == _item) { _pickup.Execute(lobby); } });
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && ReferenceEquals(change.Previous, _item)) { _pickup.Execute(lobby); } });
             _counter.Execute(_context);
             var bundle = lobbyHands.Current as ServedOrder;
             Assert.That(bundle, Is.Not.Null);
