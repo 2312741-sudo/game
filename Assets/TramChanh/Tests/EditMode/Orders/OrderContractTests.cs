@@ -76,6 +76,28 @@ namespace TramChanh.Tests.EditMode.Orders
         }
 
         [Test]
+        public void TC_ORDER_005_UnfinishedPreparedFixtureObeysSharedContract()
+        {
+            PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(new PreparedFixture());
+        }
+
+        [TestCase(ContractFault.FailureChangesKind)]
+        [TestCase(ContractFault.FailureChangesSourceState)]
+        public void TC_ORDER_005_SharedFixtureDetectsMutationOnUnfinishedFailure(ContractFault fault)
+        {
+            var item = new FaultyPrepared(fault, false);
+            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(item, () => item.State));
+        }
+
+        [TestCase(ContractFault.SuccessChangesBinding)]
+        [TestCase(ContractFault.RepeatedFailureChangesQuality)]
+        public void TC_ORDER_005_SharedFixtureDetectsMutationDuringSuccessfulOrRepeatedReady(ContractFault fault)
+        {
+            var item = new FaultyPrepared(fault, true);
+            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1));
+        }
+
+        [Test]
         public void TC_ORDER_006_EntryEventsSnapshotRequestsAndExposeReadOnlyLists()
         {
             var source = new[] { new ItemRequest("drink", 1) };
@@ -124,6 +146,36 @@ namespace TramChanh.Tests.EditMode.Orders
             {
                 if (!IsBound(item)) { return Result.Fail("stall.ticket.not_bound"); }
                 _binding = default;
+                return Result.Success();
+            }
+        }
+
+        public enum ContractFault { FailureChangesKind, FailureChangesSourceState, SuccessChangesBinding, RepeatedFailureChangesQuality }
+
+        private sealed class FaultyPrepared : IPreparedItem
+        {
+            private readonly ContractFault _fault;
+            public ItemKind Kind { get; private set; } = ItemKind.Drink;
+            public OrderItemRef BoundItem { get; private set; } = new OrderItemRef(new OrderId(1), new OrderItemId(2), new PreparationId(3));
+            public bool IsFinished { get; }
+            public int Quality { get; private set; } = 100;
+            public int State { get; private set; }
+            public FaultyPrepared(ContractFault fault, bool finished) { _fault = fault; IsFinished = finished; }
+            public Result MarkReady()
+            {
+                if (!IsFinished)
+                {
+                    if (_fault == ContractFault.FailureChangesKind) { Kind = ItemKind.Cake; }
+                    if (_fault == ContractFault.FailureChangesSourceState) { State++; }
+                    return Result.Fail("ready.not_finished");
+                }
+                if (State == 1)
+                {
+                    if (_fault == ContractFault.RepeatedFailureChangesQuality) { Quality--; }
+                    return Result.Fail("ready.already_ready");
+                }
+                State = 1;
+                if (_fault == ContractFault.SuccessChangesBinding) { BoundItem = default; }
                 return Result.Success();
             }
         }
