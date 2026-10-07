@@ -32,14 +32,20 @@ namespace TramChanh.Interaction
                 return;
             }
             RefreshFocus();
+            bool buttonReleased = _driver.IsHeldUse ? _input.UseHeldReleased || !_input.UseHeldIsHeld
+                : _input.InteractReleased || !_input.InteractIsHeld;
+            if ((_driver.IsRunning && buttonReleased) || (!_input.IsCaptured && !_input.IsPausedByUser))
+            {
+                _driver.Release();
+            }
             _driver.Tick(Focused);
             if (_input.InteractPressed)
             {
                 Press();
             }
-            if (_input.InteractReleased)
+            else if (_input.UseHeldPressed)
             {
-                _driver.Release();
+                UseHeld();
             }
             PublishPrompt();
         }
@@ -58,18 +64,45 @@ namespace TramChanh.Interaction
         }
         public void Press()
         {
-            _driver?.Begin(Focused);
+            if (_context != null && _input.IsCaptured)
+            {
+                _driver.Begin(Focused);
+            }
             PublishPrompt();
         }
+        public void UseHeld()
+        {
+            if (_context != null && _input.IsCaptured)
+            {
+                _driver.BeginHeld();
+            }
+            PublishPrompt();
+        }
+
         private void PublishPrompt()
         {
             if (_context == null)
             {
                 return;
             }
-            IInteractable target = Focused;
-            InteractionPromptChanged state = target == null ? default
-                : new InteractionPromptChanged(target.Id, target.Query(_context), _driver.Progress);
+            InteractionPromptChanged state = default;
+            if (isActiveAndEnabled && _input.IsCaptured && !_context.Clock.IsPaused)
+            {
+                IInteractable target = Focused;
+                if (target != null && !_driver.IsHeldUse)
+                {
+                    InteractionQuery query = target.Query(_context);
+                    if (query.Availability.Status != AvailabilityStatus.Hidden)
+                    {
+                        state = new InteractionPromptChanged(target.Id, query, _driver.Progress);
+                    }
+                }
+                if (!state.IsVisible && _context.Hands.Current is IHeldItemAction action)
+                {
+                    InteractableId id = (action as IInteractable)?.Id ?? default;
+                    state = new InteractionPromptChanged(id, action.QueryUse(_context), _driver.IsHeldUse ? _driver.Progress : 0f, true);
+                }
+            }
             if (!state.Equals(Prompt))
             {
                 Prompt = state;
@@ -80,7 +113,11 @@ namespace TramChanh.Interaction
         {
             _driver?.Release();
             _focusedRef = null;
-            PublishPrompt();
+            if (_context != null && !Prompt.Equals(default(InteractionPromptChanged)))
+            {
+                Prompt = default;
+                _context.Events.Publish(Prompt);
+            }
             _context = null;
         }
         private void OnDisable()
