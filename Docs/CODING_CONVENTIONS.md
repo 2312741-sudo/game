@@ -35,6 +35,7 @@
 
 - Domain state machines (orders, drink, cake, grill) are plain C#: no `MonoBehaviour`, no `UnityEngine.Object` references, no `Time.*`; time comes from `IGameClock`.
 - MonoBehaviours are thin adapters (input → domain call; domain event → visuals).
+- **Transactions.** In a cross-object transaction (shelf placement, pickup, order failure) the participants only mutate and return a `Result`; the owner publishes once, after the last mutation, and a throwing listener never changes the transaction's result (`ORDER_SYSTEM.md` §6.4).
 - Workflow step order (GT-007, GT-008) is a code constant covered by tests, never data.
 - Implementation details whose real-world form is not confirmed (e.g. the physical form of the cake *Flip* step) sit behind an interface so they can change without touching the state machine.
 

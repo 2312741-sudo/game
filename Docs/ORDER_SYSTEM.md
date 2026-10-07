@@ -86,7 +86,7 @@ WaitingForLobby → TakingOrder → Entered → SentToStall → InPreparation
 | # | From | To | Trigger (API) | Called by | Guard |
 |---|---|---|---|---|---|
 | T1 | — | `WaitingForLobby` | `RequestService(origin, customerId, requested)` | Customer arriving at a `TableOrderPoint` / `VehicleOrderPoint` | Point not already occupied by an active order; `requested` non-empty |
-| T2 | `WaitingForLobby` | `TakingOrder` | `BeginTaking(orderId, actor, at)` | Lobby interacting with that point | Domain: `at` equals the order's `Origin`; status is `WaitingForLobby`. **Adapter** (`Lobby`): `ActorRole.Lobby` — `ActorRole` lives in `Interaction`, which `Orders` cannot reference |
+| T2 | `WaitingForLobby` | `TakingOrder` | `BeginTaking(orderId, actor, point)` | Lobby interacting with that point | Domain: `point` equals the order's `Origin`; status is `WaitingForLobby`. **Adapter** (`Lobby`): `ActorRole.Lobby` — `ActorRole` lives in `Interaction`, which `Orders` cannot reference |
 | T3 | `TakingOrder` | `Entered` | `Enter(orderId, items)` | Order-entry UI confirm (via `OrderEntryConfirmed`, §7) | `items` non-empty; every item exists in content (`IContentDatabase`); per-kind quantity ≤ shelf capacity (`order.too_many_for_shelf`); slice: `items == RequestedItems` (DEC-012) |
 | T4 | `Entered` | `SentToStall` | `SendToStall(orderId)` | Order-entry UI "Send" | — ; order is enqueued in `IStallTicketQueue` |
 | T5 | `SentToStall` | `InPreparation` | automatic when the first item is claimed (`ClaimNext`) | `StallTicketQueue` | At least one item `InPreparation` |
@@ -229,6 +229,15 @@ test fixture: `IsFinished` and not yet ready ⇒ `MarkReady()` succeeds.
 
 Partial pickup is not supported in the slice. The items' own state stays `Ready` until delivery (D9 / C11, driven by `OrderStatusChanged → Delivered`). `IOrderService` therefore has **no** `PickUp`.
 
+### 6.4 Event publication rule (every cross-object transaction: `PlaceReady`, `PickUp`, `Fail`)
+
+1. **Participants mutate only.** Whatever a transaction owner calls — `IPreparedItem.MarkReady()`, the order state machine, the ticket queue, slot bookkeeping — changes state and returns a `Result`. It publishes no event, invokes no callback, touches no Unity object and plays no animation or audio. Every `IPreparedItem` implementation is checked for this by the shared `PreparedItemContractAssertions`.
+2. **The transaction owner publishes, once, after the last mutation.** The owner (shelf / order service) collects the events in an internal outbox and flushes them only when all state is consistent. While any listener runs, `Get(id)`, `NextReadyOrder`, `Occupied`, `IsBound` and `CanPlace` report the fully committed state. Order: item events by ascending `OrderItemId`, then the order event.
+3. **Which event announces what.** An item reaching `Ready` is announced by `OrderItemStatusChanged (Status = Ready)`; the whole order by `OrderStatusChanged (Status = Ready)`, which fires only when the *last* item is placed. A per-item reaction (the bag's visuals, audio) keys off `OrderItemStatusChanged` and the bag's `PreparationId`, never off the order-level event. `Drinks` / `Cakes` publish no "Ready" or "Delivered" step event of their own (`DRINK_WORKFLOW.md` §3).
+4. **Observers cannot change the result.** A listener that throws is a *post-commit fault*, not a transaction failure: the owner returns the committed result, keeps delivering the remaining events and reports the fault through an injected fault sink (logged in the game, collected in tests). `EventBus.Publish` propagates a listener exception to its caller (pinned by `CX_002_EventBus_ExceptionDoesNotCorruptSubscriptions`), so the owner must catch around its flush; listeners registered *after* the throwing one for the same event are skipped unless `EventBus` later isolates listeners (optional Core follow-up).
+5. **Re-entrancy.** A listener may call back into the shelf or order service. A mutation started from a listener opens a new transaction whose events are delivered after the current flush finishes (first-in first-out), so events of one order are never interleaved or reordered.
+6. **Adapters act after the call returns.** `ReadyCounterPoint` calls `PlaceReady` and only then releases the hand slot (`HeldItemChanged`). The release cannot fail because `Query` verified that the hand holds the item; a failure is an invariant violation.
+
 ---
 
 ## 7. Lobby adapters
@@ -271,11 +280,10 @@ Wrong deliveries do not change quality in the slice; they are counted in `Delive
 public interface IOrderService   // Lobby, Customers' requester, order-entry intents
 {
     Result<OrderId> RequestService(OrderOrigin origin, CustomerId customer, IReadOnlyList<ItemRequest> requested);
-    Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin at);
+    Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point);
     Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered);
     Result SendToStall(OrderId id);
-    Result Deliver(OrderId id, DeliveryTarget target);
-    Result Complete(OrderId id);
+    // Deliver (T8) and Complete (T9) are added by CX-025 (additive); they are not part of the drink-wave freeze
     Result Fail(OrderId id, FailureReason reason);
     IReadOnlyOrder Get(OrderId id);
     IReadOnlyList<IReadOnlyOrder> Active { get; }
@@ -297,6 +305,22 @@ There is intentionally no `CreateOrderFromStall` or `CreateOrderFromCustomer` th
 | `UI` | read-only views (`IReadOnlyOrder`, `Tickets`, `NextReadyOrder`) |
 
 No stall-side type may hold `IOrderService` or `IReadyShelfPickup`.
+
+### Event shapes (frozen by the contract PR)
+
+All are `readonly struct`, published synchronously after commit (§6.4). Payload lists are immutable snapshots.
+
+| Event | Payload | Publisher → subscribers |
+|---|---|---|
+| `OrderStatusChanged` | `OrderId`, `Status` (the **new** status) | Orders → UI, Customers, Lobby, Stall adapters. No `From`: the enum default (`WaitingForLobby = 0`) would make a missing previous status ambiguous, and observers read the committed state through `Get`. Order creation is `Status = WaitingForLobby`; there is no separate `OrderCreated`. |
+| `OrderItemStatusChanged` | `OrderItemRef Item`, `OrderItemStatus Status` | Orders → UI, `Drinks` / `Cakes` adapters |
+| `OrderEntryRequested` | `OrderId`, `RequestedItems` | Lobby → entry UI (prefill), after T2 |
+| `OrderEntryConfirmed` | `OrderId`, `Items` | entry UI → Lobby (*Enter*, T3) |
+| `OrderSendRequested` | `OrderId` | entry UI → Lobby (*Send to stall*, T4) |
+
+Adding a property to an event later is non-breaking for subscribers (they only read properties).
+
+**Content access.** `Orders` validates `Enter` through the frozen read-only subset `IContentDatabase.TryGetKind(string itemDefinitionId, out ItemKind kind)` (`TramChanh.Content`); an unknown id fails with `order.unknown_item`. `OrderService` may reference `Content`; the contracts above do not expose it.
 
 ---
 
@@ -325,6 +349,9 @@ From [WF] §3 PHASE 3, plus transition coverage:
 | TC-READY-004 | `NextReadyOrder` | Oldest Ready first; `IsValid == false` when none; allocation-free |
 | TC-READY-005 | Capacity guard | `Enter` with two drinks on a capacity-1 shelf ⇒ `order.too_many_for_shelf` |
 | TC-READY-006 | `Fail` after placement | The order's slots are freed |
+| TC-READY-007 | Throwing listener | Listener throws during the post-commit flush ⇒ `PlaceReady` / `PickUp` still return the committed result, remaining events are delivered, the fault reaches the fault sink, state is unchanged |
+| TC-READY-008 | Silence inside the transaction | A recording bus sees no event until the last mutation is done; at the first event `Get`, `Occupied`, `NextReadyOrder`, `IsBound` report the committed state; `MarkReady()` itself publishes nothing |
+| TC-READY-009 | Re-entrant listener | A listener that starts another transaction does not reorder or interleave the current flush |
 | ARCH-001 | Public API has no `Content` types | Reflection over the public signatures of `Orders` contracts: none from `TramChanh.Content` |
 | GT-005 | Dine-in origin is a table | `RequestService` with `DineIn` requires a `TableId` |
 | GT-006 | Takeaway origin is a vehicle | `RequestService` with `Vehicle` requires a `VehicleId` |

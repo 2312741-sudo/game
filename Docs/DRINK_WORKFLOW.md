@@ -90,12 +90,12 @@ public sealed class DrinkPreparation
     public Result AddIce();                      // D5
     public Result Shake();                       // D6 (called on hold completion)
     public Result Wipe();                        // D7
-    public Result MarkReady();                   // D8 — IPreparedItem.MarkReady; mutates only on success; called by ReadyShelf
+    public Result MarkReady();                   // D8 — IPreparedItem.MarkReady; mutates only on success; publishes nothing; called by ReadyShelf
     public Result MarkDelivered();               // D9
 }
 ```
 
-Every method returns `Result.Fail(reasonKey)` for an invalid source state and leaves the state unchanged. Publishes `DrinkStepCompleted` on success. `TeaBagItem` (adapter) implements `IPreparedItem` by delegating to its `DrinkPreparation`; `IsFinished` = state `Wiped` and stays true after `Ready`.
+Every method returns `Result.Fail(reasonKey)` for an invalid source state and leaves the state unchanged. The domain object publishes nothing; the `TeaBagItem` adapter publishes `DrinkStepCompleted` for D2–D7 after each successful step. `MarkReady()` (D8) and `MarkDelivered()` (D9) mutate only and never publish; Ready and Delivered are announced by `OrderItemStatusChanged` / `OrderStatusChanged` (`ORDER_SYSTEM.md` §6.4), and the bag's visuals react to the `OrderItemStatusChanged` whose `Item.PreparationId` is theirs. `TeaBagItem` (adapter) implements `IPreparedItem` by delegating to its `DrinkPreparation`; `IsFinished` = state `Wiped` and stays true after `Ready`.
 
 ---
 
@@ -175,3 +175,4 @@ From [WF] Phase 4 acceptance, plus transition coverage:
 | TC-DRINK-012 | EditMode | State names | Enum contains `PickedUp`, no `Held`; no `Measure*` / `Pour*` member |
 | TC-DRINK-013 | EditMode | `TeaBagItem` passes `PreparedItemContractTests` | `IsFinished` and not ready ⇒ `MarkReady()` succeeds |
 | TC-DRINK-014 | PlayMode | Held-use steps | Open (UseHeld press) and Shake (UseHeld hold) work with the same held-action driver as other interactions; E and F are mutually exclusive |
+| TC-DRINK-015 | EditMode | `MarkReady` is silent | A recording bus sees no event during `MarkReady()`; a rejected `MarkReady()` on an unfinished bag changes nothing and does not block a later successful one; `BoundItem` survives Ready (`PreparedItemContractAssertions`) |

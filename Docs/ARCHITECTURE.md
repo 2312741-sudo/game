@@ -79,7 +79,7 @@ Customer → Lobby takes order → Lobby enters → Lobby sends to Stall
 5. **Explicit composition, no hidden singletons.** A single composition root (`GameBootstrap`) builds services and registers them in a scene-scoped `ServiceRegistry`. Domain classes receive dependencies via constructor.
 6. **Time is injected.** All timers (cooking, preheat, hold actions) read `IGameClock`. Tests use `ManualClock`.
 7. **Data in ScriptableObjects, state in C# objects.** Recipes, item definitions and balance numbers are `SO_` assets; runtime state is never written back into ScriptableObjects.
-8. **Events are typed and synchronous.** Cross-module notification goes through `IEventBus` with `readonly struct` events. Modules do not hold references to each other's MonoBehaviours.
+8. **Events are typed and synchronous.** Cross-module notification goes through `IEventBus` with `readonly struct` events. Modules do not hold references to each other's MonoBehaviours. In a cross-object transaction only the owner publishes, once, after its last mutation (`ORDER_SYSTEM.md` §6.4).
 9. **Real-world fidelity beats genre convention** ([WF] §34). When unsure, the item goes to the Decision Register (§10), not into code.
 10. **Unknown real-world values are never ground truth.** Only the facts in §1 may become code constants (`TramChanh.Core.GroundTruth`). Everything not yet confirmed from the real shop — station positions, sign size and artwork, batter amount, cooking/burn time, topping quantities, hold durations, sauce-to-cake mapping, vehicle form, the physical form of *Flip* — is **provisional data**: ScriptableObject fields marked `[Tbd("DEC-xxx")]`, prefab/scene transforms (`StallAnchor` with *Position Confirmed* off) or placeholder prefabs (`PlaceholderAsset`). Replacing a provisional value must never require a code change.
 
@@ -147,7 +147,7 @@ Created once in `GameBootstrap`, registered in `ServiceRegistry`, disposed on sc
 | `IOrderService` | `OrderService` | Orders | Creates orders (Lobby only), drives `OrderStateMachine`, validates delivery |
 | `IStallTicketQueue` | `StallTicketQueue` | Orders | FIFO of orders in `SentToStall`/`InPreparation`; claims pending items for preparation |
 | `IReadyShelf` (= `IReadyShelfPlacement` + `IReadyShelfPickup`) | `ReadyShelf` | Orders | Slots on the Ready counter; validates, marks items Ready and commits the order side (placement, injected into `Stall`); owns T7 pickup and frees the order's slots (injected into `Lobby`) |
-| `IContentDatabase` | `ContentDatabase` | Content | Lookup of `SO_` definitions by id |
+| `IContentDatabase` | `ContentDatabase` | Content | Lookup of `SO_` definitions by id. Frozen subset: `TryGetKind(string itemDefinitionId, out ItemKind kind)` |
 | `IIdGenerator` | `SequentialIdGenerator` | Core | Deterministic ids (seedable for tests) |
 
 `ServiceRegistry` is scene-scoped (lives on the bootstrap GameObject). MonoBehaviours resolve services in `Awake`/`OnEnable` through a single accessor; they never call `FindObjectOfType` for services and never use static mutable singletons.
@@ -173,11 +173,11 @@ All are `readonly struct`, published synchronously on the main thread. Subscribe
 
 | Event | Publisher | Typical subscribers |
 |---|---|---|
-| `OrderCreated { OrderId, OrderOrigin }` | Orders | UI, Customers |
-| `OrderStatusChanged { OrderId, From, To }` | Orders | UI, Customers, Lobby |
-| `OrderItemStatusChanged { OrderId, OrderItemId, From, To }` | Orders | UI |
+| `OrderStatusChanged { OrderId, Status }` | Orders | UI, Customers, Lobby, Stall adapters |
+| `OrderItemStatusChanged { OrderItemRef Item, Status }` | Orders | UI, `Drinks` / `Cakes` adapters |
+| `OrderEntryRequested { OrderId, RequestedItems }` | Lobby | UI (entry prefill) |
 | `DeliveryRejected { OrderId, AttemptedTarget, Reason }` | Orders | UI, QA log |
-| `DrinkStepCompleted { PreparationId, DrinkState }` | Drinks | UI, audio hooks |
+| `DrinkStepCompleted { PreparationId, DrinkState }` | Drinks adapter, steps D2–D7 only, after the step succeeded | UI, audio hooks |
 | `CakeStepCompleted { PreparationId, CakeState }` | Cakes | UI, audio hooks |
 | `GrillStateChanged { GrillId, From, To }` | Cakes | Grill view, UI |
 | `ActionBlocked { InteractableId, ReasonKey }` | Interaction | Prompt UI, QA log |
@@ -301,3 +301,4 @@ Product Owner decision 2026-10-06: **all architectural defaults accepted**, with
 |---|---|---|---|
 | 2026-10-07 | `ItemKind` lives in `TramChanh.Core` (not `Content`); public-API rule added to §4 | `Stall`/`Lobby`/`Customers` use `IPreparedItem.Kind` and the queue/shelf contracts but may not reference `Content` (CS0012). Found by Codex; the earlier "no new asmdef references needed" statement in the plan review was wrong for these assemblies | Claude Code review, wave authorized by the Product Owner |
 | 2026-10-07 | `UI` → `Lobby` communication by typed events (`OrderEntryConfirmed`, `OrderSendRequested`) | `UI` cannot reference `Lobby` | Claude Code review |
+| 2026-10-07 | Event shapes frozen by the contract PR: `OrderStatusChanged` / `OrderItemStatusChanged` carry the new status only, no `OrderCreated`, new `OrderEntryRequested`; transaction owners publish after commit (`ORDER_SYSTEM.md` §6.4) | Enum-default ambiguity for `From`; observers must never see a half-committed state | Claude Code review of PR #8 |
