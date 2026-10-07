@@ -7,6 +7,7 @@
 
 - Unity project root = repository root. Unity 6 (`ProjectSettings/ProjectVersion.txt`), URP, Input System, Unity Test Framework.
 - One assembly per module (`ARCHITECTURE.md` §4). Adding a reference between `TramChanh.*` assemblies needs Claude Code review; QA-000 fails on any reference not in the architecture table.
+- **Public API across modules exposes only Core types and the module's own types** (`ARCHITECTURE.md` §4). If assemblies that may not reference a type's home still need it, move the tiny shared type to Core instead of adding a reference.
 - Namespaces = `TramChanh.<Module>[.<Subfolder>]`. Exceptions to avoid clashing with Unity types:
   - `Scripts/Debug` → assembly and namespace `TramChanh.DevTools` (a `TramChanh.Debug` namespace would hide `UnityEngine.Debug`).
   - `Scripts/Editor` → assembly `TramChanh.Editor`, namespace `TramChanh.EditorTools` (a `TramChanh.Editor` namespace would hide `UnityEditor.Editor`).

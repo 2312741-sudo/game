@@ -41,14 +41,14 @@ Stored → PickedUp → Opened → CoconutJellyAdded → LemonJellyAdded
 
 | # | From | To | Action | Where | Guard | Blocked reason key (otherwise) |
 |---|---|---|---|---|---|---|
-| D1 | `Stored` | `PickedUp` | Take bag | `PF_RedTeaRack` | Hands empty; rack count > 0; `StallTicketQueue.HasPending(Drink)` → claims item | `stall.no_ticket.drink`, `hands.full`, `drink.rack.empty` |
+| D1 | `Stored` | `PickedUp` | Take bag | `PF_RedTeaRack` | Hands empty; rack count > 0; `IStallTicketQueue.HasPending(Drink)`; **then** the claim (`ClaimNext`) and the physical pickup, with `Release` if the pickup is refused (§2.2) | `stall.no_ticket.drink`, `hands.full`, `drink.rack.empty` |
 | D2 | `PickedUp` | `Opened` | Open (UseHeld) | in hand | — | — |
 | D3 | `Opened` | `CoconutJellyAdded` | Add coconut jelly | `CoconutJellyBin` | Holding this bag | `drink.need_open` |
 | D4 | `CoconutJellyAdded` | `LemonJellyAdded` | Add lemon jelly | `LemonJellyBin` | Holding this bag | `drink.need_coconut_first` |
 | D5 | `LemonJellyAdded` | `IceAdded` | Scoop ice | `PF_IceBin` (+ `PF_IceScoop` anim) | Holding this bag | `drink.need_lemon_first` |
 | D6 | `IceAdded` | `Shaken` | Shake (UseHeld, Hold) | in hand | Hold completes | `drink.need_ice_first` |
 | D7 | `Shaken` | `Wiped` | Wipe (Hold) | `WipeArea` (+ `PF_WipeCloth`) | Hold completes | `drink.need_shake_first` |
-| D8 | `Wiped` | `Ready` | Place at Ready | `PF_ReadyCounterPoint/DrinkPlacement` | Bound to an order item; slot free | `ready.not_finished`, `ready.no_order`, `ready.slot_full` |
+| D8 | `Wiped` | `Ready` | Place at Ready (`IReadyShelfPlacement.PlaceReady`: validate → `MarkReady()` → order commit → slot → publish, `ORDER_SYSTEM.md` §6.2) | `PF_ReadyCounterPoint/DrinkPlacement` | Bound to an order item (`IsBound`); slot free | `ready.not_finished`, `ready.no_order`, `ready.already_ready`, `ready.slot_full` |
 | D9 | `Ready` | `Delivered` | (order delivered) | — | Driven by `OrderStatusChanged → Delivered` | — |
 
 Each interactable is **Blocked** (not Hidden) when the player holds a bag in the wrong state, so the prompt teaches the correct next step. Interactables are **Hidden** when the player holds nothing relevant.
@@ -57,12 +57,19 @@ Each interactable is **Blocked** (not Hidden) when the player holds a bag in the
 
 ### 2.2 Order binding
 
-- D1 calls `StallTicketQueue.ClaimNext(Drink, preparationId)`. The bag is bound to that `OrderItem` for its whole life.
+- Each bag has a stable `PreparationId` (typed Core id, assigned when the bag object is created) and is unbound until D1.
+- D1 is one domain use case in `Drinks`, not a callback: (1) run every guard that does not touch the queue (hands empty, rack not empty, paused, role); (2) `IStallTicketQueue.ClaimNext(Drink, preparationId)`; (3) perform the slot pickup; (4) if the slot refuses, `Release(ref)` so the queue is unchanged. A blocked pickup therefore never claims, and the bag's state never changes before the claim succeeded.
+- The bag is bound to that `OrderItem` for its whole life; `BoundItem` is checked with `IsBound` at placement, so a stale ref is rejected.
 - If the bound order fails (`CustomerLeft`), the bag becomes unbound; it can still be finished but cannot be placed at Ready (`ready.no_order`) until a later rebind feature (P1). In the slice the player discards it.
+- `Drinks` receives only `IStallTicketQueue`; it never holds `IOrderService` (`ORDER_SYSTEM.md` §9).
 
 ### 2.3 Sequence mode
 
 `DrinkPreparation` takes a `SequenceMode`. Only `Strict` is implemented. `FreeWithScoring` (P1) would allow out-of-order actions and reduce `Quality`; the interface reserves this but the slice must not ship any free-mode code path.
+
+### 2.4 State naming
+
+The canonical state is **`PickedUp`**, as in `[WF]` §11 and `[AP]` §18. The pickup-only slice (PR #5, `DRINK-001`) shipped it as `Held`; `Held` is renamed `PickedUp` as the first commit of the drink-preparation branch, and the test that pins the enum names is replaced by a name-based check ("no `Measure*` / `Pour*` member"). `Held` also misdescribes the bag, which stays held through `Opened … Wiped`.
 
 ---
 
@@ -71,7 +78,7 @@ Each interactable is **Blocked** (not Hidden) when the player holds a bag in the
 ```csharp
 public sealed class DrinkPreparation
 {
-    public int PreparationId { get; }
+    public PreparationId PreparationId { get; }   // typed Core id
     public TeaBagState State { get; }
     public OrderItemRef BoundItem { get; }
     public int Quality { get; }                  // 100 in Strict when Wiped
@@ -83,12 +90,12 @@ public sealed class DrinkPreparation
     public Result AddIce();                      // D5
     public Result Shake();                       // D6 (called on hold completion)
     public Result Wipe();                        // D7
-    public Result MarkReady();                   // D8 (called by ReadyShelf)
+    public Result MarkReady();                   // D8 — IPreparedItem.MarkReady; mutates only on success; called by ReadyShelf
     public Result MarkDelivered();               // D9
 }
 ```
 
-Every method returns `Result.Fail(reasonKey)` for an invalid source state and leaves the state unchanged. Publishes `DrinkStepCompleted` on success.
+Every method returns `Result.Fail(reasonKey)` for an invalid source state and leaves the state unchanged. Publishes `DrinkStepCompleted` on success. `TeaBagItem` (adapter) implements `IPreparedItem` by delegating to its `DrinkPreparation`; `IsFinished` = state `Wiped` and stays true after `Ready`.
 
 ---
 
@@ -143,6 +150,8 @@ From [AP] §18 and §81 (bag needs closed/open representation; toppings and ice 
 
 `SO_Recipe_Drink_Slice` (`DrinkRecipe`): `ItemDefinition`, `TeaBagType` (one in slice), `CoconutJellyPortion`, `LemonJellyPortion`, `IcePortion`, `ShakeHoldSeconds`, `WipeHoldSeconds` — all provisional `[Tbd("DEC-007")]` data. Portions only drive visuals/scoring later; they never add or remove a step. The step sequence is a code constant, not data. The drink's real menu name is pending (DEC-008).
 
+Durations and portions live **only** in `DrinkRecipe` (Content): never in `BalanceConfig`, never in code. `ShakeHoldSeconds` and `WipeHoldSeconds` feed the held-use and wipe hold actions; the portions never add or remove a step.
+
 ---
 
 ## 7. Tests
@@ -161,3 +170,8 @@ From [WF] Phase 4 acceptance, plus transition coverage:
 | TC-DRINK-008 | EditMode | No ticket → cannot take bag | `stall.no_ticket.drink` |
 | GT-007 | EditMode | Exact sequence | The only successful path through the state machine is the GT-007 order |
 | TC-DRINK-009 | PlayMode | Full drink at the real station prefab | Rack → … → Ready counter with real interactables and anchors |
+| TC-DRINK-010 | EditMode | D1 rollback | Slot refuses ⇒ `Release` called, queue and bag state unchanged |
+| TC-DRINK-011 | EditMode | Blocked pickup never claims | Hands full / rack empty / paused ⇒ no `ClaimNext` call |
+| TC-DRINK-012 | EditMode | State names | Enum contains `PickedUp`, no `Held`; no `Measure*` / `Pour*` member |
+| TC-DRINK-013 | EditMode | `TeaBagItem` passes `PreparedItemContractTests` | `IsFinished` and not ready ⇒ `MarkReady()` succeeds |
+| TC-DRINK-014 | PlayMode | Held-use steps | Open (UseHeld press) and Shake (UseHeld hold) work with the same held-action driver as other interactions; E and F are mutually exclusive |

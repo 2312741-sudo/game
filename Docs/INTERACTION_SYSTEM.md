@@ -107,13 +107,23 @@ Rules:
 
 Only one interaction runs at a time; while a hold is in progress, focus is locked.
 
+### 3.1 Held-use actions (`UseHeld`)
+
+`UseHeld` drives the held item's `IHeldItemAction` (`QueryUse` / `ExecuteUse`; **the approved `IInteractable` and `IHeldItemAction` signatures do not change**). It uses the **same** `InteractionActionDriver` through a small internal adapter, so there is one driver instance and `Interact` (E) and `UseHeld` (F) are mutually exclusive. Rules:
+
+- A held *Press* action (open the bag) executes on press; a held *Hold* action (shake) runs on the injected `IGameClock` for the duration supplied by `QueryUse` (recipe data).
+- The target is the held item, so a held Hold action is **not** focus-locked to the object being looked at. It is cancelled on release, when the held item changes, or when availability becomes Blocked.
+- **Pause freezes** hold progress (TC-INT-006); it does not cancel it. (PR #3 cancels holds on pause; the held-use branch fixes this for both kinds of action.)
+- `PlayerInputReader` exposes `UseHeld` pressed/released from the existing `UseHeld` action (F / right mouse); the input asset is unchanged.
+- Prompt: the focused interactable's prompt and the held action's prompt are shown together (two lines) so the held step stays discoverable.
+
 ---
 
 ## 4. Held item slot
 
 - One slot ("hands"). The slot holds at most one `IHoldable`.
 - Held object is re-parented to the camera's `HandSocket`, aligned by its `HandGrip` anchor, on the `HeldItem` layer (no collision with player).
-- Held in the slice: `TeaBag` (drink in preparation), `PF_BatterMeasureCup_500ml` (batter measuring tool), wrapped cake, `ServedOrder` bundle (Lobby carrying a Ready order).
+- Held in the slice: `TeaBag` (drink in preparation), `PF_BatterMeasureCup_500ml` (batter measuring tool), wrapped cake, `ServedOrder` bundle (Lobby carrying a Ready order; a generic `IHoldable` over the `IPreparedItem`s returned by `IReadyShelfPickup.PickUp`, class in `TramChanh.Lobby`).
 - **Not held** (DEC-005): ice scoop, spatula, scissors, sauce bag, wipe cloth. These are *station tools*: the station interaction plays the tool's animation at its anchor and returns it.
 - Dropping arbitrary items on the floor is not supported. Items leave the hands only through a valid interaction (place, pour, deliver, discard).
 
@@ -175,3 +185,8 @@ From [AP] §58: `Anchors/HandGrip`, `Anchors/InteractionPoint`, `Anchors/Placeme
 | TC-INT-005 | PlayMode | `SCN_InteractionTest`: player looks at test cube within reach → prompt; beyond reach → none; press → cube reacts |
 | TC-INT-006 | PlayMode | Paused game: hold progress does not advance |
 | TC-INT-007 | EditMode | `Query` allocates 0 bytes (GC alloc test) |
+| TC-INT-009 | EditMode | Held Press action executes once on press; Blocked press publishes `ActionBlocked` |
+| TC-INT-010 | EditMode | Held Hold action completes after the duration on `ManualClock`, independent of what the player looks at; cancels on release, held-item change, Blocked |
+| TC-INT-011 | EditMode | E and F are mutually exclusive: starting one while the other runs does nothing |
+| TC-INT-012 | EditMode | Pause freezes hold progress for focused and held actions (no cancel); resume continues |
+| TC-INT-013 | EditMode | `QueryUse` allocates 0 bytes |

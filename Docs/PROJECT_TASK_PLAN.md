@@ -59,10 +59,10 @@ CC spec (Docs) → CX implement in feature/<task> worktree → AG validate (PASS
 | QA-000 | **Done** — report `QA/Reports/QA-000-2026-10-06.md` | Repo/docs/asmdef graph PASS; `main` and `develop` exist. Proposed extension: GUARD-001 below. |
 | ART-STALL-001 (A) | **Placeholder workflow delivered** | Unity builder (`Tram Chanh ▸ Placeholders ▸ Build Stall + New Sign Placeholder`) + Blender script `ArtSource/Blender/Scripts/stall_blockout.py`. Prefabs are generated on first Unity open; anchors adjustable and unconfirmed (DEC-011). |
 | ENV-001 | **Done** 2026-10-07 — PR #4 (`0055cad`) | Unity pinned to 6000.6.0f1 (f7f8ed4d1e24); URP 17.6.0, Input System 1.20.0, Test Framework 1.8.0, `packages-lock.json` committed, `testables: [com.unity.inputsystem]`. Reviewed APPROVED (no separate review file). |
-| DRINK-001 | **PR #5 approved; squash-merge pending** — [`PR-5-claude-review.md`](Reviews/PR-5-claude-review.md) | Not a separate plan task: it is the **D1 slice** (rack pickup, `Stored → Held`) of CX-031 plus the generic held-item support (`HeldItemChanged`, `HeldItemView`) from INTERACTION_SYSTEM §4. Delivered: `TeaRackController`, `TeaBagItem`, `TeaRackInventory`, primitive `PF_TeaBag_PrePortioned`, test scene `SCN_TeaRackPickupTest`. **Not** delivered: ticket binding (needs CX-021), D2–D9, CX-030 `DrinkPreparation`. Held naming: `Held` = documented `PickedUp`; rename in the drink-preparation work (C6). Test-scene ticket bypass: see GUARD-001 and C10. |
-| REV-002 | **Open** | Order API reviewed inside the wave plan review (C1–C3, C7); the contract-first commit still needs review. |
-| REV-003 | **Open — CHANGES REQUESTED** 2026-10-07 | Drink wave plan reviewed in [`DRINK-WAVE-claude-plan-review.md`](Reviews/DRINK-WAVE-claude-plan-review.md); corrections C1–C12. D1 itself was reviewed and approved via PR #5. Closes when the contract-first commit is approved. |
-| DRINK-WAVE | **Planning — plan review CHANGES REQUESTED** | Product-Owner-authorized wave (2026-10-07): orders branch ≈ CX-020…CX-022 (+ T7 pickup per C7), held-use branch (UseHeld, timed held action), drink-preparation branch ≈ CX-030/CX-031, integration branch ≈ INT-004/INT-007/INT-008 subset. Branches fork only after the contract-first commit and the `.meta` commit (C9). |
+| DRINK-001 | **Done** 2026-10-07 — PR #5 squash-merged (`61bcf06`) | Not a separate plan task: it is the **D1 slice** (rack pickup, `Stored → Held`) of CX-031 plus the generic held-item support (`HeldItemChanged`, `HeldItemView`) from INTERACTION_SYSTEM §4. Reviewed APPROVED ([`PR-5-claude-review.md`](Reviews/PR-5-claude-review.md)). Delivered: `TeaRackController`, `TeaBagItem`, `TeaRackInventory`, primitive `PF_TeaBag_PrePortioned`, test scene `SCN_TeaRackPickupTest`. **Not** delivered: ticket binding (CX-021), D2–D9, CX-030 `DrinkPreparation`. Follow-ups, all inside the drink wave: rename `Held` → `PickedUp` (C6), retire the ticket bypass (C10, GUARD-001). |
+| REV-002 | **Open** | Order API reviewed inside the wave plan review (C1–C3, C7, Amendment 1); open until the **contract-first commit** (interfaces, `ItemKind` in Core, `OrderItemRef`, fakes, contract tests) is reviewed. |
+| REV-003 | **Open — CHANGES REQUESTED** 2026-10-07 | Drink wave plan reviewed in [`DRINK-WAVE-claude-plan-review.md`](Reviews/DRINK-WAVE-claude-plan-review.md). Codex adopted C1–C12 (2026-10-07); `ItemKind` moved to Core (Amendment 1); canonical docs amended. Closes when the contract-first commit is approved. D1 itself was approved via PR #5. |
+| DRINK-WAVE | **Contract freeze pending review** | Product-Owner-authorized wave (2026-10-07): orders branch ≈ CX-020…CX-022 (+ shelf pickup/T7, C7), held-use branch (UseHeld, timed held action, pause freeze), drink-preparation branch ≈ CX-030/CX-031, integration branch ≈ INT-004/INT-007/INT-008 subset (additive scene, no copies). C1–C12 adopted. Branches fork only after the contract-first commit is approved and the `.meta` commit lands (C9). |
 | GUARD-001 | **Proposed** (docs only; not implemented) | QA-000 should fail if `_allowUnboundPickupForTest: 1` appears in any tracked scene or prefab other than `SCN_TeaRackPickupTest`, until the bypass is retired (C10). Owner: Antigravity (`Automation/qa000_repo_check.py`). Rule: `CODING_CONVENTIONS.md` §8. |
 | DOC-FIX-001 | **Done** 2026-10-06 | 500 ml measuring cup reclassified as the interactive, recipe-driven batter tool `PF_BatterMeasureCup_500ml` (`TargetBatterMl`, `BatterToleranceMl` per recipe/size, all TBD; DEC-018, DEC-019). Affects CX-003, CX-031, CX-040, CX-041, ART-CAKE-002, INT-005, QA-040. |
 | INT-002 (A) | Covered by the ART-STALL-001 builder | Final hierarchy/anchors/colliders; becomes "Done" when QA-011 runs on the generated prefab. |
@@ -231,7 +231,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 
 ### CX-003 — Content ScriptableObjects
 - **Owner:** Codex (GPT-5.6 Terra acceptable)
-- **Objective:** `ItemDefinition`, `DrinkRecipe`, `CakeRecipe` (per menu item × size, with `TargetBatterMl`, `BatterToleranceMl`), `MeasureCupDefinition` (`SO_MeasureCup_500ml`: `CapacityMl`, `FillRateMlPerSecond`, `LevelCurve`), `SauceDefinition`, `MenuItem`, `BalanceConfig` (incl. `BatterOutOfTolerancePolicy`), `ContentDatabase`, a `[Tbd]` inspector drawer, and data instances: the four real cake items (*Bánh Lăn Truyền Thống*, *Bánh Lăn Phô Mai Chảy*, *Bánh Lăn Choco Chip*, *Bánh Lăn Cốm Dẻo*) with one `CakeRecipe` each, `SO_Sauce_Mango/Chocolate/Cheese`, `SO_Recipe_Drink_Slice`, `SO_Balance_Slice`.
+- **Objective:** (`ItemKind` lives in Core, not here — `ARCHITECTURE.md` §4 public-API rule) `ItemDefinition`, `DrinkRecipe`, `CakeRecipe` (per menu item × size, with `TargetBatterMl`, `BatterToleranceMl`), `MeasureCupDefinition` (`SO_MeasureCup_500ml`: `CapacityMl`, `FillRateMlPerSecond`, `LevelCurve`), `SauceDefinition`, `MenuItem`, `BalanceConfig` (incl. `BatterOutOfTolerancePolicy`), `ContentDatabase`, a `[Tbd]` inspector drawer, and data instances: the four real cake items (*Bánh Lăn Truyền Thống*, *Bánh Lăn Phô Mai Chảy*, *Bánh Lăn Choco Chip*, *Bánh Lăn Cốm Dẻo*) with one `CakeRecipe` each, `SO_Sauce_Mango/Chocolate/Cheese`, `SO_Recipe_Drink_Slice`, `SO_Balance_Slice`.
 - **Depends on:** CX-001
 - **Files/modules:** `Scripts/Core/Content/**`, `Scripts/Editor/Content/**`, `ScriptableObjects/**`, `Tests/EditMode/Content/**`
 - **3D assets:** none
@@ -311,12 +311,12 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 
 ### CX-022 — ReadyShelf + ReadyCounterPoint
 - **Owner:** Codex
-- **Objective:** `IReadyShelf`, `IPreparedItem`, `ReadyCounterPoint` (in `TramChanh.Stall`), `PlaceholderDiscard` handling (DEC-006).
+- **Objective:** `IReadyShelfPlacement` + `IReadyShelfPickup` (union `IReadyShelf`), `IPreparedItem` (with `Result MarkReady()`), `ReadyCounterPoint` (in `TramChanh.Stall`, receives only `IReadyShelfPlacement`), `PlaceholderDiscard` handling (DEC-006). The shelf is the single public owner of T7 (`PickUp`).
 - **Depends on:** CX-021, CX-010
 - **Files/modules:** `Scripts/Orders/Ready/**`, `Scripts/Stall/**`, `Tests/EditMode/Orders/ReadyShelfTests.cs`
 - **3D assets:** `PF_ReadyCounterPoint` (no mesh; INT-007)
-- **Acceptance:** `ORDER_SYSTEM.md` §6 placement rules 1–4; order becomes Ready only when all items placed; pickup takes the whole order.
-- **Tests:** TC-ORDER-005, `ReadyShelf_RejectsUnfinished`, `ReadyShelf_RejectsUnbound`, `ReadyShelf_SlotFull`.
+- **Acceptance:** `ORDER_SYSTEM.md` §6.2 placement protocol (validate → `MarkReady()` → order commit → slot → publish last) and §6.3 pickup (validate, T7, clear all the order's slots, snapshot, publish last); order becomes Ready only when all items placed; pickup takes the whole order and frees the slots; `Enter` rejects per-kind quantity above shelf capacity; `Fail` frees the order's slots.
+- **Tests:** TC-ORDER-005, TC-ORDER-010…012, TC-READY-001…006, ARCH-001, `ReadyShelf_RejectsUnfinished`, `ReadyShelf_RejectsUnbound`, `ReadyShelf_SlotFull`.
 - **Parallel:** No · **Review before impl.:** No.
 
 ### CX-023 — Lobby order points + LobbyOrderController
@@ -341,7 +341,7 @@ Each produces either "approved" or a short list of required doc changes. Owner C
 
 ### CX-025 — Delivery + ServedOrder bundle
 - **Owner:** Codex
-- **Objective:** `ServedOrder` held bundle from Ready pickup; delivery at table/vehicle via T8; wrong-target rejection.
+- **Objective:** generic `ServedOrder` held bundle (`IHoldable`, in `TramChanh.Lobby`) built from the items returned by `IReadyShelfPickup.PickUp` (T7 itself is delivered in CX-022); delivery at table/vehicle via T8; wrong-target rejection.
 - **Depends on:** CX-022, CX-023
 - **Files/modules:** `Scripts/Lobby/Delivery/**`, `Tests/EditMode/Lobby/**`
 - **3D assets:** finished item prefabs (blockouts acceptable)

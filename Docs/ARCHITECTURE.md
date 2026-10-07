@@ -92,7 +92,7 @@ All runtime code lives under `Assets/TramChanh/Scripts/<Module>/` ([WF] §7), on
 
 | Assembly | Folder | Responsibility | May reference |
 |---|---|---|---|
-| `TramChanh.Core` | `Scripts/Core` | `IEventBus`, `ServiceRegistry`, `IGameClock`/`UnityGameClock`/`ManualClock`, strongly-typed IDs, `GameState`, `Result`/`Availability` helpers | — |
+| `TramChanh.Core` | `Scripts/Core` | `IEventBus`, `ServiceRegistry`, `IGameClock`/`UnityGameClock`/`ManualClock`, strongly-typed IDs, `GameState`, `Result`/`Availability` helpers, **`ItemKind`** (shared vocabulary enum, explicit values, append-only) | — |
 | `TramChanh.Content` | `Scripts/Core/Content` *(own asmdef)* | ScriptableObject definitions: `ItemDefinition`, `DrinkRecipe`, `CakeRecipe`, `MenuItem`, `BalanceConfig` | Core |
 | `TramChanh.Interaction` | `Scripts/Interaction` | `IInteractable`, `InteractionContext`, `PlayerInteractor`, `HeldItemSlot`, `IHoldable`, hold-action driver, prompt model | Core |
 | `TramChanh.Orders` | `Scripts/Orders` | `Order`, `OrderItem`, `OrderStateMachine`, `OrderService`, `StallTicketQueue`, `ReadyShelf` (domain), `IPreparedItem` contract | Core, Content |
@@ -132,6 +132,7 @@ Rules:
 - `Drinks` and `Cakes` never reference each other.
 - `Interaction` knows nothing about orders, drinks or cakes.
 - Only `App` and `Debug` may reference everything.
+- **Public-API rule.** A public interface used across modules may expose only Core types and types of its own assembly. C# requires an assembly to reference every assembly whose types appear in the members it uses (CS0012), and asmdef references are not transitive. `ItemKind` therefore lives in Core, not Content, because `Stall`, `Lobby` and `Customers` may not reference `Content`. An EditMode test (ARCH-001) checks the public signatures of the `Orders` contracts.
 
 ---
 
@@ -145,7 +146,7 @@ Created once in `GameBootstrap`, registered in `ServiceRegistry`, disposed on sc
 | `IGameClock` | `UnityGameClock` (runtime), `ManualClock` (tests) | Core | Time source, pause-aware |
 | `IOrderService` | `OrderService` | Orders | Creates orders (Lobby only), drives `OrderStateMachine`, validates delivery |
 | `IStallTicketQueue` | `StallTicketQueue` | Orders | FIFO of orders in `SentToStall`/`InPreparation`; claims pending items for preparation |
-| `IReadyShelf` | `ReadyShelf` | Orders | Slots on the Ready counter; marks items Ready; releases complete orders to Lobby pickup |
+| `IReadyShelf` (= `IReadyShelfPlacement` + `IReadyShelfPickup`) | `ReadyShelf` | Orders | Slots on the Ready counter; validates, marks items Ready and commits the order side (placement, injected into `Stall`); owns T7 pickup and frees the order's slots (injected into `Lobby`) |
 | `IContentDatabase` | `ContentDatabase` | Content | Lookup of `SO_` definitions by id |
 | `IIdGenerator` | `SequentialIdGenerator` | Core | Deterministic ids (seedable for tests) |
 
@@ -181,6 +182,8 @@ All are `readonly struct`, published synchronously on the main thread. Subscribe
 | `GrillStateChanged { GrillId, From, To }` | Cakes | Grill view, UI |
 | `ActionBlocked { InteractableId, ReasonKey }` | Interaction | Prompt UI, QA log |
 | `HeldItemChanged { Previous, Current }` | Interaction | Prompt UI, hand view |
+| `OrderEntryConfirmed { OrderId, Items }` | UI | Lobby (`UI` cannot reference `Lobby`) |
+| `OrderSendRequested { OrderId }` | UI | Lobby |
 
 ---
 
@@ -190,7 +193,7 @@ Stored under `Assets/TramChanh/ScriptableObjects/` ([WF] §7), prefix `SO_` ([WF
 
 | Type | Fields (slice) | Instances in slice |
 |---|---|---|
-| `ItemDefinition` | `Id`, `DisplayName` (real menu name), `Kind` (`Drink`/`Cake`), `PreparedPrefab` | one drink (name TBD), the cake items below |
+| `ItemDefinition` | `Id`, `DisplayName` (real menu name), `Kind` (Core `ItemKind`: `Drink`/`Cake`), `PreparedPrefab` | one drink (name TBD), the cake items below |
 | `DrinkRecipe` | `ItemDefinition`, `TeaBagType`, portions (`CoconutJellyPortion`, `LemonJellyPortion`, `IcePortion`) `[Tbd]`, hold durations `[Tbd]` | `SO_Recipe_Drink_Slice` |
 | `SauceDefinition` | `Id`, `DisplayName`, `SauceBagPrefab`, `MaterialVariant` | Mango, Chocolate, Cheese bags exist as assets ([AP] §32); **no cake mapping is assumed** |
 | `CakeRecipe` | `ItemDefinition`, `SizeVariant` (`[Tbd("DEC-018")]`), `Sauce` (`SauceDefinition`, `[Tbd("DEC-008")]`, may be empty until confirmed), **`TargetBatterMl`**, **`BatterToleranceMl`**, `CookedThreshold`, `BurnThreshold`, hold durations — all `[Tbd("DEC-007")]` | one per cake menu item **and size** |
@@ -291,3 +294,10 @@ Product Owner decision 2026-10-06: **all architectural defaults accepted**, with
 - Changes to ground truth: not allowed.
 - Changes to module boundaries, service interfaces, state machines: proposal in `Docs/` by the agent who found the problem → Claude Code review → Product Owner sign-off.
 - Codex may refactor *inside* a module without review if public contracts and tests are unchanged.
+
+### Amendments
+
+| Date | Change | Reason | Decided by |
+|---|---|---|---|
+| 2026-10-07 | `ItemKind` lives in `TramChanh.Core` (not `Content`); public-API rule added to §4 | `Stall`/`Lobby`/`Customers` use `IPreparedItem.Kind` and the queue/shelf contracts but may not reference `Content` (CS0012). Found by Codex; the earlier "no new asmdef references needed" statement in the plan review was wrong for these assemblies | Claude Code review, wave authorized by the Product Owner |
+| 2026-10-07 | `UI` → `Lobby` communication by typed events (`OrderEntryConfirmed`, `OrderSendRequested`) | `UI` cannot reference `Lobby` | Claude Code review |

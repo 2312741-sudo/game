@@ -9,6 +9,7 @@
 | Date | 2026-10-07 |
 | Gate | REV-003 (drink spec) / REV-002 (order API) for this wave |
 | **Verdict** | **CHANGES REQUESTED** — the architecture and branch split are approved; the contracts need the corrections below *before the branches fork* |
+| **Amendment 1 (2026-10-07)** | Codex adopted **C1–C12**. One correction to this review: `ItemKind` lives in **`TramChanh.Core`**, not `Content` (§9). Shelf pickup API confirmed with amendments (§9). Canonical docs amended in the same PR. The verdict stays open until the contract-first commit is approved (REV-002 / REV-003). |
 
 Reviewed against `Docs/ARCHITECTURE.md` (§1 ground truth, §4 module map, §6 events, §7 content),
 `Docs/ORDER_SYSTEM.md`, `Docs/INTERACTION_SYSTEM.md`, `Docs/DRINK_WORKFLOW.md`,
@@ -25,8 +26,8 @@ Reviewed against `Docs/ARCHITECTURE.md` (§1 ground truth, §4 module map, §6 e
 |---|---|
 | `Orders` and `Lobby` contain only `AssemblyInfo.cs` and an asmdef. | "Existing Orders/Lobby are scaffolds" is correct; the canonical orders work is a true prerequisite. |
 | Core already has typed `OrderId`, `OrderItemId`, **`PreparationId`**, `TableId`, `VehicleId`, `CustomerId`, `Result`, `Result<T>`, `Availability`, `IIdGenerator`, `ManualClock`. | Contracts should use these types, not raw `int` (see C2). |
-| `ItemKind`, `ItemDefinition`, `DrinkRecipe`, `IContentDatabase` do **not** exist; `Content` holds only `BalanceConfig`. | `ItemKind` in `Content` is right, but the rest of the Content subset has no owner (see C4). |
-| asmdef references: `Orders`→Core,Content; `Lobby`→Core,Interaction,Orders; `Stall`→Core,Interaction,Orders; `Drinks`→Core,Content,Interaction,Orders. | The proposed APIs fit the graph with **no new references**. `Orders` cannot see `Interaction`, so `ActorRole` is not visible to the order domain (see C3). |
+| `ItemKind`, `ItemDefinition`, `DrinkRecipe`, `IContentDatabase` do **not** exist; `Content` holds only `BalanceConfig`. | The Content subset has no owner (see C4). *Amendment 1:* `ItemKind` itself belongs in **Core**, not `Content` (§9). |
+| asmdef references: `Orders`→Core,Content; `Lobby`→Core,Interaction,Orders; `Stall`→Core,Interaction,Orders; `Drinks`→Core,Content,Interaction,Orders; `UI`→Core,Interaction,Orders,Content. | ~~The proposed APIs fit the graph with no new references.~~ **Wrong as first written** (§9): `Stall`, `Lobby` and `Customers` use `IPreparedItem.Kind` but cannot reference `Content`. `Orders` also cannot see `Interaction`, so `ActorRole` is not visible to the order domain (see C3). |
 | `ActorRole` is `TramChanh.Interaction.ActorRole`; `ActorRef` is in Core. | The role check can only be an adapter check. |
 | `PlayerInputReader` does not read `UseHeld`, although the action (F / right mouse) already exists in `TramChanh.inputactions`. `InteractionActionDriver.Begin` accepts only `IInteractable`. `IHeldItemAction` exists with `QueryUse` / `ExecuteUse`. | The held-use branch needs no new input asset and no change to the approved interfaces (see C5). |
 
@@ -53,7 +54,7 @@ test now, and the state is not serialized anywhere.
 ## 3. Approved as proposed
 
 - Branch split and order: **orders → (held-use in parallel) → drink preparation → integration**.
-- `ItemKind` in `Content` (`Orders` and `Drinks` may reference `Content`).
+- ~~`ItemKind` in `Content`~~ — superseded by Amendment 1: `ItemKind` in **Core** (§9).
 - `OrderItemRef {OrderId, OrderItemId, PreparationId, IsValid}` — keep `PreparationId` in the ref: it
   lets `IsBound` detect a **stale** ref after a release and re-claim by another preparation (value
   equality over all three fields).
@@ -178,15 +179,15 @@ and prefabs; the others commit none. Compose a base scene additively. Conflict h
 | `Packages/*`, `ProjectSettings/*` | frozen |
 | asmdefs | frozen (C12) |
 
-**C12 — No asmdef reference changes.** Every dependency the plan needs is already allowed
-(`ARCHITECTURE.md` §4). QA-000's graph check must stay green; any new reference is a proposal to
-Claude Code first.
+**C12 — No asmdef reference changes.** QA-000's graph check must stay green; any new reference is a
+proposal to Claude Code first. *(My first draft also said every dependency was already allowed; that was
+wrong for `ItemKind` — see §9. Moving the tiny type to Core fixes it without adding any reference.)*
 
 ## 5. Corrected contract sketch (for the contract-first commit)
 
 ```csharp
-// TramChanh.Content
-public enum ItemKind { Drink, Cake }
+// TramChanh.Core   (Amendment 1: not Content)
+public enum ItemKind { Drink = 0, Cake = 1 }   // explicit values, append-only (serialized by ItemDefinition)
 
 // TramChanh.Orders
 public readonly struct OrderItemRef : IEquatable<OrderItemRef>
@@ -216,13 +217,20 @@ public interface IPreparedItem
     Result MarkReady();                   // mutates only on success; "ready.not_finished" / "ready.already_ready"
 }
 
-public interface IReadyShelf
+public interface IReadyShelfPlacement           // injected into Stall   (Amendment 1)
 {
     Availability CanPlace(IPreparedItem item);   // pure, zero-alloc
     Result PlaceReady(IPreparedItem item);       // validate -> MarkReady() -> order commit -> slot -> events (C1)
     bool Occupied(ItemKind kind);
-    // + pickup/release of one Ready order (C7)
 }
+
+public interface IReadyShelfPickup              // injected into Lobby   (C7, Amendment 1)
+{
+    OrderId NextReadyOrder { get; }              // oldest Ready; IsValid == false when none; pure
+    Result<IReadOnlyList<IPreparedItem>> PickUp(OrderId id, ActorRef actor);   // owns T7; snapshot; clears the order's slots; publishes last
+}
+
+public interface IReadyShelf : IReadyShelfPlacement, IReadyShelfPickup { }     // union: composition root / tests only
 
 public interface IOrderService
 {
@@ -230,7 +238,10 @@ public interface IOrderService
     Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin at);   // C3
     Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered);
     Result SendToStall(OrderId id);
-    // PickUp / Deliver / Complete per ORDER_SYSTEM.md (C7)
+    Result Deliver(OrderId id, DeliveryTarget target);
+    Result Complete(OrderId id);
+    Result Fail(OrderId id, FailureReason reason);   // also frees the order's shelf slots
+    // no PickUp here: IReadyShelfPickup is the single public owner of T7
 }
 ```
 
@@ -252,6 +263,55 @@ selection by the player, `FreeWithScoring` mode.
 
 Codex adopts C1–C4, C7 and C9 in the contract-first commit; Claude Code reviews it (REV-002 / REV-003).
 On approval the four branches fork. REV-003 stays **open** until then.
+
+## 9. Amendment 1 — 2026-10-07 (response to Codex's adoption of C1–C12)
+
+### 9.1 `ItemKind` moves to `TramChanh.Core` — **APPROVED**; an error in this review corrected
+
+Codex found that `Stall`, `Lobby` and `Customers` cannot reference `Content` (`UI` can; it is approved to), yet
+the public contracts use `ItemKind` (`IPreparedItem.Kind`, `IStallTicketQueue`, shelf and queue members). C# requires
+an assembly to reference every assembly whose types appear in the members it uses (CS0012), and asmdef references
+are not transitive, so these assemblies would not compile. **My first review said the plan needed no new asmdef
+references and approved `ItemKind` in `Content`; both statements were wrong for `Stall`, `Lobby` and `Customers`.**
+
+Decision: a tiny `ItemKind` enum in `TramChanh.Core` (`Drink = 0`, `Cake = 1`, explicit and append-only because
+`ItemDefinition.Kind` serializes it). `Content.ItemDefinition` reuses it. Core already hosts the shared typed ids
+(`OrderId`, `PreparationId`, `TableId`, …), so this is consistent, and no asmdef reference changes. Recorded in
+`ARCHITECTURE.md` (§4 public-API rule, amendments log).
+
+The same rule yields a **public-API rule**, now canonical (`ORDER_SYSTEM.md` §9, `CODING_CONVENTIONS.md` §1): contracts
+used across modules expose only Core and own-assembly types (so `ItemRequest.ItemDefinitionId` stays a `string`), checked by the
+reflection test ARCH-001. While auditing the graph I found one more consequence: `UI` cannot reference `Lobby`, so the
+entry UI's *Enter* / *Send* confirmations travel as typed events (`OrderEntryConfirmed`, `OrderSendRequested`),
+which keeps DEC-003's two separate confirmations.
+
+### 9.2 Shelf pickup API — **confirmed, with four amendments**
+
+Confirmed as proposed: `IReadyShelf` exposes `NextReadyOrder` and `PickUp(OrderId, ActorRef) → Result<IReadOnlyList<IPreparedItem>>`; it validates
+the order is `Ready`, commits T7, clears all of that order's slots and publishes last; the `ServedOrder` is a generic
+holdable built in `Lobby`.
+
+1. **Split the injected interface.** `PickUp` must not be reachable from stall-side code. Keep `IReadyShelf` as the union for the
+   composition root and tests, but inject `IReadyShelfPlacement` into `Stall` and `IReadyShelfPickup` into `Lobby`. The
+   domain cannot check `ActorRole` (it lives in `Interaction`), so the narrow interface is the structural guard for "only the
+   Lobby picks up" (extends C3).
+2. **One public owner of T7.** The shelf's `PickUp` is the only public path; remove `PickUp` from `IOrderService`
+   (two entry points for one transition would be ambiguous).
+3. **Pure `NextReadyOrder`.** Ordered by the time the order became Ready (ties by `OrderId`); `OrderId.IsValid == false` when none;
+   allocation-free. `PickUp` accepts any `Ready` order id, so a later UI may choose; the Lobby adapter defaults to `NextReadyOrder`.
+4. **Two deadlocks to close.** With one slot per kind (DEC-014): (a) `Enter` rejects per-kind quantity above the shelf
+   capacity (`order.too_many_for_shelf`), otherwise a two-drink order can never reach `Ready`; (b) `Fail` clears the order's
+   shelf slots, otherwise a customer who leaves after a drink was placed blocks the slot forever.
+   Also required: a test that the placed visual leaves the counter on pickup (the `Stall` adapter reacts to
+   `OrderStatusChanged (Ready → PickedUpByLobby)`).
+
+The validate → commit → publish-last rule of C1 applies to `PickUp` as well.
+
+### 9.3 What is still open
+
+REV-002 / REV-003 close when the **contract-first commit** (interfaces, `ItemKind` in Core, `OrderItemRef`, fakes, contract tests; no
+implementation) is reviewed. Canonical docs were amended to the decisions above; exact member names are final only once that commit is
+approved.
 
 ---
 _Generated by [Claude Code](https://claude.ai/code)_
