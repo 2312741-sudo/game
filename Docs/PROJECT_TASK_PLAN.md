@@ -50,6 +50,10 @@ CC spec (Docs) → CX implement in feature/<task> worktree → AG validate (PASS
 | Task | Status | Notes |
 |---|---|---|
 | REV-000 | **Done** 2026-10-06 | Architecture approved. |
+| REV-001 | **Review completed; re-review pending** | Claude Code reviewed [PR #3](https://github.com/2312741-sudo/game/pull/3) on 2026-10-07: architecture accepted; environment and scope changes requested. ENV-001 / PR #4 reconciles the editor, packages and Input System testability. Final approval remains pending. |
+| CX-010 | **Delivered in PR #3; awaiting re-review** | Documented interaction contracts, interactor, clock-driven actions and neutral placeholder inspections. Scope is the first playable interaction slice; production integration remains deferred. |
+| CX-011 | **Delivered in PR #3; awaiting re-review** | First-person movement, camera look and Input System actions with provisional tuning data. |
+| CX-012 | **Delivered in PR #3; awaiting re-review** | Localized interaction prompt, test cube and saved interaction test scene. |
 | REV-DEC | **Done (defaults)** 2026-10-06 | All DEC defaults accepted with PO amendments; DEC-007, 008 (sauce mapping, drink name), 011, 013, 017 stay open as provisional data (`ARCHITECTURE.md` §10). |
 | CX-001 | **Delivered, awaiting first Unity open** | Skeleton, asmdefs, packages, project-setup script, ground-truth constants, provisional/placeholder markers, smoke tests. Compiles against UnityEngine 2021.3 reference DLLs + NUnit with editor/URP stubs; not yet opened in Unity 6 (QA-002 verifies). |
 | QA-000 | **Done** — report `QA/Reports/QA-000-2026-10-06.md` | Repo/docs/asmdef graph PASS. Open: `main` and `develop` branches do not exist on the remote yet. |

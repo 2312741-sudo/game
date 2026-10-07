@@ -14,7 +14,9 @@
     "TramChanh.UI",
     "TramChanh.App",
     "TramChanh.DevTools",
-    "UnityEngine.TestRunner"
+    "UnityEngine.TestRunner",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
