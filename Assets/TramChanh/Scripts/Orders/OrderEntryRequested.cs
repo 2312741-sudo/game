@@ -10,7 +10,7 @@ namespace TramChanh.Orders
         public OrderEntryRequested(OrderId orderId, IReadOnlyList<ItemRequest> requestedItems)
         {
             OrderId = orderId;
-            RequestedItems = requestedItems;
+            RequestedItems = ItemRequestSnapshot.Copy(requestedItems);
         }
     }
 }

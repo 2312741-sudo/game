@@ -75,6 +75,19 @@ namespace TramChanh.Tests.EditMode.Orders
             PreparedItemContractAssertions.AssertReadyTransition(new PreparedFixture { Finished = true });
         }
 
+        [Test]
+        public void TC_ORDER_006_EntryEventsSnapshotRequestsAndExposeReadOnlyLists()
+        {
+            var source = new[] { new ItemRequest("drink", 1) };
+            var requested = new OrderEntryRequested(new OrderId(1), source);
+            var confirmed = new OrderEntryConfirmed(new OrderId(1), source);
+            source[0] = new ItemRequest("cake", 1);
+            Assert.That(requested.RequestedItems[0].ItemDefinitionId, Is.EqualTo("drink"));
+            Assert.That(confirmed.Items[0].ItemDefinitionId, Is.EqualTo("drink"));
+            Assert.Throws<NotSupportedException>(() => ((IList<ItemRequest>)requested.RequestedItems)[0] = source[0]);
+            Assert.Throws<NotSupportedException>(() => ((IList<ItemRequest>)confirmed.Items)[0] = source[0]);
+        }
+
         private static void AssertBoundary(Type type)
         {
             string assembly = type.Assembly.GetName().Name;
