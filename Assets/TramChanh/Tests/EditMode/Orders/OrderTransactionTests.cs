@@ -77,9 +77,10 @@ namespace TramChanh.Tests.EditMode.Orders
                 events.Add("item:" + e.Status);
                 if (e.Status == OrderItemStatus.Ready) { _orders.Fail(e.Item.OrderId, FailureReason.CancelledByDebug); }
             });
+            using var observeSecondItem = _bus.Subscribe<OrderItemStatusChanged>(e => events.Add("item2:" + e.Status));
             using var observeOrder = _bus.Subscribe<OrderStatusChanged>(e => events.Add("order:" + e.Status));
             Assert.That(_shelf.PlaceReady(item).IsSuccess, Is.True);
-            Assert.That(events, Is.EqualTo(new[] { "item:Ready", "order:Ready", "item:Pending", "order:Failed" }));
+            Assert.That(events, Is.EqualTo(new[] { "item:Ready", "item2:Ready", "order:Ready", "item:Pending", "item2:Pending", "order:Failed" }));
             Assert.That(_orders.Get(item.BoundItem.OrderId).Status, Is.EqualTo(OrderStatus.Failed)); Assert.That(_shelf.Occupied(ItemKind.Drink), Is.False); Assert.That(_faults, Is.Empty);
         }
         [Test]
@@ -95,6 +96,29 @@ namespace TramChanh.Tests.EditMode.Orders
             Assert.Throws<NotSupportedException>(() => ((IList<IPreparedItem>)result.Value).Clear());
             Assert.That(_shelf.Occupied(ItemKind.Drink) || _shelf.Occupied(ItemKind.Cake), Is.False); Assert.That(_faults, Is.Empty);
         }
+        [Test]
+        public void TC_READY_002_ReleaseCannotRequeueAnItemAlreadyOnReadyShelf()
+        {
+            var item = Prepared(1); _shelf.PlaceReady(item);
+            Assert.That(_queue.Release(item.BoundItem).ReasonKey, Is.EqualTo("stall.ticket.not_bound"));
+            Assert.That(_queue.IsBound(item.BoundItem), Is.True); Assert.That(_shelf.Occupied(ItemKind.Drink), Is.True);
+            Assert.That(_orders.Get(item.BoundItem.OrderId).Status, Is.EqualTo(OrderStatus.Ready));
+        }
+        [Test]
+        public void TC_READY_004_OldestReadyPickupGuardWorksWithLargerConfiguredShelf()
+        {
+            _shelf.Dispose(); _bus.Dispose(); _bus = new EventBus();
+            var db = new ContentDatabase(new[] { new KeyValuePair<string, ItemKind>("drink", ItemKind.Drink) });
+            _orders = new OrderService(new ManualClock(), _bus, new SequentialIdGenerator(), db, 2, 1, _faults.Add);
+            _queue = new StallTicketQueue(_orders); _shelf = new ReadyShelf(_orders, _queue, 2, 1);
+            var first = Prepared(1); var second = Prepared(2); _shelf.PlaceReady(first); _shelf.PlaceReady(second);
+            Assert.That(_shelf.NextReadyOrder, Is.EqualTo(first.BoundItem.OrderId));
+            Assert.That(_shelf.PickUp(second.BoundItem.OrderId, new ActorRef(1)).IsSuccess, Is.False);
+            Assert.That(_orders.Get(second.BoundItem.OrderId).Status, Is.EqualTo(OrderStatus.Ready));
+            Assert.That(_shelf.PickUp(first.BoundItem.OrderId, new ActorRef(1)).IsSuccess, Is.True);
+            Assert.That(_shelf.NextReadyOrder, Is.EqualTo(second.BoundItem.OrderId));
+        }
+
         private PreparedFake Prepared(int table)
         {
             var request = new[] { new ItemRequest("drink", 1) }; var origin = OrderOrigin.ForTable(new TableId(table));
