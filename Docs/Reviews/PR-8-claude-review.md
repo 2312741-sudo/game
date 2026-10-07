@@ -3,13 +3,13 @@
 | | |
 |---|---|
 | PR | [#8 DRINK-WAVE: freeze order and prepared-item contracts](https://github.com/2312741-sudo/game/pull/8) (draft) |
-| Head reviewed | `56d8bfbd0770df361039c2341be174d078c9f3bd` |
-| Review history | `e7c1515` (also covers `71a00a2`): CHANGES REQUESTED, two blockers → `56d8bfb` strengthens the shared fixture after the mutation finding: **narrowed, not cleared** (below) |
-| Base | `develop` `17e21cd` (PR #7, metadata freeze, merged). The branch was not rebased: it still carries PR #7's pre-squash commit `87c9291`, byte-identical to what `develop` has (74 files, 0 differences), so a squash-merge is harmless |
+| Head reviewed | `0802648` (branch `feature/DRINK-WAVE-contracts`) |
+| Review history | `e7c1515` (also covers `71a00a2`): CHANGES REQUESTED → `56d8bfb` strengthened the shared fixture (binding drop caught; latch and early publication still not) → `2121c0e` and `0802648` close those gaps: **this review** |
+| Base | `develop` `17e21cd` (PR #7, metadata freeze, merged). The branch carries PR #7's pre-squash commit `87c9291`, byte-identical to `develop`'s content (74 files, 0 differences), so a squash-merge is harmless |
 | Reviewed against | PR #6 amended docs: `ORDER_SYSTEM.md`, `DRINK_WORKFLOW.md`, `ARCHITECTURE.md`, `CODING_CONVENTIONS.md`, `Reviews/DRINK-WAVE-claude-plan-review.md` |
 | Reviewer | Claude Code (Technical Lead / Architect) |
 | Date | 2026-10-07 |
-| **Verdict** | **CHANGES REQUESTED** — four small corrections, all in test code and interface comments; **no interface design change is requested** |
+| **Verdict** | **APPROVED — interface design frozen at `0802648`.** The PR is **not yet merge-ready**: three comment/test-only conditions (M1–M3) and one before the drink-preparation fork (F1). No re-design, and the orders branch may fork now |
 
 ## What matches the docs
 
@@ -18,54 +18,45 @@
 | `ItemKind` in `TramChanh.Core`, `Drink = 0`, `Cake = 1` | ✅ test pins the values |
 | `OrderItemRef` | ✅ typed ids, `default` invalid, equality over all three fields, constructor rejects invalid parts |
 | `IStallTicketQueue` | ✅ `Tickets`, `HasPending`, `ClaimNext(ItemKind, PreparationId)`, `Release → Result`, `IsBound` |
-| `IPreparedItem` | ✅ `Kind`, `BoundItem`, `IsFinished`, `Quality`, `Result MarkReady()` |
+| `IPreparedItem` | ✅ `Kind`, `BoundItem`, `IsFinished`, `Quality`, `Result MarkReady()`, now with a comment stating the rule |
 | Shelf split | ✅ `IReadyShelfPlacement` (`CanPlace → Availability`, `PlaceReady`, `Occupied`), `IReadyShelfPickup` (`NextReadyOrder`, `PickUp(OrderId, ActorRef)`), union `IReadyShelf` |
 | `IOrderService` | ✅ no `PickUp`; `BeginTaking(id, actor, OrderOrigin point)`; `Deliver` / `Complete` not included (CX-025, additive; docs amended) |
-| Events | ✅ `OrderEntryRequested`, `OrderEntryConfirmed`, `OrderSendRequested`, `OrderStatusChanged`, `OrderItemStatusChanged`; the entry events carry immutable snapshots, with a test. Differences from the earlier catalogue (no `From`, no `OrderCreated`) accepted; docs amended |
+| Events | ✅ `OrderEntryRequested`, `OrderEntryConfirmed`, `OrderSendRequested`, `OrderStatusChanged`, `OrderItemStatusChanged`; entry events carry immutable snapshots, with a test. No `From`, no `OrderCreated`: accepted; docs amended |
 | Public-API rule | ✅ every public member of the contracts, read-only views and events uses only Core, Orders and System types (read by hand) |
 | `IContentDatabase` | ✅ minimal `TryGetKind(string, out ItemKind)`; `ItemDefinition` has no numeric data |
 | Isolation | ✅ no asmdef, manifest, `ProjectSettings`, `Docs` or `Automation` change; no production implementation |
-| Metadata | ✅ every new file has a `.meta`, no duplicate GUIDs repo-wide, no asset or folder in `Assets` without one |
-| QA-000 | ✅ PASS (checked on `e7c1515`; the later commit changes only two test files) |
+| Metadata | ✅ every new file has a `.meta`, no duplicate GUIDs, no asset or folder in `Assets` without one |
+| QA-000 | ✅ PASS (checked on `e7c1515`; later commits change only the interface comment and two test files) |
 
-**Evidence.** I compiled the contract assemblies and ran `OrderContractTests` outside Unity (.NET 8, NUnitLite): **12 of 12 pass** at `56d8bfb`. The author reports Unity validation PASS for `e7c1515` (compile, EditMode 84, PlayMode 20) and is re-running the 12-test fixture; **the Unity result for `56d8bfb` is still pending**.
+**Evidence.** I compiled the contract assemblies and ran `OrderContractTests` outside Unity (.NET 8, NUnitLite): **17 of 17 pass** at `0802648`. The author reports Unity validation PASS for `e7c1515` (compile, EditMode 84, PlayMode 20); **the Unity result for the final head is still pending**.
 
-## What `56d8bfb` fixed (verified)
+## What the later commits fixed (verified with deliberately wrong fakes)
 
-The shared fixture now snapshots `Kind`, `BoundItem`, `Quality` and `IsFinished` across success, repeated success and rejection; adds `AssertUnfinishedDoesNotMutate` (returns `ready.not_finished`, changes nothing); takes an optional source-state probe; and proves it with four malicious fakes (failure changes the kind, failure changes source state, success changes the binding, a repeated failure changes the quality). I re-ran my own three violators against it:
+| Violator | `e7c1515` | `56d8bfb` | `0802648` |
+|---|---|---|---|
+| C — `MarkReady` drops `BoundItem` | undetected | caught | **caught** |
+| B — `MarkReady` publishes inside the shelf transaction | undetected | undetected | **caught** (mandatory `readEventCount`; plus a test that publishes through a real `EventBus`) |
+| A1 — a rejection latches and a *repeated* rejection returns the wrong reason | undetected | undetected | **caught** (the rejection is now repeated twice) |
+| A2 — a rejection latches in private state and only a *later success* is poisoned | undetected | undetected | caught **only** if the rejection and the ready assertion run on the **same instance** (see M1) |
 
-| Violator | `e7c1515` | `56d8bfb` |
-|---|---|---|
-| C — `MarkReady` drops `BoundItem` | passed (undetected) | **caught** |
-| A — a *rejected* `MarkReady` latches, so a later legitimate one fails (nothing observable) | passed (undetected) | **still undetected** |
-| B — `MarkReady` publishes inside the shelf transaction | passed (undetected) | **still undetected** |
+Also confirmed: `readState` and `readEventCount` are now **mandatory** (the assertions throw `ArgumentNullException` when omitted, with a test), which removes the "optional hook can be skipped" loophole.
 
-## Required corrections
+## Conditions before PR #8 merges (comment- and test-only; no interface change)
 
-### C1 — Detect a rejection that poisons a later call (violator A)
+- **M1 — Fixture usage rule and the success-only-latch fake.** The fixture's own tests use separate instances for the rejection and ready assertions, which cannot see violator A2. State in the fixture's summary (currently "run this fixture with a finished, not-yet-Ready item") that implementations run `AssertUnfinishedTransition`, then finish the item, then `AssertReadyTransition` on the **same instance**, and add a malicious-fake test that proves it (rule now in `ORDER_SYSTEM.md` §6.4).
+- **M2 — Finish the rule on the frozen interfaces.** `IPreparedItem.MarkReady` now carries it. Add the matching comment to `IReadyShelfPlacement.PlaceReady`, `IReadyShelfPickup.PickUp` and `IOrderService.Fail`: validate, commit, then publish after the last mutation; a failing observer never changes the result. (PR #6 is not merged, so the contract must describe itself.)
+- **M3 — Rebase onto `develop` and pass Unity validation of the final head** (compile, EditMode, PlayMode, QA-000), including ARCH-001, which matches assembly names, under Unity's runtime.
 
-`AssertUnfinishedDoesNotMutate` only notices what is observable through `Kind`, `BoundItem`, `Quality`, `IsFinished`, or the **optional** `readState`. A latch in a private field passes. Add a **required** `Action finishFinalStep` parameter: after the no-mutation checks, call it and assert `MarkReady().IsSuccess` (and then `ready.already_ready` on a repeat). This needs no private state, so an implementation cannot skip it by omitting `readState`. Add a malicious-fake test for it.
+## Before the drink-preparation branch forks
 
-### C2 — Enforce "`MarkReady` publishes nothing" (violator B)
-
-Add a **required** `Func<int> publishedEventCount` to both assertions and assert it does not move across every `MarkReady()` call (the implementation test passes a recording-bus counter; the pure fixture passes `() => 0`). Add a malicious-fake test. This is the shared-fixture half of the atomicity rule in `ORDER_SYSTEM.md` §6.4 and TC-DRINK-015.
-
-### C3 — Write the rule into the frozen interfaces
-
-PR #6 is not merged, so the contract must describe itself. XML documentation: `IPreparedItem.MarkReady` ("mutates only this object and only on success; publishes nothing, invokes no callback, has no externally visible side effect"); `IReadyShelfPlacement.PlaceReady`, `IReadyShelfPickup.PickUp`, `IOrderService.Fail` ("validate, commit, then publish after the last mutation; a failing observer never changes the result").
-
-### C4 — Shareable test doubles
-
-`PreparedFixture`, `TicketFixture` and the new `FaultyPrepared` are `private` nested classes of `OrderContractTests`, so the parallel branches cannot reuse them. Move them to a shared public location (for example `Tests/EditMode/Orders/Doubles/`) and add the programmable doubles the adapters need: a fake `IStallTicketQueue` (claim, release, `IsBound`, FIFO, stale-ref rejection as the docs define), a stub `IReadyShelfPlacement` with settable results, and a `RecordingEventBus`. Faithful shelf and order-service behaviour stays with the orders branch. I will accept C4 either in this PR or in a small follow-up that merges before the drink-preparation branch forks.
+- **F1 — Shareable test doubles.** `PreparedFixture`, `FaultyPrepared` and `TicketFixture` are still `private` nested classes of `OrderContractTests`. Move them to a shared public location (for example `Tests/EditMode/Orders/Doubles/`), plus a fake `IStallTicketQueue` (claim, release, `IsBound`, FIFO, stale-ref rejection), a stub `IReadyShelfPlacement` with settable results and a `RecordingEventBus`. A follow-up PR that merges first is fine; the orders branch does not need it.
 
 ## Non-blocking
 
 1. **ARCH-001 depth.** It checks only five interfaces' direct signatures; recurse into `IReadOnlyOrder`, `IReadOnlyOrderItem` and the event structs. (The compiler already enforces the rule for `Stall` and `Lobby`.)
-2. **Test ids.** `TC_ORDER_009` here is the stale-binding test; in the docs it is TC-ORDER-011 (TC-ORDER-009 is "discard ruined cake") and the prepared contract is TC-READY-002.
+2. **Test ids.** `TC_ORDER_009` is the stale-binding test here; in the docs it is TC-ORDER-011 (TC-ORDER-009 is "discard ruined cake") and the prepared contract is TC-READY-002.
 3. **`default(ItemRequest)`** bypasses its constructor (null id, quantity 0); `Enter` must reject it (implementation test).
-4. **Rebase onto `develop`** before merging so the squash does not carry PR #7's commit.
-5. **Unity validation of the head** is the merge gate, including ARCH-001 under Unity's runtime (it matches assembly names).
-6. **Parked with other branches.** `DrinkRecipe` (shake/wipe durations) concerns only `Drinks` and integration, so the drink-preparation branch freezes it. The `ContentDatabase` implementation and the `order.unknown_item` reason key (new; used by `Enter` when `TryGetKind` fails) belong to the orders branch.
+4. **Parked with other branches.** `DrinkRecipe` (shake/wipe durations) is frozen by the drink-preparation branch; the `ContentDatabase` implementation and the `order.unknown_item` reason key (new; `Enter` when `TryGetKind` fails) belong to the orders branch.
 
 ## Event atomicity — the proposed interpretation is **valid**, with four refinements
 
@@ -81,7 +72,7 @@ Refinements (written into `ORDER_SYSTEM.md` §6.4):
 
 ## Merge readiness
 
-**Not yet.** Make C1–C3 (and C4 here or in a follow-up), rebase onto `develop`, and pass Unity validation of the head. Then the interfaces are approved as frozen, REV-002 closes, and the four branches may fork.
+**Interfaces: frozen and approved at `0802648`.** The PR itself is not merge-ready until M1–M3 are done; I will re-check only the follow-up commit. F1 gates the drink-preparation fork, not the orders fork.
 
 ---
 _Generated by [Claude Code](https://claude.ai/code)_

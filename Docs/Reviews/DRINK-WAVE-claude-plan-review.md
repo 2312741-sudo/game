@@ -9,7 +9,7 @@
 | Date | 2026-10-07 |
 | Gate | REV-003 (drink spec) / REV-002 (order API) for this wave |
 | **Verdict** | **CHANGES REQUESTED** — the architecture and branch split are approved; the contracts need the corrections below *before the branches fork* |
-| **Amendment 2 (2026-10-07)** | The frozen contract PR #8 was reviewed: [`PR-8-claude-review.md`](PR-8-claude-review.md). Interface design approved; four small corrections open. Event publication is frozen in `ORDER_SYSTEM.md` §6.4 (participants mutate only; the transaction owner publishes after commit; observers cannot change the result). |
+| **Amendment 2 (2026-10-07)** | The frozen contract PR #8 was reviewed: [`PR-8-claude-review.md`](PR-8-claude-review.md). Interface design **approved** (frozen at `0802648`); merge conditions open. Event publication is frozen in `ORDER_SYSTEM.md` §6.4 (participants mutate only; the transaction owner publishes after commit; observers cannot change the result). |
 | **Amendment 1 (2026-10-07)** | Codex adopted **C1–C12**. One correction to this review: `ItemKind` lives in **`TramChanh.Core`**, not `Content` (§9). Shelf pickup API confirmed with amendments (§9). Canonical docs amended in the same PR. The verdict stays open until the contract-first commit is approved (REV-002 / REV-003). |
 
 Reviewed against `Docs/ARCHITECTURE.md` (§1 ground truth, §4 module map, §6 events, §7 content),
