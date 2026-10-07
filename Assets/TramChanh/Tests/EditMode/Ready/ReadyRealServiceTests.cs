@@ -234,7 +234,7 @@ namespace TramChanh.Tests.EditMode.Ready
         {
             OrderId id = NewOrder(1, "drink");
             Bag drink = NewBag(ItemKind.Drink);
-            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == drink) { _orders.Fail(id, FailureReason.CustomerLeft); } });
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && ReferenceEquals(change.Previous, drink)) { _orders.Fail(id, FailureReason.CustomerLeft); } });
             PlaceFromHand(drink);
             Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.Failed));
             Assert.That(_shelf.Occupied(ItemKind.Drink), Is.False);
@@ -256,7 +256,7 @@ namespace TramChanh.Tests.EditMode.Ready
             Bag drink = NewBag(ItemKind.Drink);
             var lobbyHands = new HeldItemSlot(_events);
             var lobby = new InteractionContext(new ActorRef(2), ActorRole.Lobby, lobbyHands, _clock, _events);
-            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == drink) { _pickup.Execute(lobby); } });
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && ReferenceEquals(change.Previous, drink)) { _pickup.Execute(lobby); } });
             PlaceFromHand(drink);
             var bundle = lobbyHands.Current as ServedOrder;
             Assert.That(bundle, Is.Not.Null, "The Lobby pickup committed during the hand release.");
