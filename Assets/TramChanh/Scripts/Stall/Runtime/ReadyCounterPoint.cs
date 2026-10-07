@@ -88,6 +88,14 @@ namespace TramChanh.Stall.Runtime
             try
             {
                 result = _shelf.PlaceReady(prepared);
+                if (result.IsSuccess)
+                {
+                    // The shelf has committed. The in-flight marker stays set through the hand release so a
+                    // HeldItemChanged observer that fails or picks up the order is recorded too. A faulting
+                    // observer must not skip the presentation or reconciliation below, so the release is
+                    // isolated and its actual outcome is read back.
+                    ReleaseFromHand(context, held);
+                }
                 disposition = _placementDisposition;
             }
             finally
@@ -100,11 +108,8 @@ namespace TramChanh.Stall.Runtime
                 context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
                 return;
             }
-            // The shelf has committed. A faulting HeldItemChanged observer must not skip the presentation
-            // or reconciliation below, so the release is isolated and its actual outcome is read back.
-            ReleaseFromHand(context, held);
-            // A notification can fail or pick up the order before PlaceReady returns.
-            // Reconcile that newer committed state before presenting the original placement.
+            // A notification can fail or pick up the order before PlaceReady or the hand release returns.
+            // Reconcile the latest committed state before presenting the original placement.
             if (disposition.HasValue)
             {
                 if (disposition.Value == OrderStatus.Failed)
