@@ -4,6 +4,7 @@ using TramChanh.Content;
 using TramChanh.Core.GroundTruth;
 using TramChanh.Core.Provisional;
 using TramChanh.Drinks.Runtime;
+using TramChanh.DevTools.Drinks;
 using TramChanh.Interaction;
 using TramChanh.Interaction.Preview;
 using TramChanh.UI.Localization;
@@ -88,7 +89,6 @@ namespace TramChanh.EditorTools.Placeholders
             rackData.FindProperty("_interactionPoint").objectReferenceValue = tea.Find("InteractionPoint");
             rackData.FindProperty("_balance").objectReferenceValue = balance;
             rackData.FindProperty("_bagPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(BagPath).GetComponent<TeaBagItem>();
-            rackData.FindProperty("_allowUnboundPickupForTest").boolValue = true;
             SerializedProperty bagSlots = rackData.FindProperty("_bagSlots");
             bagSlots.arraySize = slots.childCount;
             for (int i = 0; i < slots.childCount; i++)
@@ -104,10 +104,36 @@ namespace TramChanh.EditorTools.Placeholders
             SetReference(handView, "_holdAnchor", holdAnchor);
             SetReference(bootstrap, "_heldItemView", handView);
             SetReference(bootstrap, "_balance", balance);
+            ConfigurePickupFixture(bootstrap, rack);
             SetReference(prompt, "_table", CreateText());
             AssetDatabase.SaveAssets();
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log("[TramChanh] Saved DRINK-001 pickup-only test scene: " + ScenePath);
+        }
+
+        /// <summary>Retires the production bypass in the saved pickup-only fixture.</summary>
+        public static void MigratePickupFixture()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath);
+            PlayerInteractionTestBootstrap bootstrap = null;
+            TeaRackController rack = null;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.TryGetComponent(out PlayerInteractionTestBootstrap found)) { bootstrap = found; }
+                var racks = root.GetComponentsInChildren<TeaRackController>(true);
+                if (racks.Length > 0) { rack = racks[0]; }
+            }
+            if (bootstrap == null || rack == null) { throw new System.InvalidOperationException("Pickup fixture wiring is missing."); }
+            ConfigurePickupFixture(bootstrap, rack);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AssetDatabase.SaveAssets();
+        }
+        private static void ConfigurePickupFixture(PlayerInteractionTestBootstrap bootstrap, TeaRackController rack)
+        {
+            var setup = bootstrap.GetComponent<TeaRackPickupTestSetup>();
+            if (setup == null) { setup = bootstrap.gameObject.AddComponent<TeaRackPickupTestSetup>(); }
+            SetReference(setup, "_bootstrap", bootstrap);
+            SetReference(setup, "_rack", rack);
         }
 
         private static void CreateBag()

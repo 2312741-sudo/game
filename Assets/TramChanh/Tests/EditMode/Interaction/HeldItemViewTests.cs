@@ -29,7 +29,9 @@ namespace TramChanh.Tests.EditMode.Interaction
                 grip.localRotation = Quaternion.Euler(10f, 20f, 30f);
                 var item = bag.AddComponent<TeaBagItem>();
                 SetReference(item, "_handGrip", grip);
-                item.Initialize(new TeaBagPickup());
+                var preparation = new DrinkPreparation(new PreparationId(1));
+                preparation.TryPickUp();
+                item.Initialize(preparation);
                 var collider = bag.AddComponent<BoxCollider>();
                 var view = player.AddComponent<HeldItemView>();
                 SetReference(view, "_holdAnchor", anchor);

@@ -14,7 +14,7 @@ namespace TramChanh.Tests.EditMode.Drinks
     public sealed class TeaRackPickupAssetTests
     {
         [Test]
-        public void GT_003_PrePortionedBagHasGripAndClosedTeaVisualWithoutAUseOrMeasureAction()
+        public void GT_003_PrePortionedBagHasGripAndClosedTeaVisualWithCanonicalHeldActions()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TeaRackPickupSceneBuilder.BagPath);
             Assert.That(prefab, Is.Not.Null);
@@ -23,7 +23,7 @@ namespace TramChanh.Tests.EditMode.Drinks
             Assert.That(bag.PlacementPoint, Is.SameAs(prefab.transform.Find("Anchors/PlacementPoint")));
             Assert.That(prefab.transform.Find("Visual/Bag_Closed").GetComponent<Renderer>(), Is.Not.Null);
             Assert.That(prefab.transform.Find("Visual/TeaLiquid").GetComponent<Renderer>(), Is.Not.Null);
-            Assert.That(prefab.GetComponents<MonoBehaviour>().Any(b => b is IHeldItemAction), Is.False);
+            Assert.That(prefab.GetComponents<MonoBehaviour>().Any(b => b is IHeldItemAction), Is.True);
             Assert.That(prefab.GetComponentsInChildren<MeshCollider>(true), Is.Empty);
             foreach (Transform child in prefab.GetComponentsInChildren<Transform>(true))
             {

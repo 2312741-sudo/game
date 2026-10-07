@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 452b3242c37f5425f83d56ac58ed7cf2, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Core::TramChanh.Core.Provisional.PlaceholderAsset
   _finalAssetTask: ART-STALL-001 blockout / final art tasks
   _pendingDecisions: DEC-011; unmeasured equipment geometry
@@ -849,7 +849,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 851bedd2ac4654ac5a660cb6a76277ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.PlayerInteractor
 --- !u!114 &532477578 stripped
 MonoBehaviour:
@@ -860,7 +860,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 35f84010a89974ce6b8fe343ac60abdb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.Player.FirstPersonController
 --- !u!114 &532477579 stripped
 MonoBehaviour:
@@ -871,7 +871,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f064d1e70fbd4b01921584ca268ddac, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.Player.PlayerInputReader
 --- !u!4 &532477580 stripped
 Transform:
@@ -893,7 +893,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bab2f37df6b54c589ade12da72745e81, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.HeldItemView
   _holdAnchor: {fileID: 1377365916}
 --- !u!1001 &550044125
@@ -1098,7 +1098,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67be2566df2cd455f80b0e2c7857ae6d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.UI::TramChanh.UI.Prompt.InteractionPromptView
   _table: {fileID: 11400000, guid: 0a93b164ee3dc421b8c7553aed748273, type: 2}
   _language: en
@@ -1112,7 +1112,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
   m_PanelSettings: {fileID: 11400000, guid: 679baaf3b60d64cd28e8c116b5e8bc37, type: 2}
   m_ParentUI: {fileID: 0}
@@ -1600,7 +1600,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
   _behaviour: {fileID: 992713998}
 --- !u!114 &992713998
@@ -1613,7 +1613,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 85367cd1ae85c4134bf057af7135d4eb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.Preview.InspectionInteractable
   _id: 2
   _interactionPoint: {fileID: 992713994}
@@ -1767,6 +1767,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1517160260}
   - component: {fileID: 1517160259}
+  - component: {fileID: 1517160261}
   m_Layer: 0
   m_Name: TestBootstrap
   m_TagString: Untagged
@@ -1784,7 +1785,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 063fb893a31c64bc182d91d1436804c7, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.App::TramChanh.App.PlayerInteractionTestBootstrap
   _balance: {fileID: 11400000, guid: 81bf93f84dd574b7dbc9f2b4c42130fc, type: 2}
   _input: {fileID: 532477579}
@@ -1808,6 +1809,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1517160261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517160258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b0d5163183d4172a6c27b672de673e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.DevTools::TramChanh.DevTools.Drinks.TeaRackPickupTestSetup
+  _bootstrap: {fileID: 1517160259}
+  _rack: {fileID: 2070959793}
 --- !u!1001 &1690327150
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2290,7 +2305,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
   _behaviour: {fileID: 2070959793}
 --- !u!114 &2070959793
@@ -2303,16 +2318,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8574b314cd494ff29230454cf0e8fe99, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: TramChanh.Drinks::TramChanh.Drinks.Runtime.TeaRackController
   _id: 1
   _interactionPoint: {fileID: 2070959789}
   _balance: {fileID: 11400000, guid: 81bf93f84dd574b7dbc9f2b4c42130fc, type: 2}
+  _recipe: {fileID: 0}
   _bagPrefab: {fileID: 2377749006692546719, guid: e87687542b3004b37b02d296ace17859, type: 3}
   _bagSlots:
   - {fileID: 1186429710}
   - {fileID: 1186429709}
-  _allowUnboundPickupForTest: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
