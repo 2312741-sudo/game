@@ -34,6 +34,7 @@ namespace TramChanh.EditorTools.ProjectSetup
             var changes = new List<string>();
             EnsureLayers(changes);
             EnsureLinearColorSpace(changes);
+            EnsureInputSystem(changes);
             EnsureUrp(changes);
 
             if (logChanges && changes.Count > 0)
@@ -101,6 +102,19 @@ namespace TramChanh.EditorTools.ProjectSetup
             {
                 PlayerSettings.colorSpace = ColorSpace.Linear;
                 changes.Add("color space = Linear");
+            }
+        }
+
+        private static void EnsureInputSystem(List<string> changes)
+        {
+            var settings = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset")[0]);
+            SerializedProperty handler = settings.FindProperty("activeInputHandler");
+            if (handler.intValue == 0)
+            {
+                // Both backends: enable Gameplay actions while retaining any existing legacy input.
+                handler.intValue = 2;
+                settings.ApplyModifiedPropertiesWithoutUndo();
+                changes.Add("active input handling = Both");
             }
         }
 

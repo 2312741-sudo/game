@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52532542070784b29a5107a8d0354b3e, type: 3}
+  m_Name: SO_PromptText_Preview
+  m_EditorClassIdentifier: TramChanh.UI::TramChanh.UI.Localization.PromptLocalizationTable
+  _entries:
+  - _key: preview.controls
+    _en: 'WASD: move   Mouse: look   E / click: inspect   Esc: release cursor'
+    _vi: "WASD: di chuy\u1EC3n   Chu\u1ED9t: nh\xECn   E / nh\u1EA5p: ki\u1EC3m tra   Esc: th\u1EA3 chu\u1ED9t"
+  - _key: preview.key
+    _en: '[E / LMB]'
+    _vi: "[E / chu\u1ED9t tr\xE1i]"
+  - _key: preview.tea_rack.inspect
+    _en: Inspect tea rack placeholder
+    _vi: "Ki\u1EC3m tra gi\xE1 tr\xE0 t\u1EA1m"
+  - _key: preview.tea_rack.reset
+    _en: "Tea rack inspected \u2014 reset highlight"
+    _vi: "\u0110\xE3 ki\u1EC3m tra gi\xE1 tr\xE0 \u2014 b\u1ECF \u0111\xE1nh d\u1EA5u"
+  - _key: preview.grill.inspect
+    _en: Inspect grill placeholder
+    _vi: "Ki\u1EC3m tra b\u1EBFp n\u01B0\u1EDBng t\u1EA1m"
+  - _key: preview.grill.reset
+    _en: "Grill inspected \u2014 reset highlight"
+    _vi: "\u0110\xE3 ki\u1EC3m tra b\u1EBFp \u2014 b\u1ECF \u0111\xE1nh d\u1EA5u"
+  - _key: preview.cube.inspect
+    _en: Inspect test cube
+    _vi: "Ki\u1EC3m tra kh\u1ED1i th\u1EED nghi\u1EC7m"
+  - _key: preview.cube.reset
+    _en: "Cube inspected \u2014 reset highlight"
+    _vi: "\u0110\xE3 ki\u1EC3m tra kh\u1ED1i \u2014 b\u1ECF \u0111\xE1nh d\u1EA5u"
+  - _key: preview.blocked
+    _en: Inspection temporarily blocked
+    _vi: "T\u1EA1m th\u1EDDi kh\xF4ng th\u1EC3 ki\u1EC3m tra"
