@@ -72,13 +72,15 @@ namespace TramChanh.Tests.EditMode.Orders
         [Test]
         public void TC_ORDER_005_FinishedPreparedFixtureObeysSharedContract()
         {
-            PreparedItemContractAssertions.AssertReadyTransition(new PreparedFixture { Finished = true });
+            var item = new PreparedFixture { Finished = true };
+            PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1, () => item.EventCount);
         }
 
         [Test]
         public void TC_ORDER_005_UnfinishedPreparedFixtureObeysSharedContract()
         {
-            PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(new PreparedFixture());
+            var item = new PreparedFixture();
+            PreparedItemContractAssertions.AssertUnfinishedTransition(item, () => item.State, () => item.EventCount);
         }
 
         [TestCase(ContractFault.FailureChangesKind)]
@@ -87,7 +89,7 @@ namespace TramChanh.Tests.EditMode.Orders
         public void TC_ORDER_005_SharedFixtureDetectsMutationOnUnfinishedFailure(ContractFault fault)
         {
             var item = new FaultyPrepared(fault, false);
-            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(item, () => item.State));
+            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedTransition(item, () => item.State, () => item.EventCount));
         }
 
         [TestCase(ContractFault.SuccessChangesBinding)]
@@ -95,7 +97,7 @@ namespace TramChanh.Tests.EditMode.Orders
         public void TC_ORDER_005_SharedFixtureDetectsMutationDuringSuccessfulOrRepeatedReady(ContractFault fault)
         {
             var item = new FaultyPrepared(fault, true);
-            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1));
+            Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, () => item.State, 1, () => item.EventCount));
         }
 
         [TestCase(false)]
@@ -113,8 +115,20 @@ namespace TramChanh.Tests.EditMode.Orders
             }
             else
             {
-                Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedDoesNotMutate(item, () => item.State, () => count));
+                Assert.Throws<AssertionException>(() => PreparedItemContractAssertions.AssertUnfinishedTransition(item, () => item.State, () => count));
             }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TC_ORDER_005_SharedFixtureRequiresSourceStateAndEventObservers(bool omitState)
+        {
+            var item = new PreparedFixture { Finished = true };
+            Func<object> state = omitState ? null : () => item.State;
+            Func<int> count = omitState ? () => item.EventCount : null;
+            Assert.Throws<ArgumentNullException>(() => PreparedItemContractAssertions.AssertReadyTransition(item, state, 1, count));
+            item.Finished = false;
+            Assert.Throws<ArgumentNullException>(() => PreparedItemContractAssertions.AssertUnfinishedTransition(item, state, count));
         }
 
         [Test]
@@ -145,6 +159,8 @@ namespace TramChanh.Tests.EditMode.Orders
             public bool IsFinished => Finished;
             public int Quality => 100;
             public bool WasMarkedReady { get; private set; }
+            public int State => WasMarkedReady ? 1 : 0;
+            public int EventCount => 0;
             public Result MarkReady()
             {
                 if (!Finished) { return Result.Fail("ready.not_finished"); }
@@ -182,6 +198,7 @@ namespace TramChanh.Tests.EditMode.Orders
             public bool IsFinished { get; }
             public int Quality { get; private set; } = 100;
             public int State { get; private set; }
+            public int EventCount { get; private set; }
             public FaultyPrepared(ContractFault fault, bool finished, Action publish = null) { _fault = fault; IsFinished = finished; _publish = publish; }
             public Result MarkReady()
             {
@@ -191,7 +208,7 @@ namespace TramChanh.Tests.EditMode.Orders
                     _rejected = true;
                     if (_fault == ContractFault.FailureChangesKind) { Kind = ItemKind.Cake; }
                     if (_fault == ContractFault.FailureChangesSourceState) { State++; }
-                    if (_fault == ContractFault.EventsOnFailure) { _publish(); }
+                    if (_fault == ContractFault.EventsOnFailure) { EventCount++; _publish?.Invoke(); }
                     return Result.Fail("ready.not_finished");
                 }
                 if (State == 1)
@@ -201,7 +218,7 @@ namespace TramChanh.Tests.EditMode.Orders
                 }
                 State = 1;
                 if (_fault == ContractFault.SuccessChangesBinding) { BoundItem = default; }
-                if (_fault == ContractFault.EventsOnSuccess) { _publish(); }
+                if (_fault == ContractFault.EventsOnSuccess) { EventCount++; _publish?.Invoke(); }
                 return Result.Success();
             }
         }

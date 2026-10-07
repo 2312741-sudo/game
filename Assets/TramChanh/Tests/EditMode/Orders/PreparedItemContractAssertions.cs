@@ -8,25 +8,24 @@ namespace TramChanh.Tests.EditMode.Orders
     /// <summary>Every preparation module runs this fixture with a finished, not-yet-Ready item.</summary>
     public static class PreparedItemContractAssertions
     {
-        public static void AssertReadyTransition(IPreparedItem item, Func<object> readState = null, object expectedReadyState = null, Func<int> readEventCount = null)
+        public static void AssertReadyTransition(IPreparedItem item, Func<object> readState, object expectedReadyState, Func<int> readEventCount)
         {
+            RequireObservers(readState, readEventCount);
             Assert.That(item.IsFinished, Is.True);
             var initial = new Snapshot(item, readState, readEventCount);
             Assert.That(item.MarkReady().IsSuccess, Is.True);
             AssertStableIdentityAndQuality(item, initial);
             Assert.That(item.IsFinished, Is.True, "Final-step completion remains true after Ready.");
             AssertNoEvents(initial, readEventCount);
-            if (readState != null && expectedReadyState != null)
-            {
-                Assert.That(readState(), Is.EqualTo(expectedReadyState));
-            }
+            Assert.That(readState(), Is.EqualTo(expectedReadyState));
             var ready = new Snapshot(item, readState, readEventCount);
             Assert.That(item.MarkReady().ReasonKey, Is.EqualTo("ready.already_ready"));
             AssertUnchanged(item, ready, readState, readEventCount);
         }
 
-        public static void AssertUnfinishedDoesNotMutate(IPreparedItem item, Func<object> readState = null, Func<int> readEventCount = null)
+        public static void AssertUnfinishedTransition(IPreparedItem item, Func<object> readState, Func<int> readEventCount)
         {
+            RequireObservers(readState, readEventCount);
             Assert.That(item.IsFinished, Is.False);
             var before = new Snapshot(item, readState, readEventCount);
             // Repeat the rejection: a hidden Ready latch must not change the next result.
@@ -41,16 +40,19 @@ namespace TramChanh.Tests.EditMode.Orders
         {
             AssertStableIdentityAndQuality(item, before);
             Assert.That(item.IsFinished, Is.EqualTo(before.IsFinished));
-            if (readState != null) { Assert.That(readState(), Is.EqualTo(before.State)); }
+            Assert.That(readState(), Is.EqualTo(before.State));
             AssertNoEvents(before, readEventCount);
         }
 
         private static void AssertNoEvents(Snapshot before, Func<int> readEventCount)
         {
-            if (readEventCount != null)
-            {
-                Assert.That(readEventCount(), Is.EqualTo(before.EventCount), "MarkReady must not publish before the shelf transaction commits.");
-            }
+            Assert.That(readEventCount(), Is.EqualTo(before.EventCount), "MarkReady must not publish before the shelf transaction commits.");
+        }
+
+        private static void RequireObservers(Func<object> readState, Func<int> readEventCount)
+        {
+            if (readState == null) { throw new ArgumentNullException(nameof(readState)); }
+            if (readEventCount == null) { throw new ArgumentNullException(nameof(readEventCount)); }
         }
 
         private static void AssertStableIdentityAndQuality(IPreparedItem item, Snapshot before)
@@ -74,8 +76,8 @@ namespace TramChanh.Tests.EditMode.Orders
                 Binding = item.BoundItem;
                 Quality = item.Quality;
                 IsFinished = item.IsFinished;
-                State = readState?.Invoke();
-                EventCount = readEventCount?.Invoke() ?? 0;
+                State = readState();
+                EventCount = readEventCount();
             }
         }
     }
