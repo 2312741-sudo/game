@@ -20,6 +20,8 @@ namespace TramChanh.Stall.Runtime
         private Component _cakeVisual;
         private OrderId _drinkOrder;
         private OrderId _cakeOrder;
+        private OrderId _placingOrder;
+        private OrderStatus? _placementDisposition;
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
         public Transform DrinkPlacementPoint => _drinkPlacementPoint;
@@ -76,7 +78,20 @@ namespace TramChanh.Stall.Runtime
                 context.Events.Publish(new ActionBlocked(Id, "ready.item_missing_placement_point"));
                 return;
             }
-            Result result = _shelf.PlaceReady(prepared);
+            _placingOrder = prepared.BoundItem.OrderId;
+            _placementDisposition = null;
+            Result result;
+            OrderStatus? disposition;
+            try
+            {
+                result = _shelf.PlaceReady(prepared);
+                disposition = _placementDisposition;
+            }
+            finally
+            {
+                _placingOrder = default;
+                _placementDisposition = null;
+            }
             if (!result.IsSuccess)
             {
                 context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
@@ -85,6 +100,19 @@ namespace TramChanh.Stall.Runtime
             if (ReferenceEquals(context.Hands.Current, held))
             {
                 context.Hands.TryRelease();
+            }
+            // A notification can fail or pick up the order before PlaceReady returns.
+            // Reconcile that newer committed state before presenting the original placement.
+            if (disposition.HasValue)
+            {
+                visual.transform.SetParent(null, true);
+                if (disposition.Value == OrderStatus.Failed)
+                {
+                    visual.gameObject.SetActive(false);
+                    if (Application.isPlaying) { Destroy(visual.gameObject); }
+                    else { DestroyImmediate(visual.gameObject); }
+                }
+                return;
             }
             Transform destination = prepared.Kind == ItemKind.Drink ? _drinkPlacementPoint : _cakePlacementPoint;
             Transform root = visual.transform;
@@ -126,6 +154,7 @@ namespace TramChanh.Stall.Runtime
             {
                 return;
             }
+            if (_placingOrder.IsValid && change.OrderId == _placingOrder) { _placementDisposition = change.Status; }
             ClearVisual(ref _drinkVisual, ref _drinkOrder, change);
             ClearVisual(ref _cakeVisual, ref _cakeOrder, change);
         }
