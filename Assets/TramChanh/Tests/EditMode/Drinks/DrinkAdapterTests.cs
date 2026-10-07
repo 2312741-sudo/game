@@ -157,12 +157,12 @@ namespace TramChanh.Tests.EditMode.Drinks
             Assert.That(_wipe.IsWiping, Is.True);
             _hands.TryRelease();
             TeaBagItem replacement = CreateBag(2);
+            Assert.That(_hands.TryPickUp(replacement), Is.True);
             replacement.Preparation.Open();
             replacement.Preparation.AddCoconutJelly();
             replacement.Preparation.AddLemonJelly();
             replacement.Preparation.AddIce();
             replacement.Preparation.Shake();
-            _hands.TryPickUp(replacement);
             Assert.That(_wipe.Query(_context).BlockedReasonKey, Is.EqualTo("interaction.held_item_changed"));
             _wipe.Execute(_context);
             Assert.That(replacement.State, Is.EqualTo(TeaBagState.Shaken));
