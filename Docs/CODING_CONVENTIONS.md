@@ -54,3 +54,23 @@
 - `main` / `develop` / `feature/*` / `review/*` / `qa/*`; one worktree per task ([WF] §17–18).
 - Commit messages: imperative summary line with task id, e.g. `CX-020: add order state machine`.
 - Never commit `Library/`, `Temp/`, `Logs/`, `UserSettings/`, IDE files.
+
+## 8. Development-only bypasses
+
+A bypass lets a test scene skip a workflow guard that the real system cannot satisfy yet (for example
+the drink-ticket requirement before the order service exists). It must never weaken the canonical
+Lobby → Order → Stall flow. Rules:
+
+1. **Explicit opt-in, default off.** A serialized flag that defaults to `false`, and additionally gated
+   on `Debug.isDebugBuild` (or compiled only under the `DevTools` define), so release builds always
+   take the real path.
+2. **Never in production prefabs or the vertical-slice scene.** Set only in a named test scene.
+3. **Prefer a DevTools implementation of the guard interface** over a flag inside the production
+   class. The production class depends on the interface (e.g. a ticket gate); the real implementation
+   and the dev one are interchangeable.
+4. **No fake domain data.** A bypass may skip a check; it must not create orders, tickets or other
+   records that look real, and must not publish domain events on their behalf.
+5. **QA guard.** QA-000 fails if a bypass flag is set in any tracked scene or prefab outside its
+   allow-listed test scene (GUARD-001 on the status board).
+6. **Retirement task.** Each bypass has a task id on the status board and is deleted when the real
+   path exists (the `TeaRackController` ticket bypass: wave plan review C10).
