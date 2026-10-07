@@ -12,7 +12,7 @@ namespace TramChanh.Drinks.Domain
             {
                 return Result.Fail("drink.bag.not_stored");
             }
-            State = TeaBagState.Held;
+            State = TeaBagState.PickedUp;
             return Result.Success();
         }
     }

@@ -36,7 +36,7 @@ namespace TramChanh.Tests.EditMode.Interaction
                 var hands = new HeldItemSlot(events);
                 view.Initialize(hands, events);
                 Assert.That(hands.TryPickUp(item), Is.True);
-                Assert.That(item.State, Is.EqualTo(TeaBagState.Held));
+                Assert.That(item.State, Is.EqualTo(TeaBagState.PickedUp));
                 Assert.That(bag.transform.parent, Is.SameAs(anchor));
                 Assert.That(Vector3.Distance(grip.position, anchor.position), Is.LessThan(0.0001f));
                 Assert.That(Quaternion.Angle(grip.rotation, anchor.rotation), Is.LessThan(0.001f));

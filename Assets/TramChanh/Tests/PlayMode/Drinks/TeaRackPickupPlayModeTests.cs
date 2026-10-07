@@ -86,7 +86,7 @@ namespace TramChanh.Tests.PlayMode.Drinks
             yield return null;
             var held = _interactor.Context.Hands.Current as TeaBagItem;
             Assert.That(held, Is.SameAs(first), "Pickup transfers a stocked bag, not a new quantity of tea.");
-            Assert.That(held.State, Is.EqualTo(TeaBagState.Held));
+            Assert.That(held.State, Is.EqualTo(TeaBagState.PickedUp));
             Assert.That(_rack.Stock, Is.EqualTo(stock - 1));
             Assert.That(_rack.GetComponentsInChildren<TeaBagItem>().Length, Is.EqualTo(stock - 1));
             Transform anchor = _player.GetComponent<HeldItemView>().HoldAnchor;

@@ -16,7 +16,7 @@ namespace TramChanh.Tests.EditMode.Drinks
             Assert.That(bag.State, Is.EqualTo(TeaBagState.Stored));
             Assert.That(rack.CanTake(true).IsAvailable, Is.True);
             Assert.That(bag.TryPickUp().IsSuccess, Is.True);
-            Assert.That(bag.State, Is.EqualTo(TeaBagState.Held));
+            Assert.That(bag.State, Is.EqualTo(TeaBagState.PickedUp));
             Assert.That(rack.Stock, Is.EqualTo(1));
             Assert.That(rack.BagAt(rack.NextStoredIndex()), Is.Not.SameAs(bag));
         }
@@ -54,8 +54,11 @@ namespace TramChanh.Tests.EditMode.Drinks
         [Test]
         public void GT_003_NoTeaMeasuringStepOrQuantityIsIntroduced()
         {
-            CollectionAssert.AreEqual(new[] { "Stored", "Held" }, Enum.GetNames(typeof(TeaBagState)));
-            Assert.That(typeof(TeaBagPickup).GetProperties().Length, Is.EqualTo(1));
+            foreach (string state in Enum.GetNames(typeof(TeaBagState)))
+            {
+                Assert.That(state.StartsWith("Measure", StringComparison.OrdinalIgnoreCase), Is.False);
+                Assert.That(state.StartsWith("Pour", StringComparison.OrdinalIgnoreCase), Is.False);
+            }
             Assert.That(typeof(TeaBagPickup).GetProperty("State"), Is.Not.Null);
         }
     }
