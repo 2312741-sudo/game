@@ -230,6 +230,45 @@ namespace TramChanh.Tests.EditMode.Ready
         }
 
         [Test]
+        public void B1_FailureInsideTheHandReleaseCallbackDiscardsTheProductInsteadOfPresentingIt()
+        {
+            OrderId id = NewOrder(1, "drink");
+            Bag drink = NewBag(ItemKind.Drink);
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == drink) { _orders.Fail(id, FailureReason.CustomerLeft); } });
+            PlaceFromHand(drink);
+            Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.Failed));
+            Assert.That(_shelf.Occupied(ItemKind.Drink), Is.False);
+            Assert.That(_hands.Current, Is.Null);
+            Assert.That(_drinkPlacement.childCount, Is.Zero, "A failed product is never presented on the counter.");
+            Assert.That(drink == null || !drink.gameObject.activeSelf, Is.True);
+            // The adapter is clean afterwards: the next order places normally.
+            OrderId next = NewOrder(2, "drink");
+            Bag second = NewBag(ItemKind.Drink);
+            PlaceFromHand(second);
+            Assert.That(_orders.Get(next).Status, Is.EqualTo(OrderStatus.Ready));
+            Assert.That(second.transform.parent, Is.SameAs(_drinkPlacement));
+        }
+
+        [Test]
+        public void B2_RealLobbyPickupInsideTheHandReleaseCallbackKeepsTheBundleParent()
+        {
+            OrderId id = NewOrder(1, "drink");
+            Bag drink = NewBag(ItemKind.Drink);
+            var lobbyHands = new HeldItemSlot(_events);
+            var lobby = new InteractionContext(new ActorRef(2), ActorRole.Lobby, lobbyHands, _clock, _events);
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == drink) { _pickup.Execute(lobby); } });
+            PlaceFromHand(drink);
+            var bundle = lobbyHands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null, "The Lobby pickup committed during the hand release.");
+            Assert.That(bundle.Items, Is.EqualTo(new IPreparedItem[] { drink }));
+            Assert.That(drink.transform.parent, Is.SameAs(bundle.transform), "The newly adopted item is not re-parented onto Ready.");
+            Assert.That(drink.gameObject.layer, Is.EqualTo(TramChanhLayers.HeldItemIndex));
+            Assert.That(_drinkPlacement.childCount, Is.Zero);
+            Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.PickedUpByLobby));
+            Assert.That(_hands.Current, Is.Null);
+        }
+
+        [Test]
         public void ReentrantFailureStillDiscardsTheItemAndFreesTheSlot()
         {
             OrderId id = NewOrder(1, "drink");
