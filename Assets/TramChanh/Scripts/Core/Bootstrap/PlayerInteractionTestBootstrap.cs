@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace TramChanh.App
 {
-    /// <summary>Explicit scene-owned composition for SCN_InteractionTest only (§5 test-scene exception).</summary>
+    /// <summary>Explicit scene-owned composition for self-contained player test scenes (§5 test-scene exception).</summary>
     [DefaultExecutionOrder(-1000)]
     public sealed class PlayerInteractionTestBootstrap : MonoBehaviour
     {
@@ -17,6 +17,7 @@ namespace TramChanh.App
         [SerializeField] private PlayerInteractor _interactor;
         [SerializeField] private InteractionPromptView _prompt;
         [SerializeField] private int _actorId;
+        [SerializeField] private HeldItemView _heldItemView;
         private UnityGameClock _clock;
         public BalanceConfig Balance => _balance;
         public PlayerInputReader Input => _input;
@@ -33,7 +34,8 @@ namespace TramChanh.App
             _clock = new UnityGameClock();
             Services.Register<IEventBus>(events);
             Services.Register<IGameClock>(_clock);
-            var context = new InteractionContext(new ActorRef(_actorId), ActorRole.Lobby | ActorRole.Stall, new HeldItemSlot(), _clock, events);
+            var context = new InteractionContext(new ActorRef(_actorId), ActorRole.Lobby | ActorRole.Stall, new HeldItemSlot(events), _clock, events);
+            _heldItemView?.Initialize(context.Hands, events);
             _input.Initialize(_clock);
             _player.Initialize(_input, _clock, _balance.MoveSpeed, _balance.LookSensitivity, _balance.Gravity, _balance.PitchLimit);
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
@@ -42,6 +44,7 @@ namespace TramChanh.App
         private void Update() => _clock.Tick();
         private void OnDestroy()
         {
+            _heldItemView?.Disconnect();
             _interactor.Shutdown();
             _prompt.Disconnect();
             Services?.Dispose();
