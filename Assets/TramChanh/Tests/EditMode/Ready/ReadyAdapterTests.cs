@@ -291,6 +291,31 @@ namespace TramChanh.Tests.EditMode.Ready
         }
 
         [Test]
+        public void B1_FailureDuringTheHandReleaseCallbackDiscardsTheProduct()
+        {
+            _hands.TryPickUp(_item);
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null) { _events.Publish(new OrderStatusChanged(_item.BoundItem.OrderId, OrderStatus.Failed)); } });
+            _counter.Execute(_context);
+            Assert.That(_drinkPlacement.childCount, Is.Zero);
+            Assert.That(_item == null || !_item.gameObject.activeSelf, Is.True);
+            Assert.That(_hands.Current, Is.Null);
+        }
+
+        [Test]
+        public void B2_LobbyPickupDuringTheHandReleaseCallbackKeepsTheBundleParent()
+        {
+            _hands.TryPickUp(_item);
+            var lobbyHands = new HeldItemSlot(_events);
+            InteractionContext lobby = new InteractionContext(new ActorRef(2), ActorRole.Lobby, lobbyHands, _clock, _events);
+            _events.Subscribe<HeldItemChanged>(change => { if (change.Current == null && change.Previous == _item) { _pickup.Execute(lobby); } });
+            _counter.Execute(_context);
+            var bundle = lobbyHands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null);
+            Assert.That(_item.transform.parent, Is.SameAs(bundle.transform));
+            Assert.That(_drinkPlacement.childCount, Is.Zero);
+        }
+
+        [Test]
         public void B3_PickupRequestsTheOldestReadyOrderAndCarriesItsItemsInSnapshotOrder()
         {
             var drink = Child("SnapshotDrink").AddComponent<PreparedHoldable>();
