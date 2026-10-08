@@ -56,7 +56,7 @@ Also confirmed: `readState` and `readEventCount` are now **mandatory** (the asse
 1. **ARCH-001 depth.** It checks only five interfaces' direct signatures; recurse into `IReadOnlyOrder`, `IReadOnlyOrderItem` and the event structs. (The compiler already enforces the rule for `Stall` and `Lobby`.)
 2. **Test ids.** `TC_ORDER_009` is the stale-binding test here; in the docs it is TC-ORDER-011 (TC-ORDER-009 is "discard ruined cake") and the prepared contract is TC-READY-002.
 3. **`default(ItemRequest)`** bypasses its constructor (null id, quantity 0); `Enter` must reject it (implementation test).
-4. **Parked with other branches.** `DrinkRecipe` (shake/wipe durations) is frozen by the drink-preparation branch; the `ContentDatabase` implementation and the `order.unknown_item` reason key (new; `Enter` when `TryGetKind` fails) belong to the orders branch.
+4. **Parked with other branches.** `DrinkRecipe` (shake/wipe durations) is frozen by the drink-preparation branch; the `ContentDatabase` implementation and the unknown-item reason key (proposed as `order.unknown_item`; implemented as `order.items.invalid`) belong to the orders branch.
 
 ## Event atomicity — the proposed interpretation is **valid**, with four refinements
 

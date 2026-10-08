@@ -225,7 +225,7 @@ test fixture: `IsFinished` and not yet ready ⇒ `MarkReady()` succeeds.
 1. Validate (pure): the order exists, is `Ready`, and every one of its items is on the shelf. The actor's role and empty hands are **adapter** checks in `Lobby`.
 2. Commit T7 `Ready → PickedUpByLobby` (pre-validated; a failure is an invariant violation: throw).
 3. Clear **all** slots held by that order and return a snapshot of the items.
-4. Publish last: `OrderStatusChanged (Ready → PickedUpByLobby)`. `Stall` adapters release the placed visuals on it; `Lobby` wraps the returned items in a generic `ServedOrder` holdable (`IHoldable`, class in `TramChanh.Lobby`; the composition root only injects its dependencies).
+4. Publish last: `OrderStatusChanged (Ready → PickedUpByLobby)`. `Stall` adapters release the placed visuals on it; the Lobby pickup adapter (`ReadyOrderPickupPoint`) wraps the returned items in a generic `ServedOrder` holdable (`IHoldable`, class in `TramChanh.Lobby`; the composition root only injects its dependencies).
 
 Partial pickup is not supported in the slice. The items' own state stays `Ready` until delivery (D9 / C11, driven by `OrderStatusChanged → Delivered`). `IOrderService` therefore has **no** `PickUp`.
 
@@ -236,7 +236,10 @@ Partial pickup is not supported in the slice. The items' own state stays `Ready`
 3. **Which event announces what.** An item reaching `Ready` is announced by `OrderItemStatusChanged (Status = Ready)`; the whole order by `OrderStatusChanged (Status = Ready)`, which fires only when the *last* item is placed. A per-item reaction (the bag's visuals, audio) keys off `OrderItemStatusChanged` and the bag's `PreparationId`, never off the order-level event. `Drinks` / `Cakes` publish no "Ready" or "Delivered" step event of their own (`DRINK_WORKFLOW.md` §3).
 4. **Observers cannot change the result.** A listener that throws is a *post-commit fault*, not a transaction failure: the owner returns the committed result, keeps delivering the remaining events and reports the fault through an injected fault sink (logged in the game, collected in tests). `EventBus.Publish` propagates a listener exception to its caller (pinned by `CX_002_EventBus_ExceptionDoesNotCorruptSubscriptions`), so the owner must catch around its flush; listeners registered *after* the throwing one for the same event are skipped unless `EventBus` later isolates listeners (optional Core follow-up).
 5. **Re-entrancy.** A listener may call back into the shelf or order service. A mutation started from a listener opens a new transaction whose events are delivered after the current flush finishes (first-in first-out), so events of one order are never interleaved or reordered.
-6. **Adapters act after the call returns.** `ReadyCounterPoint` calls `PlaceReady` and only then releases the hand slot (`HeldItemChanged`). The release cannot fail because `Query` verified that the hand holds the item; a failure is an invariant violation.
+6. **Adapters act after the call returns.** `ReadyCounterPoint` calls `PlaceReady` and only then releases the hand slot (`HeldItemChanged`). The slot mutation itself succeeds because `Query` verified that the hand holds the item, but its `HeldItemChanged` observers can still throw or re-enter. The adapter therefore:
+   - isolates the release: an observer fault is logged and does not skip the presentation or reconciliation that follows; the slot's actual state is read back (a release already done by a listener is not repeated; a slot that still holds a product the shelf already owns is an invariant violation, reported with an error while the committed placement is still presented);
+   - keeps an in-flight marker for the placing order through `PlaceReady` **and** the release, records the latest `OrderStatusChanged` (`Failed` / `PickedUpByLobby`) it sees for that order, and reconciles that latest disposition afterwards: a `Failed` order's product is discarded instead of presented; after `PickedUpByLobby` the product is detached only if it is still under the original hand anchor, because a `ServedOrder` bundle that already adopted it must never be re-parented;
+   - clears the marker in a `finally` on every exit.
 
 ### 6.5 Reason keys emitted by the Orders services (as implemented in PR #10)
 
@@ -254,9 +257,10 @@ Reason keys are data (localization keys, `ActionBlocked.ReasonKey`). UI and adap
 
 | Component | Prefab | Role |
 |---|---|---|
-| `TableOrderPoint` | on `PF_YellowCrateTable` | Holds `TableId`, seat(s) (`PF_PlasticStool`), the seated customer, the active order. Interactable for **take order** (T2) and **deliver** (T8). |
-| `VehicleOrderPoint` | `PF_Placeholder_VehiclePoint` — generic vehicle interaction point (DEC-010) | Holds `VehicleId`, the waiting customer, the active order. Interactable for take order and deliver. Knows nothing about the vehicle's model or type. |
-| `LobbyOrderController` | on player (DEC-001) | Checks `ActorRole.Lobby`; opens the order-entry UI after T2; performs T3/T4 when the UI's `OrderEntryConfirmed` / `OrderSendRequested` events arrive; performs T7 through `IReadyShelfPickup` and T8 through the points; builds the `ServedOrder`. |
+| `TableOrderPoint` | on `PF_YellowCrateTable` | Holds `TableId`, seat(s) (`PF_PlasticStool`), the seated customer, the active order. Interactable for **take order** (T2) and, with CX-025, **deliver** (T8; not implemented yet). |
+| `VehicleOrderPoint` | `PF_Placeholder_VehiclePoint` — generic vehicle interaction point (DEC-010) | Holds `VehicleId`, the waiting customer, the active order. Interactable for take order and, with CX-025, deliver (T8; not implemented yet). Knows nothing about the vehicle's model or type. |
+| `LobbyOrderController` | on player (DEC-001) | Opens the order-entry UI after T2 (`OpenEntry`, which calls `BeginTaking` when the order is still waiting) and performs T3/T4 when the UI's `OrderEntryConfirmed` / `OrderSendRequested` events arrive, inside an entry session authorized once at open (so the UI may pause the clock). It does **not** perform T7 or build the `ServedOrder`: T7 is delegated to `ReadyOrderPickupPoint` through `IReadyShelfPickup`, which builds the `ServedOrder`. Delivery (T8) and completion (T9) are **not implemented yet** (CX-025); the controller will gain them then. |
+| `ReadyOrderPickupPoint` | on `PF_ReadyCounterPoint` (Lobby side) | Lobby-only whole-order pickup (T7): empty hands, `NextReadyOrder`, `IReadyShelfPickup.PickUp`, wraps the snapshot in a `ServedOrder` (ascending `OrderItemId`) and puts it in the hand. Holds only the pickup capability. |
 | `OrderEntryUI` | UI | Shows the customer's request pre-filled; buttons *Enter* (T3) and *Send to stall* (T4). |
 | `StallTicketUI` | UI | Lists tickets with items and item status for the stall side. |
 | `ReadyOrdersUI` | UI | Lists Ready orders and their destination (table/vehicle id). |
@@ -269,8 +273,8 @@ Prompts at an order point depend on the order's status:
 |---|---|---|---|
 | `WaitingForLobby` | nothing | "Take order" | T2 + open entry UI |
 | `TakingOrder` / `Entered` | nothing | "Continue order" | reopen entry UI |
-| `PickedUpByLobby` (this order) | its `ServedOrder` | "Deliver" | T8 |
-| `PickedUpByLobby` (another order) | a `ServedOrder` | "Deliver" | T8 → rejected (wrong target) |
+| `PickedUpByLobby` (this order) | its `ServedOrder` | "Deliver" | T8 — **future (CX-025)**; the drink-wave points hide this prompt |
+| `PickedUpByLobby` (another order) | a `ServedOrder` | "Deliver" | T8 → rejected (wrong target) — **future (CX-025)** |
 | other | — | none | — |
 
 ---
@@ -330,7 +334,7 @@ All are `readonly struct`, published synchronously after commit (§6.4). Payload
 
 Adding a property to an event later is non-breaking for subscribers (they only read properties).
 
-**Content access.** `Orders` validates `Enter` through the frozen read-only subset `IContentDatabase.TryGetKind(string itemDefinitionId, out ItemKind kind)` (`TramChanh.Content`); an unknown id fails with `order.unknown_item`. `OrderService` may reference `Content`; the contracts above do not expose it.
+**Content access.** `Orders` validates `Enter` through the frozen read-only subset `IContentDatabase.TryGetKind(string itemDefinitionId, out ItemKind kind)` (`TramChanh.Content`); an unknown id fails with `order.items.invalid` (§6.5). `OrderService` may reference `Content`; the contracts above do not expose it.
 
 ---
 
