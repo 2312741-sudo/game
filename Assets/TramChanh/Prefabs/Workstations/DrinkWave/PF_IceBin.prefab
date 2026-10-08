@@ -1,0 +1,222 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &2070195008487682637
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1007375296642008185, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_Name
+      value: PF_IceBin
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2978231127775614487, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2379515313270564000, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 737237150600589989}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1007375296642008185, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2565429270753821965}
+    - targetCorrespondingSourceObject: {fileID: 1007375296642008185, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2094961831266187997}
+    - targetCorrespondingSourceObject: {fileID: 1007375296642008185, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7500056088081051364}
+  m_SourcePrefab: {fileID: 100100000, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+--- !u!1 &1243034294636000820 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1007375296642008185, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+  m_PrefabInstance: {fileID: 2070195008487682637}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2565429270753821965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243034294636000820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cef319a28e354662a6456eb0a9d098bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Drinks::TramChanh.Drinks.Runtime.IceBin
+  _id: 4
+  _interactionPoint: {fileID: 3279966700069382917}
+  _onScooped:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8333585117457601560}
+        m_TargetAssemblyTypeName: TramChanh.App.StationToolView, TramChanh.App
+        m_MethodName: PlayOnce
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &2094961831266187997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243034294636000820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 2565429270753821965}
+--- !u!65 &7500056088081051364
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243034294636000820}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.24, y: 0.18, z: 0.28}
+  m_Center: {x: 0, y: 0.09, z: 0}
+--- !u!4 &3279966700069382917 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3548281466134665544, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+  m_PrefabInstance: {fileID: 2070195008487682637}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4449402455816001261 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2379515313270564000, guid: cee5b8c91b0cd4e68b44ea362f697d72, type: 3}
+  m_PrefabInstance: {fileID: 2070195008487682637}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6475693531898716430
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4449402455816001261}
+    m_Modifications:
+    - target: {fileID: 4670053935033761913, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_Name
+      value: PF_IceScoop
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+--- !u!4 &737237150600589989 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6045371929347150763, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+  m_PrefabInstance: {fileID: 6475693531898716430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8333585117457601560 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3060371284351579414, guid: ec82d6ce2149e4b7991212c5d1a2158b, type: 3}
+  m_PrefabInstance: {fileID: 6475693531898716430}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0adbea656e9240cd9594c9f25373319c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.App::TramChanh.App.StationToolView

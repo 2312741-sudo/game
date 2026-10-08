@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &7647752219495047591
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6448808791454170251, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_Name
+      value: PF_RedTeaRack
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8935594291409836694, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6448808791454170251, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1528954786352551217}
+    - targetCorrespondingSourceObject: {fileID: 6448808791454170251, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2549427959268224366}
+  m_SourcePrefab: {fileID: 100100000, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+--- !u!4 &450423371922233535 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7809945116440819992, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+  m_PrefabInstance: {fileID: 7647752219495047591}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3700977521357987116 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6448808791454170251, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+  m_PrefabInstance: {fileID: 7647752219495047591}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1528954786352551217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3700977521357987116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8574b314cd494ff29230454cf0e8fe99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Drinks::TramChanh.Drinks.Runtime.TeaRackController
+  _id: 1
+  _interactionPoint: {fileID: 450423371922233535}
+  _balance: {fileID: 11400000, guid: 89eb09383d7ad44339fd0925f975feca, type: 2}
+  _recipe: {fileID: 11400000, guid: d75918780eb4a4121873000ccc9c57ac, type: 2}
+  _bagPrefab: {fileID: 2377749006692546719, guid: e87687542b3004b37b02d296ace17859, type: 3}
+  _bagSlots:
+  - {fileID: 4835148539640853209}
+  - {fileID: 8159662566085480985}
+--- !u!114 &2549427959268224366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3700977521357987116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 1528954786352551217}
+--- !u!4 &4835148539640853209 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2971148584746980222, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+  m_PrefabInstance: {fileID: 7647752219495047591}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8159662566085480985 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1954201325862843326, guid: eb16e04f46f28400791736f4c592a537, type: 3}
+  m_PrefabInstance: {fileID: 7647752219495047591}
+  m_PrefabAsset: {fileID: 0}

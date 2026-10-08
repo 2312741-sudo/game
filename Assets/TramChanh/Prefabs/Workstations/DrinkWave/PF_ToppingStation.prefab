@@ -1,0 +1,270 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &1547593571859299161
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 29950448153734689, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Name
+      value: PF_ToppingStation
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 29950448153734689, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7826184741327498459}
+    - targetCorrespondingSourceObject: {fileID: 29950448153734689, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3068071812459347359}
+    - targetCorrespondingSourceObject: {fileID: 9182100843016203733, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4646996974913879678}
+    - targetCorrespondingSourceObject: {fileID: 9182100843016203733, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 836389144803205402}
+    - targetCorrespondingSourceObject: {fileID: 9182100843016203733, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5058505511025443008}
+    - targetCorrespondingSourceObject: {fileID: 6420783976958904403, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6755123097494145492}
+    - targetCorrespondingSourceObject: {fileID: 6420783976958904403, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5559116782651092341}
+    - targetCorrespondingSourceObject: {fileID: 6420783976958904403, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 246421795030133889}
+  m_SourcePrefab: {fileID: 100100000, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+--- !u!1 &1517800904026805624 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 29950448153734689, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+  m_PrefabInstance: {fileID: 1547593571859299161}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &7826184741327498459
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517800904026805624}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 1f1fd6fe52e14460fb964dc2fae98f59, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3068071812459347359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517800904026805624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0adbea656e9240cd9594c9f25373319c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.App::TramChanh.App.StationToolView
+--- !u!4 &5123719162493700320 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5936082176538145721, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+  m_PrefabInstance: {fileID: 1547593571859299161}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5274655225926685193 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6649985809176684880, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+  m_PrefabInstance: {fileID: 1547593571859299161}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5503712266211439370 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6420783976958904403, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+  m_PrefabInstance: {fileID: 1547593571859299161}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6755123097494145492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5503712266211439370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00c7c2a8412449c6bf8d2b5c99d0695c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Drinks::TramChanh.Drinks.Runtime.ToppingBin
+  _id: 3
+  _interactionPoint: {fileID: 5123719162493700320}
+  _toppingType: 1
+  _onAdded:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3068071812459347359}
+        m_TargetAssemblyTypeName: TramChanh.App.StationToolView, TramChanh.App
+        m_MethodName: PlayOnce
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &5559116782651092341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5503712266211439370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 6755123097494145492}
+--- !u!65 &246421795030133889
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5503712266211439370}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.14000002, y: 0.07000001, z: 0.26}
+  m_Center: {x: 0.000000007450581, y: 0.035000004, z: 0}
+--- !u!1 &7644658289997928076 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9182100843016203733, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+  m_PrefabInstance: {fileID: 1547593571859299161}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4646996974913879678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7644658289997928076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00c7c2a8412449c6bf8d2b5c99d0695c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Drinks::TramChanh.Drinks.Runtime.ToppingBin
+  _id: 2
+  _interactionPoint: {fileID: 5274655225926685193}
+  _toppingType: 0
+  _onAdded:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3068071812459347359}
+        m_TargetAssemblyTypeName: TramChanh.App.StationToolView, TramChanh.App
+        m_MethodName: PlayOnce
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &836389144803205402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7644658289997928076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 4646996974913879678}
+--- !u!65 &5058505511025443008
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7644658289997928076}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.14000002, y: 0.07000001, z: 0.26}
+  m_Center: {x: 0, y: 0.035000004, z: 0}

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27ba7f9c52fb4d89be281b01489899c6, type: 3}
+  m_Name: SO_Item_Drink_Slice
+  m_EditorClassIdentifier: TramChanh.Content::TramChanh.Content.ItemDefinition
+  _id: drink.slice
+  _displayName: Drink (menu name pending)
+  _kind: 0
+  _preparedPrefab: {fileID: 8175047884166780683, guid: e87687542b3004b37b02d296ace17859, type: 3}
