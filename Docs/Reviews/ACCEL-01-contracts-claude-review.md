@@ -5,7 +5,7 @@
 | Reviewed | `wave/ACCEL-01-playable-tram-chanh` commit `f4eb584` (additive): `Core/IPreparationFeedback.cs`, `Orders/{IOrderDelivery, DeliveryTarget, DeliveryRejected, IOrderDeliveryInfo}.cs`, `Docs/ACCEL-01_CONTRACTS.md`, `tasks/plan.md`, `tasks/todo.md` (+ `.meta` files). Parent `395b8f1` (PR #15 head, on `develop` `d9143c1`) |
 | Reviewer | Claude Code (Technical Lead / Architect). Review only; no runtime edits, rebases or merges |
 | Date | 2026-10-08 (local) |
-| Verdict | **CHANGES REQUESTED** — the direction is right and the commit is safely additive, but three small shared-contract gaps (B1–B3) must be closed **before the cake and orders lanes fork**, otherwise two lanes will invent incompatible solutions. B4 must close before any lane PR merges |
+| Verdict (first pass, `f4eb584`) | **CHANGES REQUESTED** — the direction is right and the commit is safely additive, but three small shared-contract gaps (B1–B3) must be closed **before the cake and orders lanes fork**, otherwise two lanes will invent incompatible solutions. B4 must close before any lane PR merges |
 
 ## Verified
 
@@ -49,6 +49,29 @@ and a Cakes-owned `ICakeRecipeCatalog` (definition id → `CakeRecipe`) that the
 ## Merge readiness
 
 Do not branch the cake and orders lanes from `f4eb584` as it stands. After B1–B3 are folded into the contract commit (one small follow-up commit is enough) I will re-check only that delta. B4 and the items in N1 are tracked per lane. Nothing here asks for runtime changes in Orders, Drinks, Lobby or the UI by me; the root owns the shared files.
+
+## Delta review — `4d6d1e7` (2026-10-08)
+
+**Verdict on the follow-up: APPROVED for the cake and orders lanes to fork**, with one pre-fork clarification (C1) and lane requirements (C2–C4). B4 still gates lane merges. I reviewed only the delta from `f4eb584` (Orders contract files, `StallTicketQueue`, `ACCEL-01_CONTRACTS.md`, `tasks/plan.md`); the two PR #15 files in the same range are covered by the PR #15 review.
+
+| Blocker | Result |
+|---|---|
+| **B1** recipe lookup | **Resolved.** `IOrderItemCatalog.TryGetItemDefinition(OrderItemRef, out string)` is read-only, implemented by `StallTicketQueue` over the same live-binding test as `IsBound` (so stale, released, re-claimed or failed bindings fail). Cakes receive the catalog, never `IOrderService`. I verified it against the real services in the out-of-Unity harness: a claimed binding returns its own definition (two cake items, two definitions), `default` and a wrong preparation id fail, `Release` invalidates the ref, a re-claim by another preparation leaves the old ref stale and resolves the new one, and `Fail` invalidates all refs of the order (2 probe tests pass). |
+| **B2** delivery info | **Resolved.** `IOrderDelivery.TryGetInfo(OrderId, out OrderDeliveryInfo)` is an explicit immutable snapshot (quality 0 until Delivered, rounded mean afterwards, missing order false/default). `DeliveryTarget` has `IsValid` and `IEquatable` plus operators; the harness confirms `default` is invalid, equality and hash agree, and invalid constructor input throws. |
+| **B3** `CakeRecipe` ownership | **Resolved with one gap (C1).** The cake lane gets exclusive new `Content/CakeRecipe.cs` and `MeasureCupDefinition.cs`; Cakes owns `ICakeRecipeCatalog`. |
+| **B4** contract tests | Accepted as in progress (root contract tests, orders-lane behavior fixtures). Still required before any lane merges. |
+
+Also accepted: the review clarifications now in the contract (Complete right after Deliver, empty points reject without an attempt, failed bundles release only their own identity, constant `drink.state.*` / `cake.state.*` feedback keys validated against localization assets, new environment anchors supplementing the canonical `StallAnchorSet`, `tasks/` as the wave's acceptance record).
+
+**C1 — extend the cake lane's grant (pre-fork, one line).** `CakeRecipe.Sauce` is a `SauceDefinition` (ARCHITECTURE, DEC-008), and the grill needs `CookedThreshold`, `BurnThreshold`, preheat, `BatterOutOfTolerancePolicy` and the quality weights (CAKE_WORKFLOW §6; documented as `SO_Balance_Slice`/`BalanceConfig`). Neither `SauceDefinition` nor any cake balance data is in the exclusive grant, and the cake agent may not edit the shared `BalanceConfig`. Grant exclusive new `Content/SauceDefinition.cs` and a new cake-owned balance asset class (for example `CakeBalanceConfig`) instead of editing `BalanceConfig`.
+
+**C2 — the UI must not receive `IOrderDelivery`.** The interface carries the commands `Deliver` and `Complete`; `TryGetInfo` lives on it. The contract says the root wires delivery "into Lobby and its read-only UI projection": make that a root-side read-only projection object (or the Orders events plus `IOrderService.Get`), not the capability itself, and add a reflection test that no UI type references `IOrderDelivery`.
+
+**C3 — `Complete` must be retryable.** The contract says that after a non-terminal completion error the order stays `Delivered` and the point stays occupied (occupancy is only freed by `Complete`, and `Fail` rejects `Delivered`). Never retrying `Deliver` is right, but the adapter must be allowed to retry `Complete` (idempotent, rejects only terminal repeats) on its next frame or interaction; add a test with a faulting first completion.
+
+**C4 — one source of truth for delivery info.** `IOrderDeliveryInfo` now duplicates `TryGetInfo`. Delete it before anything implements it, or keep it only with a test that `OrderService.Get(id)` returning it always agrees with `TryGetInfo`.
+
+Carried from the first review (lane work, non-blocking): cake claim and discard/empty-back rules, `DeliveryRejected` naming, anchor-name reconciliation with `StallAnchorId` (`Wrap`, `Sauce`, `BatterArea`), scene lane reusing `PF_Stall_TramChanh`, canonical folders, and handling a `false` from `TryGetItemDefinition` right after a claim (release the claim, do not create a recipe-less cake).
 
 ---
 _Generated by [Claude Code](https://claude.ai/code)_
