@@ -1,0 +1,11 @@
+# ACCEL-01 tasks
+- [x] Recover remotes, branches, worktrees, statuses, stashes and unpushed work.
+- [ ] Restore actual pointer activation and modal teardown; validate/merge PR15.
+- [ ] Lock and review shared additive contracts (compile, contract tests).
+- [ ] Cake: recipe measurement/corrections -> pour/hinged grill cook -> configurable flip -> cut/sauce/vertical roll/wrap -> Ready; test invalid sequence/burn/measurement/held conflicts and bindings.
+- [ ] Orders: delivery identity, wrong-target attempts, ordered delivery/completion events, release hands, reusable order points; Drink/Cake/mixed acceptance tests.
+- [ ] Scene: saved night roadside environment, approved stall/sign, stools/crate/trays, customer/vehicle/handoff, mesh-swappable anchors; visual contract tests + screenshot.
+- [ ] HUD: current held state/next action/order, ticket panel with origin/items/status, readable localized reasons; model and PlayMode rendering tests.
+- [ ] Integrate all lanes in one saved playable scene; full flow tests through interaction/input where applicable.
+- [ ] Lane PRs, compile/Edit/Play/QA and independent review gates.
+- [ ] Fresh checkout all scenes/prefabs and full tests, Claude major integration review, merge develop only, final report with exact heads/counts/blockers.
