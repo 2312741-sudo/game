@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TramChanh.App;
@@ -16,9 +17,14 @@ using TramChanh.Stall.Runtime;
 using TramChanh.UI.Orders;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UIElements;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
+using Cursor = UnityEngine.Cursor;
+using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 namespace TramChanh.Tests.PlayMode.Integration
 {
@@ -145,6 +151,85 @@ namespace TramChanh.Tests.PlayMode.Integration
             Assert.That(_bootstrap.Orders.Get(_bootstrap.Table.ActiveOrder).Status, Is.EqualTo(OrderStatus.TakingOrder));
             Assert.That(_bootstrap.Tickets.HasPending(ItemKind.Drink), Is.False);
         }
+        [UnityTest]
+        public IEnumerator TC_ORDER_UI_MousePipelineActivatesEnterSendAndCloseWithoutRecapturingGameplay()
+        {
+            var context = _bootstrap.Interactor.Context;
+            var previousBackground = InputSystem.settings.backgroundBehavior;
+            var previousEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            Mouse mouse = null;
+            // Unity's runtime event system separately ignores UI updates in an unfocused desktop app.
+            // Its explicit unit-test hook keeps the normal InputForUI pipeline running in headless tests.
+            var runtimeUtility = typeof(UIDocument).Assembly.GetType("UnityEngine.UIElements.UIElementsRuntimeUtility", true);
+            PropertyInfo eventMode = runtimeUtility.GetProperty("eventSystemUpdateMode", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(eventMode, Is.Not.Null, "The pinned Unity runtime event-system test hook must exist.");
+            object previousEventMode = eventMode.GetValue(null);
+            try
+            {
+                if (Application.isBatchMode) { eventMode.SetValue(null, Enum.Parse(eventMode.PropertyType, "Always")); }
+                InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                // Batch test runners have no focused Game View; keep queued mouse state in the player input loop.
+                InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                mouse = InputSystem.AddDevice<Mouse>();
+                InputSystem.EnableDevice(mouse);
+                _bootstrap.Table.Execute(context); yield return null; yield return null;
+                var document = _entry.GetComponent<UIDocument>();
+                Assert.That(document.rootVisualElement.panel, Is.Not.Null);
+                var buttons = document.rootVisualElement.Query<Button>().ToList();
+                Assert.That(buttons.Count, Is.EqualTo(3));
+                Assert.That(_entry.IsOpen && context.Clock.IsPaused, Is.True);
+                yield return ClickMouse(mouse, document.rootVisualElement, buttons[0]);
+                Assert.That(_bootstrap.Orders.Get(_bootstrap.Table.ActiveOrder).Status, Is.EqualTo(OrderStatus.Entered), "The UI Toolkit pointer pipeline must activate Enter.");
+                Assert.That(_entry.IsOpen && context.Clock.IsPaused, Is.True);
+                Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.None));
+                Assert.That(_bootstrap.Interactor.GetComponent<TramChanh.Interaction.Player.PlayerInputReader>().enabled, Is.False);
+                yield return ClickMouse(mouse, document.rootVisualElement, buttons[1]);
+                Assert.That(_bootstrap.Orders.Get(_bootstrap.Table.ActiveOrder).Status, Is.EqualTo(OrderStatus.SentToStall), "The UI Toolkit pointer pipeline must activate Send.");
+                Assert.That(_entry.IsOpen || context.Clock.IsPaused, Is.False);
+                _bootstrap.Vehicle.Execute(context); yield return null; yield return null;
+                yield return ClickMouse(mouse, document.rootVisualElement, buttons[2]);
+                Assert.That(_entry.IsOpen || context.Clock.IsPaused, Is.False, "Close must release modal input and clock ownership.");
+                Assert.That(_bootstrap.Orders.Get(_bootstrap.Vehicle.ActiveOrder).Status, Is.EqualTo(OrderStatus.TakingOrder));
+            }
+            finally
+            {
+                if (mouse != null && mouse.added) { InputSystem.RemoveDevice(mouse); }
+                InputSystem.settings.backgroundBehavior = previousBackground;
+                InputSystem.settings.editorInputBehaviorInPlayMode = previousEditorInput;
+                eventMode.SetValue(null, previousEventMode);
+            }
+        }
+        [UnityTest]
+        public IEnumerator TC_ORDER_UI_DestroyedGameplayInputDoesNotBreakModalClosure()
+        {
+            _bootstrap.Table.Execute(_bootstrap.Interactor.Context);
+            Assert.That(_entry.IsOpen, Is.True);
+            Object.Destroy(_bootstrap.Interactor.GetComponent<TramChanh.Interaction.Player.PlayerInputReader>());
+            yield return null;
+            _entry.Cancel();
+            Assert.That(_entry.IsOpen, Is.False);
+            LogAssert.NoUnexpectedReceived();
+        }
+        private static IEnumerator ClickMouse(Mouse mouse, VisualElement root, Button button)
+        {
+            Assert.That(mouse.enabled, Is.True, "The isolated test mouse must be enabled.");
+            int down = 0, up = 0;
+            button.RegisterCallback<PointerDownEvent>(_ => down++, TrickleDown.TrickleDown);
+            button.RegisterCallback<PointerUpEvent>(_ => up++, TrickleDown.TrickleDown);
+            Rect bounds = button.worldBound;
+            Assert.That(bounds.width, Is.GreaterThan(0f), "The runtime document must have a laid-out button.");
+            Assert.That(root.worldBound.width, Is.GreaterThan(0f));
+            Vector2 center = bounds.center;
+            // UI Toolkit panel coordinates are top-left; mouse state is screen pixels, bottom-left.
+            Vector2 screen = new Vector2(center.x * Screen.width / root.worldBound.width, Screen.height - center.y * Screen.height / root.worldBound.height);
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }); yield return null;
+            Assert.That(Vector2.Distance(mouse.position.ReadValue(), screen), Is.LessThan(0.01f), "Queued mouse state must reach the player input loop.");
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }.WithButton(MouseButton.Left)); yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }); yield return null; yield return null;
+            Assert.That(down, Is.EqualTo(1), "Input System mouse press must reach the runtime button as a pointer event.");
+            Assert.That(up, Is.EqualTo(1), "Input System mouse release must reach the runtime button as a pointer event.");
+        }
+
         private static IEnumerator CompleteHold(InteractionActionDriver driver, IInteractable target, float duration)
         {
             Assert.That(driver.IsRunning, Is.True); float deadline = Time.realtimeSinceStartup + duration + 5f;
