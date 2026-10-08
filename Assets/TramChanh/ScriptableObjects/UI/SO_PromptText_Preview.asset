@@ -40,3 +40,6 @@ MonoBehaviour:
   - _key: preview.blocked
     _en: Inspection temporarily blocked
     _vi: "T\u1EA1m th\u1EDDi kh\xF4ng th\u1EC3 ki\u1EC3m tra"
+  - _key: preview.held_key
+    _en: "[F / RMB]"
+    _vi: "[F / chuột phải]"

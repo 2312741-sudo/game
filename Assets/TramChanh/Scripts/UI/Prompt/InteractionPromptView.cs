@@ -19,6 +19,12 @@ namespace TramChanh.UI.Prompt
         private Label _text;
         private Label _reason;
         private ProgressBar _progress;
+        private VisualElement _heldPanel;
+        private Label _heldText;
+        private Label _heldReason;
+        private ProgressBar _heldProgress;
+        private InteractionQuery _renderedHeldQuery;
+        private bool _hasRenderedHeldQuery;
         private InteractionQuery _renderedQuery;
         private bool _hasRenderedQuery;
         private bool _renderedHeldUse;
@@ -26,6 +32,7 @@ namespace TramChanh.UI.Prompt
         public string Language => _language;
         public bool IsPromptVisible => _panel != null && _panel.style.display.value == DisplayStyle.Flex;
         public string PromptText => _text != null ? _text.text : string.Empty;
+        public string HeldPromptText => _heldText != null ? _heldText.text : string.Empty;
 
         public void Initialize(IEventBus events, PlayerInteractor source)
         {
@@ -81,6 +88,13 @@ namespace TramChanh.UI.Prompt
             _panel.Add(_reason);
             _progress = new ProgressBar { lowValue = 0f, highValue = 100f };
             _panel.Add(_progress);
+            _heldPanel = new VisualElement();
+            _heldText = new Label(); _heldText.style.fontSize = 22f; _heldText.style.color = Color.white; _heldText.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _heldReason = new Label(); _heldReason.style.fontSize = 16f; _heldReason.style.color = Color.gray; _heldReason.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _heldProgress = new ProgressBar { lowValue = 0f, highValue = 100f };
+            _heldPanel.Add(_heldText); _heldPanel.Add(_heldReason); _heldPanel.Add(_heldProgress);
+            _panel.Add(_heldPanel);
+            _hasRenderedHeldQuery = false;
             root.Add(_panel);
         }
         private void Subscribe()
@@ -96,12 +110,14 @@ namespace TramChanh.UI.Prompt
             if (!state.IsVisible)
             {
                 _text.text = string.Empty;
+                _heldText.text = string.Empty;
                 _hasRenderedQuery = false;
+                _hasRenderedHeldQuery = false;
                 return;
             }
             if (!_hasRenderedQuery || !_renderedQuery.Equals(state.Query) || _renderedHeldUse != state.IsHeldUse)
             {
-                _text.text = (state.IsHeldUse ? "[F]" : _table.Resolve("preview.key", _language)) + "  " + _table.Resolve(state.Query.PromptKey, _language);
+                _text.text = _table.Resolve(state.IsHeldUse ? "preview.held_key" : "preview.key", _language) + "  " + _table.Resolve(state.Query.PromptKey, _language);
                 _reason.text = _table.Resolve(state.Query.BlockedReasonKey, _language);
                 _progress.style.display = state.Query.Kind == InteractionKind.Hold ? DisplayStyle.Flex : DisplayStyle.None;
                 _renderedQuery = state.Query;
@@ -109,6 +125,19 @@ namespace TramChanh.UI.Prompt
                 _hasRenderedQuery = true;
             }
             _progress.value = state.Progress * 100f;
+            _heldPanel.style.display = state.HasHeldPrompt ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!state.HasHeldPrompt)
+            {
+                _heldText.text = string.Empty; _hasRenderedHeldQuery = false; return;
+            }
+            if (!_hasRenderedHeldQuery || !_renderedHeldQuery.Equals(state.HeldQuery))
+            {
+                _heldText.text = _table.Resolve("preview.held_key", _language) + "  " + _table.Resolve(state.HeldQuery.PromptKey, _language);
+                _heldReason.text = _table.Resolve(state.HeldQuery.BlockedReasonKey, _language);
+                _heldProgress.style.display = state.HeldQuery.Kind == InteractionKind.Hold ? DisplayStyle.Flex : DisplayStyle.None;
+                _renderedHeldQuery = state.HeldQuery; _hasRenderedHeldQuery = true;
+            }
+            _heldProgress.value = state.HeldProgress * 100f;
         }
         private void OnEnable()
         {

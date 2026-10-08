@@ -89,18 +89,20 @@ namespace TramChanh.Interaction
             if (isActiveAndEnabled && _input.IsCaptured && !_context.Clock.IsPaused)
             {
                 IInteractable target = Focused;
-                if (target != null && !_driver.IsHeldUse)
+                InteractionQuery heldQuery = _context.Hands.Current is IHeldItemAction heldAction ? heldAction.QueryUse(_context) : default;
+                float heldProgress = _driver.IsHeldUse ? _driver.Progress : 0f;
+                if (target != null)
                 {
                     InteractionQuery query = target.Query(_context);
                     if (query.Availability.Status != AvailabilityStatus.Hidden)
                     {
-                        state = new InteractionPromptChanged(target.Id, query, _driver.Progress);
+                        state = new InteractionPromptChanged(target.Id, query, _driver.IsHeldUse ? 0f : _driver.Progress, false, heldQuery, heldProgress);
                     }
                 }
                 if (!state.IsVisible && _context.Hands.Current is IHeldItemAction action)
                 {
                     InteractableId id = (action as IInteractable)?.Id ?? default;
-                    state = new InteractionPromptChanged(id, action.QueryUse(_context), _driver.IsHeldUse ? _driver.Progress : 0f, true);
+                    state = new InteractionPromptChanged(id, heldQuery, heldProgress, true);
                 }
             }
             if (!state.Equals(Prompt))

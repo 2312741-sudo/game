@@ -397,6 +397,46 @@ namespace TramChanh.Tests.PlayMode.Interaction
             Assert.That(held.Executions, Is.Zero);
         }
 
+        [UnityTest]
+        public IEnumerator TC_INT_009_TargetAndHeldPromptsRemainVisibleDuringHeldHold()
+        {
+            var held = new HeldAction { Kind = InteractionKind.Hold };
+            _interactor.Context.Hands.TryPickUp(held);
+            InspectionInteractable cube = Target("PF_Placeholder_InteractionCube");
+            Aim(cube);
+            Assert.That(_view.PromptText, Does.Contain("E"));
+            Assert.That(_view.HeldPromptText, Does.Contain("F"));
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.F));
+            yield return null;
+            yield return null;
+            Assert.That(_interactor.Prompt.HasHeldPrompt, Is.True);
+            Assert.That(_interactor.Prompt.HeldProgress, Is.GreaterThan(0f));
+            Assert.That(_view.PromptText, Does.Contain("test cube"));
+            Assert.That(_view.HeldPromptText, Does.Contain("F"));
+        }
+
+        [UnityTest]
+        public IEnumerator TC_INT_009_HeldGlyphUsesLocalizationAndRepeatedDualPromptAllocatesNothing()
+        {
+            var held = new HeldAction();
+            _interactor.Context.Hands.TryPickUp(held);
+            InspectionInteractable cube = Target("PF_Placeholder_InteractionCube");
+            Aim(cube);
+            string key = _view.Table.Resolve("preview.held_key", _view.Language);
+            Assert.That(key, Is.Not.EqualTo("preview.held_key"), "Held binding must have a localization entry.");
+            Assert.That(_view.HeldPromptText, Does.StartWith(key));
+            InteractionPromptChanged state = _interactor.Prompt;
+            _interactor.Context.Events.Publish(state);
+            Assert.That((TestDelegate)(() =>
+            {
+                for (int frame = 0; frame < 10; frame++)
+                {
+                    _interactor.Context.Events.Publish(state);
+                }
+            }), Is.Not.AllocatingGCMemory());
+            yield return null;
+        }
+
         private sealed class HeldAction : IHoldable, IHeldItemAction, IInteractable
         {
             public Transform HandGrip => null;

@@ -61,3 +61,6 @@ MonoBehaviour:
   - _key: drink.rack.not_configured
     _en: Tea rack setup is missing
     _vi: "Thi\u1EBFu thi\u1EBFt l\u1EADp gi\xE1 tr\xE0"
+  - _key: preview.held_key
+    _en: "[F / RMB]"
+    _vi: "[F / chuột phải]"
