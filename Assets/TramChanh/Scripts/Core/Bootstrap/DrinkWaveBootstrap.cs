@@ -132,9 +132,13 @@ namespace TramChanh.App
         }
         private void OnEntryHidden()
         {
-            _lobby.CloseEntry();
-            _input.enabled = true;
-            _input.SetCaptured(true);
+            // Scene teardown may destroy the player before the modal document raises Hidden.
+            if (_lobby != null) { _lobby.CloseEntry(); }
+            if (_input != null)
+            {
+                _input.enabled = true;
+                _input.SetCaptured(true);
+            }
         }
         private void OnDestroy()
         {
