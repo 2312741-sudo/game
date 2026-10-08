@@ -6,7 +6,7 @@ using TramChanh.Core;
 namespace TramChanh.Orders
 {
     /// <summary>Canonical Lobby intake; preparation mutation is internal to ticket/shelf use cases.</summary>
-    public sealed class OrderService : IOrderService
+    public sealed class OrderService : IOrderService, IOrderDelivery
     {
         private readonly IGameClock _clock;
         private readonly IIdGenerator _ids;
@@ -60,6 +60,44 @@ namespace TramChanh.Orders
             _active.Add(order);
             PublishStatus(order);
             return Result<OrderId>.Success(id);
+        }
+
+        public bool TryGetInfo(OrderId id, out OrderDeliveryInfo info)
+        {
+            Order order = Find(id);
+            info = order == null ? default : new OrderDeliveryInfo(order.DeliveryAttempts, order.QualityScore);
+            return order != null;
+        }
+
+        public Result Deliver(OrderId id, ActorRef actor, DeliveryTarget target)
+        {
+            if (actor.Value <= 0) { return Result.Fail("order.actor.invalid"); }
+            if (!target.IsValid) { return Result.Fail("order.delivery.invalid_target"); }
+            Order order = Find(id);
+            if (order == null || order.Status != OrderStatus.PickedUpByLobby) { return Result.Fail("order.transition.invalid"); }
+            if (!order.Origin.Equals(target.Origin) || order.CustomerId != target.Customer)
+            {
+                order.DeliveryAttempts++;
+                Enqueue(new DeliveryRejected(id, target, "order.delivery.wrong_target"));
+                FlushOutbox();
+                return Result.Fail("order.delivery.wrong_target");
+            }
+            long quality = 0;
+            foreach (OrderItem item in order.MutableItems) { quality += item.Quality; }
+            order.QualityScore = (int)Math.Round((double)quality / order.MutableItems.Count);
+            SetStatus(order, OrderStatus.Delivered);
+            PublishStatus(order);
+            return Result.Success();
+        }
+
+        public Result Complete(OrderId id)
+        {
+            Order order = Find(id);
+            if (order == null || order.Status != OrderStatus.Delivered) { return Result.Fail("order.transition.invalid"); }
+            SetStatus(order, OrderStatus.Completed);
+            _active.Remove(order);
+            PublishStatus(order);
+            return Result.Success();
         }
 
         public Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point)
