@@ -107,9 +107,20 @@ Every other transition is **rejected**: the call returns `Result.Fail(ReasonKey)
 - returns `Fail("order.delivery.wrong_target")`;
 - order stays `PickedUpByLobby`, items stay in the Lobby's hands;
 - `DeliveryAttempts++`;
-- publishes `DeliveryRejected { OrderId, AttemptedTarget, Reason }`.
+- publishes `DeliveryRejected { Order, AttemptedTarget, ReasonKey }` (field names as implemented by ACCEL-01; `AttemptedTarget` is a `DeliveryTarget` = `OrderOrigin` + `CustomerId`).
 
 Matching rule: `DineIn` → target must be `TableOrderPoint` with the same `TableId` *and* the seated customer is `CustomerId`. `TakeawayVehicle` → target must be the `VehicleOrderPoint` with the same `VehicleId` *and* the waiting customer is `CustomerId`.
+
+### 3.2.1 Delivery and completion — ACCEL-01 order lane (PR #17, under review)
+
+Capability `IOrderDelivery` (separate from intake; `Order` also implements the optional `IOrderDeliveryInfo`):
+
+- `Deliver(OrderId, ActorRef, DeliveryTarget)`: positive actor (`order.actor.invalid`), valid target (`order.delivery.invalid_target`), order exists and is `PickedUpByLobby` (`order.transition.invalid`, which also covers `Delivered`, `Completed`, `Failed` and repeats) — none of these mutate or publish. A valid target whose `OrderOrigin` or `CustomerId` differs counts one attempt and publishes one `DeliveryRejected` (`order.delivery.wrong_target`). A matching target commits `QualityScore = round(mean(item.Quality))` and `Delivered` before the `OrderStatusChanged(Delivered)` publication.
+- `Complete(OrderId)`: only from `Delivered`; commits `Completed` and removes the order from the active set (the point is free) **before** `OrderStatusChanged(Completed)`; any other state is `order.transition.invalid`.
+- `TryGetInfo(OrderId, out OrderDeliveryInfo)`: immutable snapshot (`DeliveryAttempts`, `QualityScore`, 0 until `Delivered`); false/default for an unknown order.
+- All publication goes through the §6.4 outbox: observer faults cannot undo a delivery or completion, a reentrant `Complete` or `Deliver` from an observer queues after the current flush (`Delivered` is always observed before `Completed`).
+- Lobby adapters (`OrderPoint`, `ServedOrder`, `ReadyOrderPickupPoint`): the point builds the `DeliveryTarget` from its own live order's origin and customer, so a bundle held for another order is routed to its real order and rejected there; a free point has no customer and blocks without counting an attempt (`order.delivery.no_customer`). After a committed delivery the bundle releases only its own held identity and retires its visuals even if observers fault, then `Complete` follows immediately; if `Complete` fails transiently the order stays `Delivered`, the next interaction at the point (`order.point.complete`, empty hands) retries `Complete` only. A `Failed` carried order retires its bundle; this requires the bundle's lifecycle binding (`ReadyOrderPickupPoint.Initialize(shelf, orders, events)`), see the PR #17 review.
+- Rounding: `Math.Round` currently rounds half to even (96.5 → 96, 97.5 → 98); the doc intent "round(mean)" is to be pinned by a test (PR #17 review N1).
 
 ### 3.3 Failure reasons (slice)
 
@@ -249,6 +260,7 @@ Reason keys are data (localization keys, `ActionBlocked.ReasonKey`). UI and adap
 |---|---|
 | Intake (`RequestService`, `BeginTaking`, `Enter`, `SendToStall`, `Fail`) | `order.origin.invalid`, `order.point.occupied`, `order.point.wrong`, `order.actor.invalid`, `order.transition.invalid`, `order.items.empty`, `order.items.invalid`, `order.items.request_mismatch`, `order.too_many_for_shelf`, `order.failure.invalid` |
 | Ticket queue | `stall.no_ticket.drink`, `stall.no_ticket.cake`, `stall.ticket.not_bound`, `stall.ticket.preparation_invalid`, `stall.ticket.preparation_bound`, `stall.ticket.kind_invalid` |
+| Delivery (ACCEL-01) | `order.delivery.invalid_target`, `order.delivery.wrong_target`, `order.delivery.no_customer`, `order.delivery.not_configured`, plus prompts `order.point.deliver` / `order.point.complete` and HUD keys `order.status.PickedUpByLobby` / `hud.next.delivery` |
 | Ready shelf | `ready.not_finished`, `ready.no_order`, `ready.already_ready`, `ready.slot_full`, `ready.quality.invalid`, `ready.no_complete_order` (pickup of a non-Ready, incomplete or not-oldest order) |
 
 ---
