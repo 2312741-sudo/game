@@ -7,5 +7,6 @@ namespace TramChanh.Orders
     {
         Result Deliver(OrderId order, ActorRef actor, DeliveryTarget target);
         Result Complete(OrderId order);
+        bool TryGetInfo(OrderId order, out OrderDeliveryInfo info);
     }
 }
