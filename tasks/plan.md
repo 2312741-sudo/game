@@ -12,8 +12,8 @@ See Docs/ACCEL-01_CONTRACTS.md. Shared contracts commit precedes lane branching.
 ## Ownership and dependencies
 - Root: shared Core/Orders contract files, App composition, UI/feedback, final scene wiring and integrated acceptance tests.
 - Recovery agent: only existing DrinkWaveBootstrap.cs and DrinkWaveFlowTests.cs in integration-clean; fix mouse path/teardown and validate PR15.
-- Cake agent: Scripts/Cakes/**; new Cakes tests; new Editor/Placeholders/CakeWavePrefabBuilder.cs; new Prefabs/ACCEL01/Cakes/** and Data/ACCEL01/Cakes/**. Never modify shared contracts, App bootstrap, UI, package pins.
-- Orders agent: existing Orders/OrderService.cs and Order.cs; Lobby/OrderPoint.cs, ServedOrder.cs and new delivery adapters; own new Orders/Lobby delivery tests. No shared interface modifications.
+- Cake agent: Scripts/Cakes/**; exclusive new Content/CakeRecipe.cs and MeasureCupDefinition.cs data files; new Cakes tests; new Editor/Placeholders/CakeWavePrefabBuilder.cs; new Prefabs/ACCEL01/Cakes/** and Data/ACCEL01/Cakes/**. Never modify shared contracts, App bootstrap, UI, package pins.
+- Orders agent: existing Orders/OrderService.cs and Order.cs; Lobby/OrderPoint.cs, ServedOrder.cs and new delivery adapters; own new Orders/Lobby delivery tests. No shared interface modifications; also owns ReadyOrderPickupPoint delivery dependency injection.
 - Scene agent: new Editor/Placeholders/AccelRoadsideSceneBuilder.cs; new Prefabs/ACCEL01/Environment/**, Materials/ACCEL01/**, Scenes/ACCEL01/** and own visual-contract tests. Never modify existing canonical prefabs/anchors or App composition.
 - Only three child slots: recovery first; cake and scene start after locked commit; orders takes recovery's slot. UI/root runs concurrently.
 
