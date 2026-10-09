@@ -11,12 +11,16 @@ namespace TramChanh.EditorTools
     /// </summary>
     public static class TramChanhSceneMenu
     {
+        public const string Main = "Assets/TramChanh/Scenes/Gameplay/SCN_TramChanh_Main.unity";
         public const string PlayableDrinkWave = "Assets/TramChanh/Scenes/Gameplay/SCN_DrinkWave.unity";
         public const string Blockout = "Assets/TramChanh/Scenes/Gameplay/SCN_Gameplay_Blockout.unity";
         public const string RoadsideEnvironment = "Assets/TramChanh/Scenes/ACCEL01/SCN_AccelRoadsideEnvironment.unity";
         public const string TeaRackTest = "Assets/TramChanh/Scenes/Test/SCN_TeaRackPickupTest.unity";
 
-        [MenuItem("Tram Chanh/Scenes/Open Playable Scene (Drink Wave) - primary")]
+        [MenuItem("Tram Chanh/Scenes/Open Main Game (SCN_TramChanh_Main) - primary", false, 0)]
+        public static void OpenMain() => Open(Main);
+
+        [MenuItem("Tram Chanh/Scenes/Open Drink Wave (gray blockout, drink only)")]
         public static void OpenPlayable() => Open(PlayableDrinkWave);
 
         [MenuItem("Tram Chanh/Scenes/Open Visual Shell Preview (Roadside Night, view only)")]
@@ -29,8 +33,8 @@ namespace TramChanh.EditorTools
         public static void SetBuildSettingsToPlayableScenes()
         {
             var scenes = new List<EditorBuildSettingsScene>();
-            // The drink wave loads the blockout additively by path, so a player build needs both.
-            foreach (string path in new[] { PlayableDrinkWave, Blockout })
+            // Main is first (startup scene). The drink wave loads the blockout additively by path, so it needs both.
+            foreach (string path in new[] { Main, PlayableDrinkWave, Blockout })
             {
                 if (File.Exists(path)) { scenes.Add(new EditorBuildSettingsScene(path, true)); }
             }

@@ -9,7 +9,8 @@ How to keep the Unity Editor on your Mac showing the same project that Codex, Cl
 | Unity version (pinned) | **6000.6.0f1** |
 | Unity project folder | the **root of the Git clone** (the folder that contains `Assets/`, `Packages/`, `ProjectSettings/`). Add exactly this folder in Unity Hub |
 | Integration branch | `develop` (never `main`) |
-| Playable scene (primary) | `Assets/TramChanh/Scenes/Gameplay/SCN_DrinkWave.unity` |
+| Main game (primary) | `Assets/TramChanh/Scenes/Gameplay/SCN_TramChanh_Main.unity` (on `wave/MAIN-001-integration` until merged) |
+| Drink-only wave (gray blockout) | `Assets/TramChanh/Scenes/Gameplay/SCN_DrinkWave.unity` |
 | Visual Shell (roadside night, view only) | `Assets/TramChanh/Scenes/ACCEL01/SCN_AccelRoadsideEnvironment.unity` — only on `feature/ACCEL-01-scene` (PR #18, draft) and on `preview/ACCEL-01-visual-shell` |
 | Old test scene | `Assets/TramChanh/Scenes/Test/SCN_TeaRackPickupTest.unity` — gray prototype by design; never judge the project by it |
 
