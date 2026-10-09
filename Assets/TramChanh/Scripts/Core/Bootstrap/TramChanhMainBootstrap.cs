@@ -125,7 +125,7 @@ namespace TramChanh.App
                 StallAnchorId.Grill, StallAnchorId.BatterArea, StallAnchorId.RollArea, StallAnchorId.Sauce, StallAnchorId.Wrap })
             { HideStallEquipment(anchors, id); }
 
-            foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true)) { rack.Initialize(Tickets, _ids, _events); }
+            foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true)) { rack.Initialize(Tickets, _ids, _events, Shelf); }
             foreach (ReadyCounterPoint ready in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
             foreach (ReadyOrderPickupPoint pickup in DrinkStation.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
             CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes));
