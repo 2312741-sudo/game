@@ -270,7 +270,8 @@ namespace TramChanh.EditorTools
         private static bool IsDangling(SerializedProperty property)
         {
             if (property.objectReferenceValue != null) { return false; }
-            PropertyInfo info = InstanceIdProperty ?? EntityIdProperty;
+            // Prefer EntityId: on Unity 6000.6 the obsolete instance-id getter throws (TargetInvocationException).
+            PropertyInfo info = EntityIdProperty ?? InstanceIdProperty;
             if (info == null) { return false; }
             object value = info.GetValue(property, null);
             if (value == null) { return false; }

@@ -135,7 +135,8 @@ namespace TramChanh.Tests.PlayMode.Integration
             InteractionContext context = _bootstrap.Interactor.Context;
             OrderPoint vehicle = _bootstrap.Vehicle;
             OrderId order = vehicle.ActiveOrder;
-            Assert.That(_bootstrap.Orders.Get(order).Items.Count, Is.EqualTo(2));
+            // Order lines are materialized at Enter; before Lobby intake only the request exists.
+            Assert.That(_bootstrap.Orders.Get(order).RequestedItems.Count, Is.EqualTo(2));
             Assert.That(_bootstrap.Tickets.HasPending(ItemKind.Drink) || _bootstrap.Tickets.HasPending(ItemKind.Cake), Is.False, "No ticket before Lobby intake.");
             vehicle.Execute(context);
             Assert.That(_entry.IsOpen, Is.True);
