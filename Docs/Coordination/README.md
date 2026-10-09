@@ -36,10 +36,10 @@ Last refreshed: 2026-10-09
 
 | Id | Agent | Branch | Owned files | Depends on | PR | Status |
 |---|---|---|---|---|---|---|
-| MAIN-001 | CLAUDE-01 lead / CLAUDE-05 QA | `wave/MAIN-001-integration` | `Scripts/Core/Bootstrap/**`, `Scenes/Gameplay/SCN_TramChanh_Main.unity`, `Scripts/Editor/Placeholders/TramChanhMainSceneBuilder.cs`, `Tests/PlayMode/Integration/TramChanhMain*` | #16, #17, #18 (merged into the wave branch for integration) | open (see #20) | In progress |
-| MAIN-002 | CLAUDE-02 drink | `feature/MAIN-002-drink-workflow` | `Scripts/Drinks/**`, `Tests/*/Drinks/**` | MAIN-001 base | — | In progress |
+| MAIN-001 | CLAUDE-01 lead / CLAUDE-05 QA | `wave/MAIN-001-integration` | `Scripts/Core/Bootstrap/**`, `Scenes/Gameplay/SCN_TramChanh_Main.unity`, `Scripts/Editor/Placeholders/TramChanhMainSceneBuilder.cs`, `Tests/PlayMode/Integration/TramChanhMain*` | #16, #17, #18, #19, MAIN-002/003/004 merged into the wave | #22 (draft) | Scene + bootstrap pushed; awaiting MAIN-003 and Unity validation |
+| MAIN-002 | CLAUDE-02 drink | `feature/MAIN-002-drink-workflow` | `Scripts/Drinks/**`, `Tests/*/Drinks/**` | MAIN-001 base | via #22 | Done (c7fbf68): prompt fix + Ready-slot gate, 69/69 harness |
 | MAIN-003 | CLAUDE-03 cake | `feature/MAIN-003-cake-workflow` | `Scripts/Cakes/**`, `Tests/*/Cakes/**` | MAIN-001 base, PR #16 review | — | In progress |
-| MAIN-004 | CLAUDE-04 lobby/orders | `feature/MAIN-004-lobby-orders` | `Scripts/Orders/**`, `Scripts/Lobby/**`, `Scripts/UI/Orders/**`, `Scripts/Customers/**`, matching EditMode tests | MAIN-001 base | — | In progress |
+| MAIN-004 | CLAUDE-04 lobby/orders | `feature/MAIN-004-lobby-orders` | `Scripts/Orders/**`, `Scripts/Lobby/**`, `Scripts/UI/Orders/**`, `Scripts/Customers/**`, matching EditMode tests | MAIN-001 base | via #22 | Done (f950ff3): mixed-order regressions, no prod change |
 | ART-* | Antigravity | to be announced on #20 | art folders only | anchor contract above | — | Not started |
 
 ## Pending source PRs
