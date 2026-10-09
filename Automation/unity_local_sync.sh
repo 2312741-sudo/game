@@ -14,7 +14,8 @@ set -u
 set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Run from a copy outside the repo with TRAMCHANH_PROJECT=/path/to/clone, or from Automation/ inside it.
+ROOT="${TRAMCHANH_PROJECT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 PINNED_UNITY="6000.6.0f1"
 PRIMARY_SCENE="Assets/TramChanh/Scenes/Gameplay/SCN_DrinkWave.unity"
 PREVIEW_SCENE="Assets/TramChanh/Scenes/ACCEL01/SCN_AccelRoadsideEnvironment.unity"
