@@ -267,6 +267,11 @@ namespace TramChanh.EditorTools
         private static bool CanDetectDanglingReferences() => InstanceIdProperty != null || EntityIdProperty != null;
 
         /// <summary>A missing ("dangling") reference: a persistent id is stored but the object does not resolve.</summary>
+        private static readonly HashSet<string> HeldOnlyInteractables = new HashSet<string>
+        {
+            "TramChanh.Drinks.Runtime.TeaBagItem",
+        };
+
         private static bool IsDangling(SerializedProperty property)
         {
             if (property.objectReferenceValue != null) { return false; }
@@ -401,9 +406,10 @@ namespace TramChanh.EditorTools
                 }
                 foreach (MonoBehaviour interactable in interactables.Where(i => !targeted.Contains(i)))
                 {
-                    // Held-use items (e.g. TeaBagItem) expose IInteractable only to forward their held action;
-                    // the rack/station is their world target, so a world InteractableRef would make the held bag hit the ray.
-                    if (interactable is IHoldable && interactable is IHeldItemAction)
+                    // Explicit allowlist: these types expose IInteractable only to forward their held action and are
+                    // reached in the world through another interactable (TeaBagItem via the tea rack). Items that are
+                    // also picked up from the world (e.g. BatterMeasureCup) are NOT exempt and must keep their ref.
+                    if (HeldOnlyInteractables.Contains(interactable.GetType().FullName))
                     {
                         report.Warning(section, path + " :: " + HierarchyPath(interactable.transform) + " [" + interactable.GetType().Name + "] is a held-use item without a world InteractableRef (expected).");
                         continue;
