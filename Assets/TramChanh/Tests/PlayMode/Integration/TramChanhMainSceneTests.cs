@@ -57,12 +57,19 @@ namespace TramChanh.Tests.PlayMode.Integration
             ReadyCounterPoint counter = _bootstrap.DrinkStation.GetComponentInChildren<ReadyCounterPoint>();
             Assert.That(counter.DrinkPlacementPoint, Is.Not.Null); Assert.That(counter.CakePlacementPoint, Is.Not.Null);
             Assert.That(_bootstrap.DrinkStation.GetComponentInChildren<ReadyOrderPickupPoint>(), Is.Not.Null);
-            Assert.That(_bootstrap.CustomerPoints.Count, Is.EqualTo(3));
-            foreach (OrderPoint point in _bootstrap.CustomerPoints)
+            // TABLES-10: ten dine-in tables plus the takeaway vehicle; dine-in customers arrive through the director.
+            Assert.That(_bootstrap.CustomerPoints.Count, Is.EqualTo(TramChanhMainBootstrap.TableCount + 1));
+            Assert.That(_bootstrap.Vehicle.ActiveOrder.IsValid, Is.True, "The takeaway vehicle always has a waiting customer.");
+            Assert.That(_bootstrap.Orders.Get(_bootstrap.Vehicle.ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+            int waitingTables = 0;
+            foreach (OrderPoint point in _bootstrap.Tables)
             {
-                Assert.That(point.ActiveOrder.IsValid, Is.True, point.name + " should have a waiting customer.");
-                Assert.That(_bootstrap.Orders.Get(point.ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+                if (!point.ActiveOrder.IsValid) { continue; }
+                waitingTables++;
+                Assert.That(_bootstrap.Orders.Get(point.ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby), point.name);
             }
+            Assert.That(waitingTables, Is.EqualTo(_bootstrap.Customers.ActiveCustomers));
+            Assert.That(waitingTables, Is.GreaterThanOrEqualTo(1), "The scene opens with at least one dine-in customer.");
             Assert.That(Object.FindObjectsByType<Camera>(FindObjectsSortMode.None), Has.Exactly(1).Matches<Camera>(camera => camera.isActiveAndEnabled));
             foreach (GameObject root in _scene.GetRootGameObjects())
             {
