@@ -190,8 +190,8 @@ def main():
             if fn.endswith(SCANNED_EXT):
                 targets.append(os.path.join(dp, fn))
 
+    tracked = git_tracked(root)
     if not a.include_untracked:
-        tracked = git_tracked(root)
         if tracked is not None:
             skipped = [t for t in targets if rel(root, t) not in tracked]
             targets = [t for t in targets if rel(root, t) in tracked]
@@ -238,6 +238,10 @@ def main():
                 e["count"] += 1
                 continue
             stats["resolved_guid_refs"] += 1
+            # A tracked file must not depend on a .meta that only exists in this working copy:
+            # a fresh clone would lose the reference even though this checkout resolves it.
+            if tracked is not None and rp in tracked and not any(pth + ".meta" in tracked for pth in paths):
+                fails.append("GUID_ONLY_IN_UNTRACKED_META %s:%d %s -> %s (commit the asset and its .meta)" % (rp, line_no, key, paths[0]))
             # 3. cross-file fileID check into project YAML assets (type 2 = serialized asset)
             target = os.path.join(root, paths[0])
             if typ == 2 and target.endswith(YAML_LIKE_EXT) and os.path.isfile(target):
