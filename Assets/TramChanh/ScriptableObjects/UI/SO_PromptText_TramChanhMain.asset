@@ -33,10 +33,10 @@ MonoBehaviour:
     _vi: "G\u1EEDi t\u1EDBi qu\u1EA7y"
   - _key: item.drink.slice
     _en: Drink (menu name pending)
-    _vi: "\u0110\u1ED3 u\u1ED1ng (ch\u1EDD t\xEAn m\xF3n)"
+    _vi: "\u0110\u1ED3 u\u1ED1ng (t\xEAn t\u1EA1m)"
   - _key: order.point.take
     _en: Take order
-    _vi: "Nh\u1EADn y\xEAu c\u1EA7u c\u1EE7a kh\xE1ch"
+    _vi: "Nh\u1EADn \u0111\u01A1n c\u1EE7a kh\xE1ch"
   - _key: order.point.continue
     _en: Continue order
     _vi: "Ti\u1EBFp t\u1EE5c nh\u1EADp \u0111\u01A1n"
@@ -65,14 +65,14 @@ MonoBehaviour:
     _en: Hold to wipe
     _vi: "Gi\u1EEF \u0111\u1EC3 lau"
   - _key: ready.place_item
-    _en: Place at Ready
-    _vi: "\u0110\u1EB7t \u0111\u1ED3 u\u1ED1ng ho\xE0n t\u1EA5t"
+    _en: Place on Ready counter
+    _vi: "\u0110\u1EB7t l\xEAn qu\u1EA7y giao"
   - _key: ready.pick_up_order
     _en: Pick up ready order
-    _vi: "Nh\u1EADn \u0111\u01A1n \u0111\xE3 xong"
+    _vi: "L\u1EA5y \u0111\u01A1n \u0111\xE3 xong"
   - _key: hands.full
     _en: Hands full
-    _vi: "\u0110ang c\u1EA7m v\u1EADt ph\u1EA9m"
+    _vi: "Tay \u0111ang c\u1EA7m \u0111\u1ED3"
   - _key: drink.rack.empty
     _en: Tea rack empty
     _vi: "Gi\xE1 tr\xE0 \u0111\xE3 h\u1EBFt"
@@ -95,8 +95,8 @@ MonoBehaviour:
     _en: Shake first
     _vi: "L\u1EAFc tr\u01B0\u1EDBc"
   - _key: ready.not_finished
-    _en: Finish shaking and wiping first
-    _vi: "Ho\xE0n th\xE0nh l\u1EAFc v\xE0 lau tr\u01B0\u1EDBc"
+    _en: Not finished yet
+    _vi: "M\xF3n ch\u01B0a l\xE0m xong"
   - _key: ready.no_order
     _en: Item has no live order
     _vi: "Kh\xF4ng c\xF3 \u0111\u01A1n h\u1EE3p l\u1EC7"
@@ -108,7 +108,7 @@ MonoBehaviour:
     _vi: "\u0110\xE3 ho\xE0n t\u1EA5t"
   - _key: ready.no_ready_order
     _en: No ready order
-    _vi: "Ch\u01B0a c\xF3 \u0111\u01A1n ho\xE0n t\u1EA5t"
+    _vi: "Ch\u01B0a c\xF3 \u0111\u01A1n n\xE0o xong"
   - _key: interaction.paused
     _en: Paused
     _vi: "\u0110ang t\u1EA1m d\u1EEBng"
@@ -138,7 +138,7 @@ MonoBehaviour:
     _vi: "Thi\u1EBFu thi\u1EBFt l\u1EADp ch\u1ED7 nh\u1EADn"
   - _key: ready.need_prepared_item
     _en: Hold a finished item
-    _vi: "C\u1EA7n c\u1EA7m \u0111\u1ED3 u\u1ED1ng ho\xE0n t\u1EA5t"
+    _vi: "C\u1EA7m m\xF3n \u0111\xE3 l\xE0m xong"
   - _key: ready.item_missing_placement_point
     _en: Item placement is not configured
     _vi: "Thi\u1EBFu \u0111i\u1EC3m \u0111\u1EB7t v\u1EADt ph\u1EA9m"
@@ -146,11 +146,11 @@ MonoBehaviour:
     _en: "Order point is not set up"
     _vi: "\u0110i\u1EC3m g\u1ECDi m\u00F3n ch\u01B0a \u0111\u01B0\u1EE3c thi\u1EBFt l\u1EADp"
   - _key: order.wrong_point
-    _en: "This order belongs to another place"
-    _vi: "Order n\u00E0y thu\u1ED9c v\u1ECB tr\u00ED kh\u00E1c"
+    _en: This order belongs to another place
+    _vi: "\u0110\u01A1n n\xE0y thu\u1ED9c ch\u1ED7 kh\xE1c"
   - _key: order.entry.not_available
-    _en: "This order can no longer be edited"
-    _vi: "Order n\u00E0y kh\u00F4ng th\u1EC3 ch\u1EC9nh s\u1EEDa n\u1EEFa"
+    _en: This order can no longer be edited
+    _vi: "\u0110\u01A1n n\xE0y kh\xF4ng s\u1EEDa \u0111\u01B0\u1EE3c n\u1EEFa"
   - _key: order.transition.invalid
     _en: "Not possible at this step \u2014 enter the order before sending"
     _vi: "Ch\u01B0a l\u00E0m \u0111\u01B0\u1EE3c \u1EDF b\u01B0\u1EDBc n\u00E0y \u2014 h\u00E3y nh\u1EADp \u0111\u01A1n tr\u01B0\u1EDBc khi g\u1EEDi"
@@ -158,38 +158,38 @@ MonoBehaviour:
     _en: "This order point is not valid"
     _vi: "\u0110i\u1EC3m g\u1ECDi m\u00F3n kh\u00F4ng h\u1EE3p l\u1EC7"
   - _key: order.point.wrong
-    _en: "Wrong place for this order"
-    _vi: "Sai v\u1ECB tr\u00ED c\u1EE7a order n\u00E0y"
+    _en: Wrong place for this order
+    _vi: "Sai ch\u1ED7 c\u1EE7a \u0111\u01A1n n\xE0y"
   - _key: order.point.occupied
-    _en: "This place already has an order"
-    _vi: "V\u1ECB tr\u00ED n\u00E0y \u0111\u00E3 c\u00F3 order"
+    _en: This place already has an order
+    _vi: "Ch\u1ED7 n\xE0y \u0111\xE3 c\xF3 \u0111\u01A1n"
   - _key: order.actor.invalid
     _en: "Invalid server"
     _vi: "Ng\u01B0\u1EDDi ph\u1EE5c v\u1EE5 kh\u00F4ng h\u1EE3p l\u1EC7"
   - _key: order.items.empty
-    _en: "The order has no items"
-    _vi: "Order ch\u01B0a c\u00F3 m\u00F3n n\u00E0o"
+    _en: The order has no items
+    _vi: "\u0110\u01A1n ch\u01B0a c\xF3 m\xF3n"
   - _key: order.items.invalid
-    _en: "The order has an unknown item"
-    _vi: "Order c\u00F3 m\u00F3n kh\u00F4ng h\u1EE3p l\u1EC7"
+    _en: The order has an unknown item
+    _vi: "\u0110\u01A1n c\xF3 m\xF3n kh\xF4ng h\u1EE3p l\u1EC7"
   - _key: order.items.request_mismatch
     _en: "Entered items differ from the customer's request"
     _vi: "M\u00F3n \u0111\u00E3 nh\u1EADp kh\u00E1c y\u00EAu c\u1EA7u c\u1EE7a kh\u00E1ch"
   - _key: order.too_many_for_shelf
-    _en: "Too many of one kind for the ready shelf"
-    _vi: "Qu\u00E1 nhi\u1EC1u m\u00F3n c\u00F9ng lo\u1EA1i cho k\u1EC7 ch\u1EDD giao"
+    _en: Too many of one kind for the ready shelf
+    _vi: "Qu\xE1 nhi\u1EC1u m\xF3n c\xF9ng lo\u1EA1i cho qu\u1EA7y giao"
   - _key: order.failure.invalid
     _en: "Invalid failure reason"
     _vi: "L\u00FD do th\u1EA5t b\u1EA1i kh\u00F4ng h\u1EE3p l\u1EC7"
   - _key: order.not_found
-    _en: "Order not found"
-    _vi: "Kh\u00F4ng t\u00ECm th\u1EA5y order"
+    _en: Order not found
+    _vi: "Kh\xF4ng t\xECm th\u1EA5y \u0111\u01A1n"
   - _key: order.entry.empty
     _en: "Nothing to enter"
     _vi: "Kh\u00F4ng c\u00F3 m\u00F3n \u0111\u1EC3 nh\u1EADp"
   - _key: order.lobby.not_configured
-    _en: "Order entry is not set up"
-    _vi: "Ghi order ch\u01B0a \u0111\u01B0\u1EE3c thi\u1EBFt l\u1EADp"
+    _en: Order entry is not set up
+    _vi: "Ch\u01B0a thi\u1EBFt l\u1EADp nh\u1EADp \u0111\u01A1n"
   - _key: order.point.invalid_customer
     _en: "Invalid customer"
     _vi: "Kh\u00E1ch kh\u00F4ng h\u1EE3p l\u1EC7"
@@ -197,11 +197,11 @@ MonoBehaviour:
     _en: "The customer asked for nothing"
     _vi: "Kh\u00E1ch ch\u01B0a g\u1ECDi m\u00F3n"
   - _key: order.point.invalid_service_result
-    _en: "The order service returned an invalid order"
-    _vi: "D\u1ECBch v\u1EE5 order tr\u1EA3 v\u1EC1 order kh\u00F4ng h\u1EE3p l\u1EC7"
+    _en: The order service returned an invalid order
+    _vi: "D\u1ECBch v\u1EE5 tr\u1EA3 v\u1EC1 \u0111\u01A1n kh\xF4ng h\u1EE3p l\u1EC7"
   - _key: cake.dev.tbd
-    _en: 'Test cake (recipe TBD)'
-    _vi: 'Bánh thử nghiệm (công thức TBD)'
+    _en: Test cake (recipe TBD)
+    _vi: "B\xE1nh th\u1EED nghi\u1EC7m (c\xF4ng th\u1EE9c TBD)"
   - _key: cake.cup.pickup
     _en: 'Pick up 500 ml batter cup'
     _vi: 'Cầm ca đong bột 500 ml'
@@ -338,8 +338,8 @@ MonoBehaviour:
     _en: 'Complete order'
     _vi: 'Hoàn tất đơn'
   - _key: order.delivery.wrong_target
-    _en: 'Wrong customer'
-    _vi: 'Sai khách'
+    _en: Wrong customer for this order
+    _vi: "Sai kh\xE1ch c\u1EE7a \u0111\u01A1n n\xE0y"
   - _key: order.delivery.invalid_target
     _en: 'Invalid delivery target'
     _vi: 'Nơi giao không hợp lệ'
@@ -406,3 +406,219 @@ MonoBehaviour:
   - _key: cake.state.ruined
     _en: 'Burnt'
     _vi: 'Bánh cháy'
+  - _key: core.result.uninitialized
+    _en: 'Something went wrong, try again'
+    _vi: "C\xF3 l\u1ED7i, h\xE3y th\u1EED l\u1EA1i"
+  - _key: drink.bag.not_stored
+    _en: Tea bag already taken
+    _vi: "T\xFAi tr\xE0 \u0111\xE3 \u0111\u01B0\u1EE3c l\u1EA5y"
+  - _key: drink.need_pickup
+    _en: Take a tea bag first
+    _vi: "L\u1EA5y t\xFAi tr\xE0 tr\u01B0\u1EDBc"
+  - _key: interaction.held_item_changed
+    _en: Held item changed
+    _vi: "V\u1EADt \u0111ang c\u1EA7m \u0111\xE3 \u0111\u1ED5i"
+  - _key: item.cake.dev.tbd
+    _en: Test cake (recipe TBD)
+    _vi: "B\xE1nh th\u1EED nghi\u1EC7m"
+  - _key: held.TeaBagItem
+    _en: Tea bag
+    _vi: "T\xFAi tr\xE0"
+  - _key: held.CakeItem
+    _en: Cake
+    _vi: "B\xE1nh"
+  - _key: held.BatterMeasureCup
+    _en: Batter measuring cup
+    _vi: "Ca \u0111ong b\u1ED9t"
+  - _key: held.ServedOrder
+    _en: Order tray
+    _vi: "Khay \u0111\u01A1n"
+  - _key: drink.state.stored
+    _en: In the rack
+    _vi: "Trong k\u1EC7"
+  - _key: drink.state.pickedup
+    _en: Sealed
+    _vi: "Ch\u01B0a m\u1EDF"
+  - _key: drink.state.opened
+    _en: Opened
+    _vi: "\u0110\xE3 m\u1EDF t\xFAi"
+  - _key: drink.state.coconutjellyadded
+    _en: Coconut jelly added
+    _vi: "\u0110\xE3 th\xEAm th\u1EA1ch d\u1EEBa"
+  - _key: drink.state.lemonjellyadded
+    _en: Lemon jelly added
+    _vi: "\u0110\xE3 th\xEAm th\u1EA1ch chanh"
+  - _key: drink.state.iceadded
+    _en: Ice added
+    _vi: "\u0110\xE3 th\xEAm \u0111\xE1"
+  - _key: drink.state.shaken
+    _en: Shaken
+    _vi: "\u0110\xE3 l\u1EAFc"
+  - _key: drink.state.wiped
+    _en: Wiped
+    _vi: "\u0110\xE3 lau"
+  - _key: drink.state.ready
+    _en: Ready
+    _vi: "S\u1EB5n s\xE0ng giao"
+  - _key: order.status.WaitingForLobby
+    _en: Waiting to order
+    _vi: "Ch\u1EDD nh\u1EADn \u0111\u01A1n"
+  - _key: order.status.TakingOrder
+    _en: Taking order
+    _vi: "\u0110ang nh\u1EADn \u0111\u01A1n"
+  - _key: order.status.Entered
+    _en: Entered
+    _vi: "\u0110\xE3 nh\u1EADp \u0111\u01A1n"
+  - _key: order.status.SentToStall
+    _en: At the stall
+    _vi: "\u0110\xE3 g\u1EEDi qu\u1EA7y"
+  - _key: order.status.InPreparation
+    _en: Preparing
+    _vi: "\u0110ang l\xE0m"
+  - _key: order.status.Ready
+    _en: Ready for pickup
+    _vi: "S\u1EB5n s\xE0ng"
+  - _key: order.status.PickedUpByLobby
+    _en: Delivering
+    _vi: "\u0110ang mang \u0111i"
+  - _key: order.status.Delivered
+    _en: Delivered
+    _vi: "\u0110\xE3 giao"
+  - _key: order.status.Completed
+    _en: Completed
+    _vi: "Ho\xE0n t\u1EA5t"
+  - _key: order.status.Failed
+    _en: Cancelled
+    _vi: "\u0110\xE3 h\u1EE7y"
+  - _key: order.item.status.Pending
+    _en: Waiting
+    _vi: "Ch\u1EDD l\xE0m"
+  - _key: order.item.status.InPreparation
+    _en: Preparing
+    _vi: "\u0110ang l\xE0m"
+  - _key: order.item.status.Ready
+    _en: Done
+    _vi: Xong
+  - _key: hud.origin.table
+    _en: 'Table {0}'
+    _vi: "B\xE0n {0}"
+  - _key: hud.origin.vehicle
+    _en: 'Vehicle {0}'
+    _vi: 'Xe {0}'
+  - _key: hud.orders.title
+    _en: 'Orders ({0})'
+    _vi: "\u0110\u01A1n h\xE0ng ({0})"
+  - _key: hud.orders.empty
+    _en: 'No orders yet, wait for a customer'
+    _vi: "Ch\u01B0a c\xF3 \u0111\u01A1n, ch\u1EDD kh\xE1ch t\u1EDBi"
+  - _key: hud.orders.more
+    _en: '+{0} more'
+    _vi: "+{0} \u0111\u01A1n kh\xE1c"
+  - _key: hud.order.header
+    _en: "{0} \xB7 {1}"
+    _vi: "{0} \xB7 {1}"
+  - _key: hud.order.stage_progress
+    _en: '{0} ({1}/{2} done)'
+    _vi: "{0} ({1}/{2} m\xF3n xong)"
+  - _key: hud.order.item_qty
+    _en: '{0} x{1}'
+    _vi: '{0} x{1}'
+  - _key: hud.order.item_status
+    _en: '{0}: {1}'
+    _vi: '{0}: {1}'
+  - _key: hud.next.prefix
+    _en: 'Next: {0}'
+    _vi: "Ti\u1EBFp theo: {0}"
+  - _key: hud.next.take_order
+    _en: 'Go to {0} and take the order'
+    _vi: "T\u1EDBi {0} nh\u1EADn \u0111\u01A1n"
+  - _key: hud.next.enter_order
+    _en: 'Enter the order, then send it'
+    _vi: "Nh\u1EADp \u0111\u01A1n r\u1ED3i g\u1EEDi t\u1EDBi qu\u1EA7y"
+  - _key: hud.next.send_order
+    _en: Send the order to the stall
+    _vi: "G\u1EEDi \u0111\u01A1n t\u1EDBi qu\u1EA7y"
+  - _key: hud.next.make_drink
+    _en: Take a tea bag from the rack
+    _vi: "L\u1EA5y t\xFAi tr\xE0 \u1EDF k\u1EC7"
+  - _key: hud.next.make_cake
+    _en: Make the cake at the grill
+    _vi: "L\xE0m b\xE1nh \u1EDF b\u1EBFp n\u01B0\u1EDBng"
+  - _key: hud.next.make_items
+    _en: Prepare the items at the stall
+    _vi: "L\xE0m m\xF3n \u1EDF qu\u1EA7y"
+  - _key: hud.next.finish_item
+    _en: 'Finish the {0}, then put it on the Ready counter'
+    _vi: "L\xE0m xong {0} r\u1ED3i \u0111\u1EB7t l\xEAn qu\u1EA7y giao"
+  - _key: hud.next.pickup
+    _en: Pick up the order at the Ready counter
+    _vi: "L\u1EA5y \u0111\u01A1n \u1EDF qu\u1EA7y giao"
+  - _key: hud.next.deliver_to
+    _en: 'Take the order to {0}'
+    _vi: "Mang \u0111\u01A1n t\u1EDBi {0}"
+  - _key: hud.next.complete_at
+    _en: 'Complete the order at {0}'
+    _vi: "Ho\xE0n t\u1EA5t \u0111\u01A1n \u1EDF {0}"
+  - _key: hud.next.drink_steps
+    _en: 'Add coconut jelly, lemon jelly, ice, then shake and wipe'
+    _vi: "Th\xEAm th\u1EA1ch d\u1EEBa, th\u1EA1ch chanh, \u0111\xE1; r\u1ED3i l\u1EAFc v\xE0 lau"
+  - _key: hud.next.cake_steps
+    _en: Continue at the grill
+    _vi: "L\xE0m ti\u1EBFp \u1EDF b\u1EBFp n\u01B0\u1EDBng"
+  - _key: hud.next.delivery
+    _en: Take it to the customer who ordered
+    _vi: "Mang t\u1EDBi kh\xE1ch \u0111\xE3 g\u1ECDi"
+  - _key: hud.held.title
+    _en: Holding
+    _vi: "\u0110ang c\u1EA7m"
+  - _key: hud.held.empty
+    _en: Empty hands
+    _vi: "Tay kh\xF4ng"
+  - _key: hud.held.empty_hint
+    _en: Look at a station or customer and press E
+    _vi: "Nh\xECn v\xE0o qu\u1EA7y ho\u1EB7c kh\xE1ch r\u1ED3i nh\u1EA5n E"
+  - _key: hud.held.unknown
+    _en: Item
+    _vi: "V\u1EADt ph\u1EA9m"
+  - _key: hud.held.kind.drink
+    _en: Drink
+    _vi: "\u0110\u1ED3 u\u1ED1ng"
+  - _key: hud.held.kind.cake
+    _en: Cake
+    _vi: "B\xE1nh"
+  - _key: hud.held.state.finished
+    _en: Finished
+    _vi: "\u0110\xE3 xong"
+  - _key: hud.held.for_order
+    _en: 'For {0}'
+    _vi: 'Cho {0}'
+  - _key: hud.held.order_cancelled
+    _en: 'Order cancelled, discard it'
+    _vi: "\u0110\u01A1n \u0111\xE3 h\u1EE7y, h\xE3y b\u1ECF m\xF3n n\xE0y"
+  - _key: hud.held.state_label
+    _en: 'State: {0}'
+    _vi: "Tr\u1EA1ng th\xE1i: {0}"
+  - _key: hud.held.next_label
+    _en: 'Next: {0}'
+    _vi: "Ti\u1EBFp: {0}"
+  - _key: hud.hold.progress
+    _en: 'Holding... {0}%'
+    _vi: "\u0110ang gi\u1EEF... {0}%"
+  - _key: hud.hold.continuous
+    _en: 'Hold the key, release to stop'
+    _vi: "Gi\u1EEF ph\xEDm, th\u1EA3 ra \u0111\u1EC3 d\u1EEBng"
+  - _key: hud.toast.completed
+    _en: 'Order for {0} completed!'
+    _vi: "Ho\xE0n t\u1EA5t \u0111\u01A1n {0}!"
+  - _key: hud.toast.failed
+    _en: '{0}: the customer left'
+    _vi: "{0}: kh\xE1ch \u0111\xE3 b\u1ECF \u0111i"
+  - _key: hud.toast.ready
+    _en: 'Order for {0} is ready, pick it up'
+    _vi: "\u0110\u01A1n {0} \u0111\xE3 xong, t\u1EDBi qu\u1EA7y giao l\u1EA5y"
+  - _key: hud.toast.sent
+    _en: 'Order for {0} sent to the stall'
+    _vi: "\u0110\xE3 g\u1EEDi \u0111\u01A1n {0} t\u1EDBi qu\u1EA7y"
+  - _key: hud.toast.wrong_target
+    _en: 'Wrong place, this order is for {0}'
+    _vi: "Sai ch\u1ED7, \u0111\u01A1n n\xE0y c\u1EE7a {0}"
