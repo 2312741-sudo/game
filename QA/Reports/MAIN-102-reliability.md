@@ -12,10 +12,11 @@ Owner: CLAUDE-02 · Branch: `feature/MAIN-102-reliability` (base `wave/MAIN-001-
 |---|---|---|
 | drink orphan discard | `TeaBagItem` held-use `drink.discard_orphan`, offered only when the claimed order item is no longer live; retires the preparation, releases the hand, destroys the bag; publishes nothing order-related. Drink stations block steps on an orphaned bag with `ready.no_order`. | `Drinks/Domain/DrinkPreparation.cs` (`IsOrphaned`, `IsRetired`, internal `Retire()`), `Drinks/Runtime/TeaBagItem.cs`, `Drinks/Runtime/DrinkActionGuards.cs` |
 | tea rack restock (lead priority) | When the rack has no stored bag, every *previously stocked* slot whose bag is Ready or a discarded orphan gets a fresh, unbound Stored bag with a new `PreparationId`. Held or in-preparation bags keep their slot. Never-stocked slots stay empty. No ticket claimed, no event published. Quantity policy remains **DEC-015 TBD** (documented in code; balance asset untouched). | `Drinks/Domain/TeaRackInventory.cs` (`RestockWhenEmpty`, `IsRestockable`), `Drinks/Runtime/TeaRackController.cs` (`RestockEmptySlots()`, called from `Query`/`Execute`) |
+| tea bag feedback (MAIN-103 request) | `TeaBagItem` implements `IPreparationFeedback`: `PreparationStateKey` = `drink.state.<state>`; `NextActionKey` maps Stored/PickedUp → `drink.bag.open`, Opened → `drink.add_coconut`, CoconutJellyAdded → `drink.add_lemon`, LemonJellyAdded → `drink.add_ice`, IceAdded → `drink.bag.shake`, Shaken → `drink.wipe`, Wiped → `ready.place_item`, Ready → `ready.pick_up_order`, orphaned bag → `drink.discard_orphan`. | `Drinks/Runtime/TeaBagItem.cs` |
 | batter cup return | An empty cup (no measurement or claim in progress) can be put back on its stand with its held action `cake.cup.return`. A measured cup still empties first (unchanged top-up flow). | `Cakes/BatterMeasureCup.cs` |
 
 No public contract in `Docs/ACCEL-01_CONTRACTS.md` / `Docs/ORDER_SYSTEM.md` changed. The new public members are additive
-(`DrinkPreparation.IsOrphaned/IsRetired`, `TeaBagItem.DiscardOrphanPromptKey`, `TeaRackInventory.RestockWhenEmpty/IsRestockable`,
+(`DrinkPreparation.IsOrphaned/IsRetired`, `TeaBagItem.DiscardOrphanPromptKey`, `TeaBagItem : IPreparationFeedback` (this one closes a gap against the ACCEL-01 contract), `TeaRackInventory.RestockWhenEmpty/IsRestockable`,
 `TeaRackController.RestockEmptySlots`, `BatterMeasureCup.ReturnPromptKey`). ORDER_SYSTEM §3.3 already says "the drink/cake
 in progress becomes unassigned and may be discarded"; the drink discard implements that sentence.
 §6.4 is respected: the discard and the restock mutate local Drinks state only and publish nothing; the order owner already
@@ -44,14 +45,16 @@ released the item (and published) inside `OrderService.Fail`.
 
 ## New prompt / reason keys (for the UX agent and the lead)
 
-Not added to `SO_PromptText_TramChanhMain.asset` (out of my ownership). Reused keys (`ready.no_order`, `role.not_stall`,
+Not added to `SO_PromptText_TramChanhMain.asset` (out of my ownership). These are the only two new keys; the restock adds
+none. I simulated the wave's `PromptTextCoverageTests` literal scan (same regex) over this branch's `Scripts/**` against the
+current wave table (`origin/wave/MAIN-001-integration`, which includes MAIN-103): exactly these two keys are missing.
+All `drink.state.*` keys and every `NextActionKey` target already exist in the wave table. Reused keys (`ready.no_order`, `role.not_stall`,
 `game.paused`, `interaction.stall_role_required`, `hands.full`, `drink.rack.empty`) already exist in that table.
 
 | Key | Kind | English | Vietnamese |
 |---|---|---|---|
 | `drink.discard_orphan` | held-use prompt | Discard tea bag (order cancelled) | Bỏ túi trà (đơn đã hủy) |
 | `cake.cup.return` | held-use prompt | Put the measuring cup back | Đặt ly đong về chỗ cũ |
-| `drink.discard.not_orphaned` | internal result reason (never published; `ExecuteUse` checks availability first) | Nothing to discard | Không có gì để bỏ |
 
 ## Requests to the lead
 
@@ -68,7 +71,7 @@ Not added to `SO_PromptText_TramChanhMain.asset` (out of my ownership). Reused k
 
 | Harness | What | Result |
 |---|---|---|
-| `m002` (drinks) | Drinks + Orders + Lobby + ReadyCounterPoint with EditMode Drinks/Ready tests | **88 / 88** |
+| `m002` (drinks) | Drinks + Orders + Lobby + ReadyCounterPoint with EditMode Drinks/Ready tests | **91 / 91** |
 | `m3h` (cakes) | Cakes + Orders with CakeDomainTests + all PlayMode Cakes fixtures (runner generalised to every fixture in the namespace) | **32 / 32** |
 | `m4` (orders/lobby) | Orders + Lobby + UI model with EditMode Orders/Lobby tests | **208 / 209**. The one failure, `ARCH001_PublicContractsReferenceOnlyCoreOrdersAndSystemTypes`, is a pre-existing harness artefact: it checks assembly names and the harness compiles everything into one assembly. It fails identically on the base commit. |
 | `mainc/c.csproj` | All runtime `Scripts/**` against real UnityEngine reference DLLs | **0 errors** |
@@ -77,9 +80,12 @@ Not added to `SO_PromptText_TramChanhMain.asset` (out of my ownership). Reused k
 Mutation checks (each test was run with its fix or guarded behaviour removed, then restored):
 discard offer (6 failures), station orphan guard (1), restock trigger (3, including the 3-ticket test), restock of a held slot (2),
 restock while stock remains (3), restock of never-stocked slots (2), cup return (4), LIFO ticket claims (model check + 6 existing),
-hold-restart reset (2), second pickup while holding (4), order-point `hands.full` (1), duplicate preparation claim (1).
+hold-restart reset (2), orphan `NextActionKey` (1), second pickup while holding (4), order-point `hands.full` (1), duplicate preparation claim (1).
 
 ## Unverified
+
+- The branch is based on 248eac1 and was not rebased onto the newer wave head (MAIN-101/103/104/105 merges). Those merges
+  touch none of the files changed here; `PromptTextCoverageTests` (wave only) was simulated, not run.
 
 - No Unity Editor run of any kind (EditMode, PlayMode, scene). In particular, these were not executed in any harness:
   `Tests/PlayMode/Drinks/TeaRackPickupPlayModeTests.cs` (checked by reading: its empty-rack case uses initial stock 0, and
