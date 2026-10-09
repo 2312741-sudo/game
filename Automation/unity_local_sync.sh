@@ -135,6 +135,10 @@ update() {
     die "Tracked files are modified. Commit them first (git switch -c wip/<name>; git add -A; git commit) - nothing was changed. The backup above is safe."
   fi
   git_in fetch origin --prune || die "git fetch failed (network?)."
+  if ! git_in rev-parse --verify --quiet "origin/$target" >/dev/null; then
+    # single-branch clones do not fetch other branches by default
+    git_in fetch origin "+refs/heads/$target:refs/remotes/origin/$target" >/dev/null 2>&1
+  fi
   git_in rev-parse --verify --quiet "origin/$target" >/dev/null || die "origin/$target does not exist."
   cur="$(git_in rev-parse --abbrev-ref HEAD)"
   if [ "$cur" != "$target" ]; then
