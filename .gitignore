@@ -46,3 +46,6 @@ sysinfo.txt
 # QA scratch output (reports in QA/Reports are committed)
 /QA/Output/
 /Automation/__pycache__/
+
+# Local .NET/NUnit harness output (never commit)
+/TestResult.xml
