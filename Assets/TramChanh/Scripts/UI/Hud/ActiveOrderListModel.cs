@@ -184,8 +184,9 @@ namespace TramChanh.UI.Hud
             switch (order.Status)
             {
                 case OrderStatus.WaitingForLobby: return HudText.Of(HudKeys.NextTakeOrder, origin);
-                case OrderStatus.TakingOrder: return HudText.Of(HudKeys.NextEnterOrder);
-                case OrderStatus.Entered: return HudText.Of(HudKeys.NextSendOrder);
+                // Entry happens at the order's own point; with many tables the hint must say which one.
+                case OrderStatus.TakingOrder: return HudText.Of(HudKeys.NextEnterOrder, origin);
+                case OrderStatus.Entered: return HudText.Of(HudKeys.NextSendOrder, origin);
                 case OrderStatus.SentToStall:
                 case OrderStatus.InPreparation: return StallStep(order);
                 case OrderStatus.Ready: return HudText.Of(HudKeys.NextPickUp);
