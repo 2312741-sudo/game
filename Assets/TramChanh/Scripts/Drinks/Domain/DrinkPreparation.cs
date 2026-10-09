@@ -68,14 +68,14 @@ namespace TramChanh.Drinks.Domain
         }
 
         /// <summary>Discard an orphaned bag. Order state is untouched: the owner already released the item.</summary>
-        internal Result Retire()
+        internal bool Retire()
         {
             if (!IsOrphaned)
             {
-                return Result.Fail("drink.discard.not_orphaned");
+                return false;
             }
             IsRetired = true;
-            return Result.Success();
+            return true;
         }
 
         internal void RollbackBoundPickup()

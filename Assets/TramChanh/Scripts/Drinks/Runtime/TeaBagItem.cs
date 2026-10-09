@@ -48,6 +48,31 @@ namespace TramChanh.Drinks.Runtime
         public bool IsFinished => _preparation != null && _preparation.IsFinished;
         public int Quality => _preparation?.Quality ?? 0;
         public InteractableId Id => new InteractableId(PreparationId.Value);
+        /// <summary>IPreparationFeedback (ACCEL-01 contract): composed drink.state.* key for the HUD.</summary>
+        public string PreparationStateKey => "drink.state." + State.ToString().ToLowerInvariant();
+        /// <summary>IPreparationFeedback: the next canonical step; an orphaned bag points at its discard.</summary>
+        public string NextActionKey
+        {
+            get
+            {
+                if (_preparation != null && _preparation.IsOrphaned)
+                {
+                    return DiscardOrphanPromptKey;
+                }
+                switch (State)
+                {
+                    case TeaBagState.Stored:
+                    case TeaBagState.PickedUp: return "drink.bag.open";
+                    case TeaBagState.Opened: return "drink.add_coconut";
+                    case TeaBagState.CoconutJellyAdded: return "drink.add_lemon";
+                    case TeaBagState.LemonJellyAdded: return "drink.add_ice";
+                    case TeaBagState.IceAdded: return "drink.bag.shake";
+                    case TeaBagState.Shaken: return "drink.wipe";
+                    case TeaBagState.Wiped: return "ready.place_item";
+                    default: return "ready.pick_up_order";
+                }
+            }
+        }
         public Transform InteractionPoint => _handGrip;
 
         public void Initialize(DrinkPreparation preparation, DrinkRecipe recipe = null, IEventBus events = null)
@@ -131,7 +156,7 @@ namespace TramChanh.Drinks.Runtime
         // Publishes nothing order-related: the order owner already released the item before the bag became orphaned.
         private void Discard(InteractionContext context)
         {
-            if (!_preparation.Retire().IsSuccess)
+            if (!_preparation.Retire())
             {
                 return;
             }

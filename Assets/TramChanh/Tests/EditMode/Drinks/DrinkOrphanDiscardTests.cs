@@ -41,7 +41,7 @@ namespace TramChanh.Tests.EditMode.Drinks
             var preparation = new DrinkPreparation(new PreparationId(77));
             Assert.That(preparation.TryPickUp().IsSuccess, Is.True);
             Assert.That(preparation.IsOrphaned, Is.False, "Only a bag that lost its claim is orphaned.");
-            Assert.That(preparation.Retire().IsSuccess, Is.False);
+            Assert.That(preparation.Retire(), Is.False);
         }
 
         [TestCase(0)]
