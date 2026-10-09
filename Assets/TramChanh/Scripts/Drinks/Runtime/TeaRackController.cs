@@ -68,22 +68,22 @@ namespace TramChanh.Drinks.Runtime
             _bags = new TeaBagItem[_inventory.Capacity];
             for (int i = 0; i < _inventory.Capacity; i++)
             {
-                if (_inventory.BagAt(i) != null)
+                if (_inventory.BagAt(i) == null)
                 {
-                    if (_bagSlots[i] == null)
-                    {
-                        throw new InvalidOperationException("Each stocked bag requires a placement slot.");
-                    }
-                    SpawnBag(i);
+                    continue;
                 }
+                if (_bagSlots[i] == null)
+                {
+                    throw new InvalidOperationException("Each stocked bag requires a placement slot.");
+                }
+                SpawnBag(i);
             }
         }
 
         private void SpawnBag(int index)
         {
-            // A restocked slot without its own anchor falls back to the rack root, so the domain bag always has a view.
-            Transform parent = _bagSlots[index] != null ? _bagSlots[index] : transform;
-            TeaBagItem bag = Instantiate(_bagPrefab, parent, false);
+            // Only initially stocked slots are ever restocked, and their anchors were validated at initialization.
+            TeaBagItem bag = Instantiate(_bagPrefab, _bagSlots[index], false);
             bag.transform.localPosition = -bag.PlacementPoint.localPosition;
             bag.Initialize(_inventory.BagAt(index), _recipe, _events);
             _bags[index] = bag;

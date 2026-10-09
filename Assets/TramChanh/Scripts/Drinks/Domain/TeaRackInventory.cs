@@ -7,7 +7,7 @@ namespace TramChanh.Drinks.Domain
     /// <summary>Stored pre-portioned bags only; no quantities or preparation steps.</summary>
     /// <remarks>
     /// MAIN-102 restock (provisional, DEC-015 TBD): pre-portioned bags are restocked from storage. When the rack
-    /// has no stored bag, every slot whose bag has left play for good (Ready, or a discarded orphan) receives a
+    /// has no stored bag, every stocked slot whose bag has left play for good (Ready, or a discarded orphan) receives a
     /// fresh, unbound Stored bag with a new preparation identity. Stock never exceeds capacity. A slot whose bag
     /// is still held or in preparation is never refilled. Restocking claims no ticket and publishes nothing.
     /// </remarks>
@@ -49,8 +49,11 @@ namespace TramChanh.Drinks.Domain
 
         public DrinkPreparation BagAt(int index) => _bags[index];
 
-        /// <summary>A slot may be restocked only when it is empty or its bag can never return to the rack.</summary>
-        public static bool IsRestockable(DrinkPreparation bag) => bag == null || bag.State == TeaBagState.Ready || bag.IsRetired;
+        /// <summary>
+        /// A slot may be restocked only when its bag left play for good (Ready or a discarded orphan). A slot that was never
+        /// stocked (initial stock below capacity) stays empty, so an intentionally empty rack keeps its configuration.
+        /// </summary>
+        public static bool IsRestockable(DrinkPreparation bag) => bag != null && (bag.State == TeaBagState.Ready || bag.IsRetired);
 
         /// <summary>
         /// Restocks terminal slots only while the rack is empty of stored bags. Calls <paramref name="restocked"/> once per

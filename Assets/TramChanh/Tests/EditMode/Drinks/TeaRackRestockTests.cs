@@ -114,6 +114,15 @@ namespace TramChanh.Tests.EditMode.Drinks
         }
 
         [Test]
+        public void MAIN_102_IntentionallyEmptyRackIsNeverRestocked()
+        {
+            var inventory = new TeaRackInventory(2, 0, new SequentialIdGenerator());
+            Assert.That(inventory.RestockWhenEmpty(), Is.Zero);
+            Assert.That(inventory.Stock, Is.Zero);
+            Assert.That(inventory.CanTake(true).ReasonKey, Is.EqualTo("drink.rack.empty"));
+        }
+
+        [Test]
         public void MAIN_102_InventoryRestockOnlyWhenEmptyAndOnlyTerminalSlots()
         {
             var inventory = new TeaRackInventory(3, 2, new SequentialIdGenerator());
@@ -125,10 +134,11 @@ namespace TramChanh.Tests.EditMode.Drinks
             ready.Open(); ready.AddCoconutJelly(); ready.AddLemonJelly(); ready.AddIce(); ready.Shake(); ready.Wipe();
             Assert.That(ready.MarkReady().IsSuccess, Is.True);
             var restocked = new List<int>();
-            Assert.That(inventory.RestockWhenEmpty(restocked.Add), Is.EqualTo(2));
-            Assert.That(restocked, Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(inventory.RestockWhenEmpty(restocked.Add), Is.EqualTo(1));
+            Assert.That(restocked, Is.EqualTo(new[] { 1 }), "Only the Ready slot; the held bag and the never-stocked slot are untouched.");
             Assert.That(inventory.BagAt(0), Is.SameAs(held));
-            Assert.That(inventory.Stock, Is.EqualTo(2));
+            Assert.That(inventory.BagAt(2), Is.Null);
+            Assert.That(inventory.Stock, Is.EqualTo(1));
             Assert.That(inventory.Stock, Is.LessThanOrEqualTo(inventory.Capacity));
         }
     }
