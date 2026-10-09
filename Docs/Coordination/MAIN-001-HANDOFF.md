@@ -13,6 +13,28 @@ Branch: `wave/MAIN-001-integration` (draft PR #22 → `develop`). Coordination: 
 | Sync guide and Tram Chanh ▸ Scenes menu | #19 |
 | `TramChanhMainBootstrap`, `SCN_TramChanh_Main`, `SO_PromptText_TramChanhMain`, `TramChanhMainSceneTests` | MAIN-001 |
 
+## Polish wave (MAIN-101…105), merged
+
+- **MAIN-101 (lead):**
+  - The vehicle point trigger can now be aimed at (1 × 1.2 × 1 m instead of a 16 cm box on the ground).
+  - The cake station's five points and the batter cup now have `InteractableRef`. Before this, the player could not focus them in Play Mode.
+  - The HUD is wired up.
+  - New PlayMode raycast reach tests.
+- **MAIN-102:**
+  - A drink whose order is cancelled can be discarded (`drink.discard_orphan`).
+  - The tea rack restocks after its bags are used.
+  - An empty batter cup can be put back (`cake.cup.return`).
+  - A model check shows the Ready slots cannot deadlock.
+  - Customers never leave in this slice. This is an explicit restriction.
+- **MAIN-103:** HUD panels for active orders, the held item with its next step, toasts and hold progress, plus full Vietnamese/English prompt coverage (no raw keys).
+- **MAIN-104:** `Docs/Coordination/ART_INTEGRATION_HANDOFF.md` and `Automation/art_contract_audit.py`.
+- **MAIN-105:**
+  - the Tram Chanh ▸ QA menu
+  - `Automation/unity_validate.sh` for batch runs
+  - `Automation/static_preflight.py`
+  - `Docs/QA/UNITY_VALIDATION.md`
+  - the test inventory
+
 ## Validation status
 
 Run in the cloud container (no Unity):
@@ -32,7 +54,9 @@ Run in the cloud container (no Unity):
    The script refuses if tracked files are modified. Untracked files are kept.
 4. Open the folder in Unity 6000.6.0f1 and wait for the import to finish.
 5. Run **Tram Chanh ▸ Scenes ▸ Open Main Game (SCN_TramChanh_Main)**, then press Play.
-6. Window ▸ General ▸ Test Runner: run EditMode, then PlayMode. Run QA-000 as well. The Console must have no errors.
+6. Run **Tram Chanh ▸ QA ▸ Run All**. Then open Window ▸ General ▸ Test Runner and run EditMode, then PlayMode. The Console must have no errors.
+   Or close Unity and run `bash Automation/unity_validate.sh`; the results go to `~/TramChanh-validation/<time>/SUMMARY.txt`.
+   The full procedure and the acceptance gate are in `Docs/QA/UNITY_VALIDATION.md`.
 
 ## What you should see after pressing Play
 
