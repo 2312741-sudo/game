@@ -42,6 +42,8 @@ namespace TramChanh.App
         [SerializeField] private ItemDefinition _drinkDefinition;
         [SerializeField] private CakeRecipe[] _cakeRecipes = Array.Empty<CakeRecipe>();
         [SerializeField] private GameObject _environmentPrefab;
+        [Tooltip("Optional modular art prefabs (customer area, buildings, trees, street lights...). They are instantiated under the environment root, so anchors inside them (e.g. TABLE_01..TABLE_10) are found like environment anchors. Visual-only: they must not carry gameplay components.")]
+        [SerializeField] private GameObject[] _additionalEnvironmentPrefabs = Array.Empty<GameObject>();
         [SerializeField] private GameObject _drinkStationPrefab;
         [SerializeField] private GameObject _cakeStationPrefab;
         [SerializeField] private GameObject _tablePointPrefab;
@@ -148,6 +150,15 @@ namespace TramChanh.App
 
             Environment = Instantiate(_environmentPrefab, _runtime.transform);
             Environment.name = _environmentPrefab.name;
+            if (_additionalEnvironmentPrefabs != null)
+            {
+                foreach (GameObject module in _additionalEnvironmentPrefabs)
+                {
+                    if (module == null) { continue; }
+                    GameObject instance = Instantiate(module, Environment.transform, false);
+                    instance.name = module.name;
+                }
+            }
             // The environment is view-only; the player camera is the only camera and listener.
             foreach (Camera camera in Environment.GetComponentsInChildren<Camera>(true)) { camera.enabled = false; }
             foreach (AudioListener listener in Environment.GetComponentsInChildren<AudioListener>(true)) { listener.enabled = false; }
