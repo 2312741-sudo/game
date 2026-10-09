@@ -401,6 +401,13 @@ namespace TramChanh.EditorTools
                 }
                 foreach (MonoBehaviour interactable in interactables.Where(i => !targeted.Contains(i)))
                 {
+                    // Held-use items (e.g. TeaBagItem) expose IInteractable only to forward their held action;
+                    // the rack/station is their world target, so a world InteractableRef would make the held bag hit the ray.
+                    if (interactable is IHoldable && interactable is IHeldItemAction)
+                    {
+                        report.Warning(section, path + " :: " + HierarchyPath(interactable.transform) + " [" + interactable.GetType().Name + "] is a held-use item without a world InteractableRef (expected).");
+                        continue;
+                    }
                     report.Error(section, path + " :: " + HierarchyPath(interactable.transform) + " [" + interactable.GetType().Name + "] is IInteractable but no InteractableRef points to it.");
                 }
                 foreach (Collider orphan in root.GetComponentsInChildren<Collider>(true).Where(c => c.gameObject.layer == layer && NearestRef(c.transform) == null))
