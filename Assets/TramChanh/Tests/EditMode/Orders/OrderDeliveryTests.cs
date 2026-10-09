@@ -97,47 +97,29 @@ namespace TramChanh.Tests.EditMode.Orders
         public void TC_ORDER_004_WrongOriginAndWrongCustomerCountOnlyValidAttempts()
         {
             OrderId id = InStatus(OrderStatus.PickedUpByLobby);
-            var rejected = new List<DeliveryRejected>();
-            using var subscription = _events.Subscribe<DeliveryRejected>(rejected.Add);
-            DeliveryTarget vehicle = new DeliveryTarget(OrderOrigin.ForVehicle(new VehicleId(1)), _customer);
-            DeliveryTarget otherCustomer = new DeliveryTarget(_table, new CustomerId(8));
-            Assert.That(_delivery.Deliver(id, _actor, vehicle).ReasonKey, Is.EqualTo("order.delivery.wrong_target"));
-            Assert.That(_delivery.Deliver(id, _actor, otherCustomer).ReasonKey, Is.EqualTo("order.delivery.wrong_target"));
-            Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.PickedUpByLobby));
-            Assert.That(Info(id).DeliveryAttempts, Is.EqualTo(2));
-            Assert.That(Info(id).QualityScore, Is.Zero);
-            Assert.That(((IOrderDeliveryInfo)_orders.Get(id)).DeliveryAttempts, Is.EqualTo(Info(id).DeliveryAttempts));
-            Assert.That(((IOrderDeliveryInfo)_orders.Get(id)).QualityScore, Is.EqualTo(Info(id).QualityScore));
-            Assert.That(rejected.Count, Is.EqualTo(2));
-            Assert.That(rejected[0].Order, Is.EqualTo(id));
-            Assert.That(rejected[0].AttemptedTarget, Is.EqualTo(vehicle));
-            Assert.That(rejected[1].AttemptedTarget, Is.EqualTo(otherCustomer));
-            Assert.That(rejected[1].ReasonKey, Is.EqualTo("order.delivery.wrong_target"));
-            Assert.That(_delivery.Deliver(id, _actor, new DeliveryTarget(_table, _customer)).IsSuccess, Is.True);
-            Assert.That(Info(id).DeliveryAttempts, Is.EqualTo(2));
+            DeliveryContractAssertions.RejectWrongTargetsThenDeliver(_orders, _delivery, _events, id, _actor,
+                new DeliveryTarget(_table, _customer), new[]
+                {
+                    new DeliveryTarget(OrderOrigin.ForVehicle(new VehicleId(1)), _customer),
+                    new DeliveryTarget(_table, new CustomerId(8))
+                });
         }
 
         [Test]
-        public void TC_ORDER_006_InvalidActorTargetAndMissingOrderNeverMutate()
+        public void TC_ORDER_006_InvalidActorTargetAndMissingOrderDoNotMutateOrLatchRejection()
         {
             OrderId id = InStatus(OrderStatus.PickedUpByLobby);
-            int events = 0;
-            using var rejected = _events.Subscribe<DeliveryRejected>(_ => events++);
-            using var changed = _events.Subscribe<OrderStatusChanged>(_ => events++);
-            Assert.That(_delivery.Deliver(id, default, new DeliveryTarget(_table, _customer)).ReasonKey, Is.EqualTo("order.actor.invalid"));
-            Assert.That(_delivery.Deliver(id, _actor, default).ReasonKey, Is.EqualTo("order.delivery.invalid_target"));
-            Assert.That(_delivery.Deliver(default, _actor, new DeliveryTarget(_table, _customer)).IsSuccess, Is.False);
-            Assert.That(Info(id).DeliveryAttempts, Is.Zero);
-            Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.PickedUpByLobby));
-            Assert.That(events, Is.Zero);
+            DeliveryContractAssertions.RejectInvalidInputsThenDeliver(_orders, _delivery, _events, id, _actor,
+                new DeliveryTarget(_table, _customer));
         }
 
-        [Test]
-        public void TC_ORDER_007_QualityMeanIsCommittedBeforeDeliveredObserversAndSnapshotIsImmutable()
+        [TestCase(75, 80, 78)]
+        [TestCase(96, 97, 97)]
+        public void TC_ORDER_007_QualityMeanIsCommittedBeforeDeliveredObserversAndSnapshotIsImmutable(int drink, int cake, int mean)
         {
             var requests = Requests("mixed");
             OrderId id = Request(_table, requests);
-            PrepareAndPickUp(id, _table, requests, 75, 80);
+            PrepareAndPickUp(id, _table, requests, drink, cake);
             OrderDeliveryInfo before = Info(id);
             Assert.That(before.QualityScore, Is.Zero);
             int observed = -1;
@@ -146,10 +128,10 @@ namespace TramChanh.Tests.EditMode.Orders
                 if (change.Status == OrderStatus.Delivered) { observed = Info(id).QualityScore; }
             });
             Assert.That(_delivery.Deliver(id, _actor, new DeliveryTarget(_table, _customer)).IsSuccess, Is.True);
-            Assert.That(observed, Is.EqualTo(78));
-            Assert.That(Info(id).QualityScore, Is.EqualTo(78));
+            Assert.That(observed, Is.EqualTo(mean));
+            Assert.That(Info(id).QualityScore, Is.EqualTo(mean));
             Assert.That(before.QualityScore, Is.Zero);
-            Assert.That(((IOrderDeliveryInfo)_orders.Get(id)).QualityScore, Is.EqualTo(78));
+            Assert.That(((IOrderDeliveryInfo)_orders.Get(id)).QualityScore, Is.EqualTo(mean));
         }
 
         [Test]

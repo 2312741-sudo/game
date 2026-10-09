@@ -17,10 +17,12 @@ namespace TramChanh.Lobby
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
 
-        public void Initialize(IReadyShelfPickup shelf, IOrderService orders = null, IEventBus events = null)
+        public void Initialize(IReadyShelfPickup shelf, IOrderService orders, IEventBus events)
         {
-            _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
-            if ((orders == null) != (events == null)) { throw new ArgumentException("Delivery lifecycle needs both orders and events."); }
+            if (shelf == null) { throw new ArgumentNullException(nameof(shelf)); }
+            if (orders == null) { throw new ArgumentNullException(nameof(orders)); }
+            if (events == null) { throw new ArgumentNullException(nameof(events)); }
+            _shelf = shelf;
             _orders = orders;
             _events = events;
         }
@@ -62,11 +64,16 @@ namespace TramChanh.Lobby
             var reservation = new GameObject("ServedOrder");
             SceneManager.MoveGameObjectToScene(reservation, gameObject.scene);
             var bundle = reservation.AddComponent<ServedOrder>();
-            bundle.Initialize(orderId);
-            if (_orders != null) { bundle.BindDelivery(_orders, _events); }
             bool committed = false;
             try
             {
+                bundle.Initialize(orderId);
+                bundle.BindDelivery(_orders, _events);
+                if (bundle == null || bundle.IsRetired)
+                {
+                    context.Events.Publish(new ActionBlocked(Id, "ready.no_complete_order"));
+                    return;
+                }
                 // Reserve only empty carrying space. Order/item events remain owned by shelf commit.
                 if (!context.Hands.TryPickUp(bundle) || !ReferenceEquals(context.Hands.Current, bundle))
                 {
@@ -86,7 +93,7 @@ namespace TramChanh.Lobby
                 }
                 // Shelf observers may fail or deliver the order before the reservation can adopt visuals.
                 if (bundle == null || bundle.IsRetired || !ReferenceEquals(context.Hands.Current, bundle) ||
-                    (_orders != null && _orders.Get(orderId)?.Status != OrderStatus.PickedUpByLobby))
+                    _orders.Get(orderId)?.Status != OrderStatus.PickedUpByLobby)
                 {
                     context.Events.Publish(new ActionBlocked(Id, "ready.no_complete_order"));
                     return;

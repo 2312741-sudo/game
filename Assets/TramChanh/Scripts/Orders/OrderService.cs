@@ -84,7 +84,7 @@ namespace TramChanh.Orders
             }
             long quality = 0;
             foreach (OrderItem item in order.MutableItems) { quality += item.Quality; }
-            order.QualityScore = (int)Math.Round((double)quality / order.MutableItems.Count);
+            order.QualityScore = (int)Math.Round((double)quality / order.MutableItems.Count, MidpointRounding.AwayFromZero);
             SetStatus(order, OrderStatus.Delivered);
             PublishStatus(order);
             return Result.Success();

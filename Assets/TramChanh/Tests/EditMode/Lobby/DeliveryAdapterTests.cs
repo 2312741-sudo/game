@@ -251,11 +251,12 @@ namespace TramChanh.Tests.EditMode.Lobby
         private sealed class RetryCompletionService : IOrderService, IOrderDelivery
         {
             private readonly OrderService _inner;
+            public bool HideOrders { get; set; }
             public int DeliverCalls { get; private set; }
             public int CompleteCalls { get; private set; }
             public RetryCompletionService(OrderService inner) { _inner = inner; }
             public IReadOnlyList<IReadOnlyOrder> Active => _inner.Active;
-            public IReadOnlyOrder Get(OrderId id) => _inner.Get(id);
+            public IReadOnlyOrder Get(OrderId id) => HideOrders ? null : _inner.Get(id);
             public Result<OrderId> RequestService(OrderOrigin origin, CustomerId customer, IReadOnlyList<ItemRequest> requested) => _inner.RequestService(origin, customer, requested);
             public Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point) => _inner.BeginTaking(id, actor, point);
             public Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered) => _inner.Enter(id, entered);
@@ -272,6 +273,71 @@ namespace TramChanh.Tests.EditMode.Lobby
                 CompleteCalls++;
                 return CompleteCalls == 1 ? Result.Fail("order.complete.retry") : _inner.Complete(id);
             }
+        }
+
+        [TestCase(OrderStatus.Failed)]
+        [TestCase(OrderStatus.Delivered)]
+        [TestCase(OrderStatus.Completed)]
+        public void TC_ORDER_008_LegacyUnboundTerminalBundleSelfHealsThroughInteractionDriver(OrderStatus terminal)
+        {
+            OrderId id = Prepare(_table, 7, true);
+            var pickedUp = _shelf.PickUp(id, _context.Actor);
+            var bundle = Child("Legacy unbound bundle").AddComponent<ServedOrder>();
+            bundle.Initialize(id);
+            _hands.TryPickUp(bundle);
+            bundle.Populate(pickedUp.Value);
+            if (terminal == OrderStatus.Failed) { _orders.Fail(id, FailureReason.CustomerLeft); }
+            else
+            {
+                ((IOrderDelivery)_orders).Deliver(id, _context.Actor, new DeliveryTarget(_table.Origin, new CustomerId(7)));
+                if (terminal == OrderStatus.Completed) { ((IOrderDelivery)_orders).Complete(id); }
+            }
+            Assert.That(_hands.Current, Is.SameAs(bundle), "The legacy unbound path has no automatic lifecycle subscription.");
+            Assert.That(_table.Query(_context).Availability.IsAvailable, Is.True);
+            new InteractionActionDriver(_context).Begin(_table);
+            Assert.That(_hands.Current, Is.Null, "The player interaction driver must reach terminal bundle cleanup.");
+            Assert.That(bundle == null || !bundle.gameObject.activeSelf, Is.True);
+            Assert.That(_orders.Get(id).Status, Is.EqualTo(terminal));
+        }
+
+        [Test]
+        public void TC_ORDER_008_UnknownUnboundBundleSelfHealsWithoutChangingThePointOrder()
+        {
+            OrderId waiting = _table.RequestCustomerService(new CustomerId(7), Requests(false)).Value;
+            var bundle = Child("Unknown bundle").AddComponent<ServedOrder>();
+            bundle.Initialize(new OrderId(9999));
+            _hands.TryPickUp(bundle);
+            Assert.That(_table.Query(_context).Availability.IsAvailable, Is.True);
+            new InteractionActionDriver(_context).Begin(_table);
+            Assert.That(_hands.Current, Is.Null);
+            Assert.That(bundle == null || !bundle.gameObject.activeSelf, Is.True);
+            Assert.That(_orders.Get(waiting).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+        }
+
+        [Test]
+        public void TC_ORDER_008_PickupInitializerCannotSilentlyUseTheOldOneArgumentPath()
+        {
+            MethodInfo method = typeof(ReadyOrderPickupPoint).GetMethod(nameof(ReadyOrderPickupPoint.Initialize));
+            Assert.That(method, Is.Not.Null);
+            Assert.Throws<TargetParameterCountException>(() => method.Invoke(_pickup, new object[] { _shelf }));
+            ParameterInfo[] parameters = method.GetParameters();
+            Assert.That(parameters.Length, Is.EqualTo(3));
+            foreach (ParameterInfo parameter in parameters) { Assert.That(parameter.IsOptional, Is.False); }
+            Assert.That(_hands.Current, Is.Null);
+            Assert.Throws<ArgumentNullException>(() => _pickup.Initialize(_shelf, null, _events));
+            Assert.Throws<ArgumentNullException>(() => _pickup.Initialize(_shelf, _orders, null));
+        }
+
+        [Test]
+        public void TC_ORDER_008_FailedLifecycleBindRetiresItsEmptyReservation()
+        {
+            Prepare(_table, 7, false);
+            var missing = new RetryCompletionService(_orders) { HideOrders = true };
+            _pickup.Initialize(_shelf, missing, _events);
+            int roots = _pickup.gameObject.scene.GetRootGameObjects().Length;
+            Assert.Throws<InvalidOperationException>(() => _pickup.Execute(_context));
+            Assert.That(_hands.Current, Is.Null);
+            Assert.That(_pickup.gameObject.scene.GetRootGameObjects().Length, Is.EqualTo(roots), "Binding failure must not leak a ServedOrder reservation.");
         }
 
         private OrderId Prepare(OrderPoint point, int customer, bool mixed)

@@ -68,6 +68,7 @@ namespace TramChanh.Lobby
                 Availability delivery;
                 if ((context.Role & ActorRole.Lobby) == 0) { delivery = Availability.Blocked("interaction.lobby_role_required"); }
                 else if (context.Clock.IsPaused) { delivery = Availability.Blocked("interaction.paused"); }
+                else if (IsObsoleteBundle(bundle)) { delivery = Availability.Available; }
                 else if (_delivery == null) { delivery = Availability.Blocked("order.delivery.not_configured"); }
                 else if (order == null) { delivery = Availability.Blocked("order.delivery.no_customer"); }
                 else if (bundle.IsRetired || _orders.Get(bundle.OrderId)?.Status != OrderStatus.PickedUpByLobby) { delivery = Availability.Blocked("order.transition.invalid"); }
@@ -86,6 +87,7 @@ namespace TramChanh.Lobby
 
         public void Execute(InteractionContext context)
         {
+            if (context == null) { throw new ArgumentNullException(nameof(context)); }
             InteractionQuery query = Query(context);
             if (query.Availability.Status == AvailabilityStatus.Hidden) { return; }
             if (!query.Availability.IsAvailable)
@@ -95,6 +97,11 @@ namespace TramChanh.Lobby
             }
             if (context.Hands.Current is ServedOrder bundle && bundle != null)
             {
+                if (IsObsoleteBundle(bundle))
+                {
+                    bundle.ReleaseAndRetire();
+                    return;
+                }
                 Deliver(context, bundle);
                 return;
             }
@@ -114,6 +121,13 @@ namespace TramChanh.Lobby
             {
                 context.Events.Publish(new ActionBlocked(Id, opened.ReasonKey));
             }
+        }
+
+        private bool IsObsoleteBundle(ServedOrder bundle)
+        {
+            IReadOnlyOrder order = _orders.Get(bundle.OrderId);
+            return bundle.IsRetired || order == null || order.Status == OrderStatus.Failed
+                || order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Completed;
         }
 
         private void Deliver(InteractionContext context, ServedOrder bundle)
