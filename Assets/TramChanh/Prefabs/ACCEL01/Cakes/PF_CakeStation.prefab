@@ -155,6 +155,7 @@ GameObject:
   - component: {fileID: 400873997721884791}
   - component: {fileID: 3781180701868416957}
   - component: {fileID: 1369054389712985470}
+  - component: {fileID: 3909763318180015428}
   m_Layer: 9
   m_Name: WrappingArea
   m_TagString: Untagged
@@ -195,6 +196,19 @@ MonoBehaviour:
   _interactionPoint: {fileID: 400873997721884791}
   _id: 1106
   _sauce: 
+--- !u!114 &3909763318180015428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866888755417578606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 3781180701868416957}
 --- !u!65 &1369054389712985470
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -227,6 +241,7 @@ GameObject:
   - component: {fileID: 463126014010334613}
   - component: {fileID: 4332399522854148226}
   - component: {fileID: 1486132209347252973}
+  - component: {fileID: 5743281004440953485}
   m_Layer: 9
   m_Name: BatterSource
   m_TagString: Untagged
@@ -267,6 +282,19 @@ MonoBehaviour:
   _interactionPoint: {fileID: 463126014010334613}
   _id: 1102
   _sauce: 
+--- !u!114 &5743281004440953485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2877411794549035441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 4332399522854148226}
 --- !u!65 &1486132209347252973
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -299,6 +327,7 @@ GameObject:
   - component: {fileID: 7358755179210169912}
   - component: {fileID: 3074294659870296562}
   - component: {fileID: 7678692787684221852}
+  - component: {fileID: 1906197054427317125}
   m_Layer: 9
   m_Name: RollArea
   m_TagString: Untagged
@@ -339,6 +368,19 @@ MonoBehaviour:
   _interactionPoint: {fileID: 7358755179210169912}
   _id: 1104
   _sauce: 
+--- !u!114 &1906197054427317125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5986556441388636442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 3074294659870296562}
 --- !u!65 &7678692787684221852
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -754,6 +796,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9030799623006661197, guid: 8e81afc81a8d3467d944066fd7e4fd18, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7971522721678973311}
+    - targetCorrespondingSourceObject: {fileID: 9030799623006661197, guid: 8e81afc81a8d3467d944066fd7e4fd18, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2912082240162076368}
   m_SourcePrefab: {fileID: 100100000, guid: 8e81afc81a8d3467d944066fd7e4fd18, type: 3}
 --- !u!1 &4414159672183221779 stripped
 GameObject:
@@ -777,6 +822,19 @@ MonoBehaviour:
   _interactionPoint: {fileID: 5613098144042263896}
   _id: 1105
   _sauce: DEV_TBD
+--- !u!114 &2912082240162076368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4414159672183221779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 4155964122906198401}
 --- !u!65 &7971522721678973311
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -989,6 +1047,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 825939044911108326, guid: 0df55bd2587ad4e578d6412725a8a599, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2034890181488056778}
+    - targetCorrespondingSourceObject: {fileID: 825939044911108326, guid: 0df55bd2587ad4e578d6412725a8a599, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2023672134413536544}
   m_SourcePrefab: {fileID: 100100000, guid: 0df55bd2587ad4e578d6412725a8a599, type: 3}
 --- !u!4 &1159648022026190267 stripped
 Transform:
@@ -1022,6 +1083,19 @@ MonoBehaviour:
   _interactionPoint: {fileID: 2097436792818849179}
   _id: 1103
   _sauce: 
+--- !u!114 &2023672134413536544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7533765211323734055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e47e6bb6bb3847e1bcb28ff35c954e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TramChanh.Interaction::TramChanh.Interaction.InteractableRef
+  _behaviour: {fileID: 608419806971283731}
 --- !u!65 &2034890181488056778
 BoxCollider:
   m_ObjectHideFlags: 0

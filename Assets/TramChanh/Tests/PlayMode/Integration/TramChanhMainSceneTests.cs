@@ -97,6 +97,39 @@ namespace TramChanh.Tests.PlayMode.Integration
         }
 
         [UnityTest]
+        public IEnumerator MAIN_101_EveryStationInteractableIsFocusableByThePlayerRaycast()
+        {
+            // Tests that call Execute directly cannot catch a missing InteractableRef; this drives the real focus path.
+            Physics.SyncTransforms();
+            Transform stall = _bootstrap.DrinkStation.transform;
+            var stationRoots = new[] { _bootstrap.DrinkStation.transform, _bootstrap.CakeStation.transform };
+            int checkedCount = 0;
+            foreach (Transform root in stationRoots)
+            {
+                foreach (InteractableRef reference in root.GetComponentsInChildren<InteractableRef>())
+                {
+                    if (reference.Target == null) { continue; }
+                    Collider trigger = reference.GetComponent<Collider>() ?? reference.GetComponentInChildren<Collider>();
+                    if (trigger == null || !trigger.enabled || trigger.gameObject.layer != TramChanhLayers.InteractableIndex) { continue; }
+                    Vector3 local = stall.InverseTransformPoint(trigger.bounds.center);
+                    // Worker side is -z; the Ready counter and pickup face customers at +z.
+                    float side = local.z > 0.15f ? 0.95f : -0.75f;
+                    Vector3 eye = stall.TransformPoint(new Vector3(local.x, 1.6f, side));
+                    Vector3 direction = (trigger.bounds.center - eye).normalized;
+                    bool hit = Physics.Raycast(eye, direction, out RaycastHit info, 1.8f, 1 << TramChanhLayers.InteractableIndex, QueryTriggerInteraction.Collide);
+                    Assert.That(hit, Is.True, reference.name + " is out of reach.");
+                    Assert.That(info.collider.GetComponentInParent<InteractableRef>(), Is.Not.Null, reference.name + ": ray hit " + info.collider.name + " which has no InteractableRef.");
+                    checkedCount++;
+                }
+            }
+            Assert.That(checkedCount, Is.GreaterThanOrEqualTo(10), "Drink + cake stations expose at least 10 focusable interactables.");
+            foreach (CakeStationPoint point in _bootstrap.CakeStation.GetComponentsInChildren<CakeStationPoint>())
+            { Assert.That(point.GetComponentInParent<InteractableRef>(), Is.Not.Null, point.name + " cannot be focused."); }
+            Assert.That(_bootstrap.CakeStation.Cup.GetComponent<InteractableRef>(), Is.Not.Null, "Batter cup cannot be focused.");
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator MAIN_001_TakeawayMixedOrderGoesThroughLobbyToBothStallQueues()
         {
             InteractionContext context = _bootstrap.Interactor.Context;
