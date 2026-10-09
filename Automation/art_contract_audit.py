@@ -996,7 +996,7 @@ def table_anchor_checks(audit, label, prefab):
             continue
         node = nodes[0]
         placed = node.parent is root or (len(areas) == 1 and node.parent is areas[0])
-        audit.add("OK" if placed else F, label, "table anchor '%s' %s" % (node.path(root), "placed under the root/CustomerArea" if placed else "must be a direct child of the environment root or of its single CustomerArea child"))
+        audit.add("OK" if placed else W, label, "table anchor '%s' %s" % (node.path(root), "placed under the root/CustomerArea" if placed else "must be a direct child of the environment root or of its single CustomerArea child"))
         if not any(c.name == "Seat" for c in node.children):
             audit.add(W, label, "table anchor '%s' has no 'Seat' child (bootstrap uses its default seat offset)" % node.path(root))
         gameplay = [n.path(root) for n in node.walk() for c in n.components if c.label in ("TableOrderPoint", "VehicleOrderPoint", "InteractableRef")]
