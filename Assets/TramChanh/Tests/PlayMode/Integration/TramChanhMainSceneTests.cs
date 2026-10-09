@@ -4,6 +4,7 @@ using NUnit.Framework;
 using TramChanh.App;
 using TramChanh.Cakes;
 using TramChanh.Core;
+using TramChanh.Core.GroundTruth;
 using TramChanh.Drinks.Runtime;
 using TramChanh.Interaction;
 using TramChanh.Lobby;
@@ -70,6 +71,27 @@ namespace TramChanh.Tests.PlayMode.Integration
                     foreach (Component component in child.GetComponents<Component>())
                     { Assert.That(component, Is.Not.Null, "Missing script on " + child.name); }
                 }
+            }
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator MAIN_001_EveryCustomerPointIsAimableFromStandingEyeHeightWithinReach()
+        {
+            Physics.SyncTransforms();
+            Vector3 spawn = _bootstrap.Interactor.transform.position;
+            foreach (OrderPoint point in _bootstrap.CustomerPoints)
+            {
+                Collider trigger = point.GetComponentInChildren<Collider>();
+                Assert.That(trigger, Is.Not.Null, point.name);
+                Assert.That(trigger.gameObject.layer, Is.EqualTo(TramChanhLayers.InteractableIndex), point.name);
+                Assert.That(trigger.bounds.max.y, Is.GreaterThan(0.4f), point.name + " trigger must not lie on the ground.");
+                Vector3 towardPlayer = spawn - point.transform.position; towardPlayer.y = 0f;
+                Vector3 eye = point.transform.position + towardPlayer.normalized * 1.0f + Vector3.up * 1.6f;
+                Vector3 target = trigger.bounds.center;
+                bool hit = Physics.Raycast(eye, (target - eye).normalized, out RaycastHit info, 1.8f, 1 << TramChanhLayers.InteractableIndex, QueryTriggerInteraction.Collide);
+                Assert.That(hit, Is.True, point.name + " is not reachable from 1 m away at eye height.");
+                Assert.That(info.collider.GetComponentInParent<InteractableRef>().Target, Is.SameAs(point), point.name);
             }
             yield return null;
         }

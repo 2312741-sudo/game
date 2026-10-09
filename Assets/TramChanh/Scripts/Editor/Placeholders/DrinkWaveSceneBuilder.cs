@@ -235,6 +235,8 @@ namespace TramChanh.EditorTools.Placeholders
             root.AddComponent<PlaceholderAsset>().Configure("DEC-010", "Vehicle type pending", "Generic takeaway interaction point, no assumed vehicle model.");
             var anchors = Child(root.transform, "Anchors"); Child(anchors, "InteractionPoint").localPosition = Vector3.up;
             var point = root.AddComponent<VehicleOrderPoint>(); Target(root, point, true);
+            // Aimable volume around the customer/vehicle; the bounds fallback was a 16 cm box at ground level.
+            var vehicleTrigger = root.GetComponent<BoxCollider>(); vehicleTrigger.center = new Vector3(0f, 0.9f, 0.3f); vehicleTrigger.size = new Vector3(1f, 1.2f, 1f);
             Box(root.transform, "Placeholder", Vector3.up * 0.7f, new Vector3(0.4f, 1.4f, 0.4f), AssetDatabase.LoadAssetAtPath<Material>(StallPlaceholderBuilder.MaterialFolder + "/MAT_Placeholder.mat"));
             return SaveAndDestroy(root, Folder + "/PF_Placeholder_VehiclePoint.prefab");
         }
