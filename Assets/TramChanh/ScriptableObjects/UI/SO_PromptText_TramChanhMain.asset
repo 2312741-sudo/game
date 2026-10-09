@@ -533,11 +533,11 @@ MonoBehaviour:
     _en: 'Go to {0} and take the order'
     _vi: "T\u1EDBi {0} nh\u1EADn \u0111\u01A1n"
   - _key: hud.next.enter_order
-    _en: 'Enter the order, then send it'
-    _vi: "Nh\u1EADp \u0111\u01A1n r\u1ED3i g\u1EEDi t\u1EDBi qu\u1EA7y"
+    _en: 'Enter the order for {0}, then send it'
+    _vi: "Nh\u1EADp \u0111\u01A1n {0} r\u1ED3i g\u1EEDi t\u1EDBi qu\u1EA7y"
   - _key: hud.next.send_order
-    _en: Send the order to the stall
-    _vi: "G\u1EEDi \u0111\u01A1n t\u1EDBi qu\u1EA7y"
+    _en: 'Send the order for {0} to the stall'
+    _vi: "G\u1EEDi \u0111\u01A1n {0} t\u1EDBi qu\u1EA7y"
   - _key: hud.next.make_drink
     _en: Take a tea bag from the rack
     _vi: "L\u1EA5y t\xFAi tr\xE0 \u1EDF k\u1EC7"
@@ -631,3 +631,6 @@ MonoBehaviour:
   - _key: drink.discard.not_orphaned
     _en: 'Nothing to discard'
     _vi: 'Không có gì để bỏ'
+  - _key: customers.seat.missing_point
+    _en: 'This table has no order point configured'
+    _vi: 'Bàn này chưa được cấu hình điểm gọi món'
