@@ -40,7 +40,8 @@ Branch: `wave/MAIN-001-integration` (draft PR #22 → `develop`). Coordination: 
 Run in the cloud container (no Unity):
 - All runtime scripts compile against UnityEngine 2021.3.33 module reference DLLs, with an InputSystem stand-in.
 - Static scene check: every GUID and prefab fileID resolves, with no unresolved local references.
-- Harnesses: drinks 69/69, cakes 28/28, orders/lobby 180/181 (the one failure is the harness-only assembly-name test).
+- Harnesses at head: drinks 91/91, cakes 32/32, orders/lobby 208/209 single-assembly and 209/209 per-asmdef (ARCH001 checks assembly names), HUD/prompt coverage 27/27.
+- `static_preflight.py` PASS; `art_contract_audit.py` 0 FAIL.
 
 **Not run (required before merge):** Unity 6000.6.0f1 compile, EditMode and PlayMode suites, QA-000, Console check, and a manual Play Mode run.
 
