@@ -18,6 +18,15 @@ namespace TramChanh.UI.Localization
         }
         [SerializeField] private Entry[] _entries = Array.Empty<Entry>();
         public int EntryCount => _entries.Length;
+        public bool Contains(string key)
+        {
+            if (string.IsNullOrEmpty(key)) { return false; }
+            foreach (Entry entry in _entries)
+            {
+                if (entry.Key == key) { return true; }
+            }
+            return false;
+        }
         public string Resolve(string key, string language)
         {
             if (string.IsNullOrEmpty(key))
