@@ -43,17 +43,21 @@ namespace TramChanh.EditorTools
 
         public static void ConfigureTextureImporters()
         {
-            SetTextureType($"{TexturesFolder}/T_Steel_Brushed_MaskMap.png", TextureImporterType.Default, false);
+            SetTextureType($"{TexturesFolder}/T_TeaBag_Pouch_BaseColor.png", TextureImporterType.Default, true, true);
+            SetTextureType($"{TexturesFolder}/T_TeaBag_Pouch_Normal.png", TextureImporterType.NormalMap, false, false);
+            SetTextureType($"{TexturesFolder}/T_TeaBag_Pouch_MaskMap.png", TextureImporterType.Default, false, false);
+            SetTextureType($"{TexturesFolder}/T_Steel_Brushed_MaskMap.png", TextureImporterType.Default, false, false);
             AssetDatabase.SaveAssets();
         }
 
-        private static void SetTextureType(string path, TextureImporterType type, bool isSrgb)
+        private static void SetTextureType(string path, TextureImporterType type, bool isSrgb, bool alphaIsTransparency = false)
         {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer != null)
             {
                 importer.textureType = type;
                 importer.sRGBTexture = isSrgb;
+                importer.alphaIsTransparency = alphaIsTransparency;
                 importer.SaveAndReimport();
             }
         }
@@ -66,11 +70,26 @@ namespace TramChanh.EditorTools
             // 1. Transparent Stand-Up Pouch (Plastic Film)
             Material matPouch = LoadOrCreateMaterial("MAT_TeaBag_Pouch", urpLit);
             Texture2D pouchTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_TeaBag_Pouch_BaseColor.png");
-            if (pouchTex != null) matPouch.SetTexture("_BaseColorMap", pouchTex);
-            matPouch.SetColor("_BaseColor", new Color(0.95f, 0.97f, 1.0f, 0.65f));
+            Texture2D pouchNorm = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_TeaBag_Pouch_Normal.png");
+            Texture2D pouchMask = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_TeaBag_Pouch_MaskMap.png");
+            if (pouchTex != null)
+            {
+                matPouch.SetTexture("_BaseMap", pouchTex);
+                matPouch.SetTexture("_MainTex", pouchTex);
+            }
+            if (pouchNorm != null)
+            {
+                matPouch.SetTexture("_BumpMap", pouchNorm);
+                matPouch.EnableKeyword("_NORMALMAP");
+            }
+            if (pouchMask != null)
+            {
+                matPouch.SetTexture("_MetallicGlossMap", pouchMask);
+            }
+            matPouch.SetColor("_BaseColor", Color.white);
             matPouch.SetFloat("_Surface", 1f); // Transparent
             matPouch.SetFloat("_Blend", 0f);   // Alpha
-            matPouch.SetFloat("_Smoothness", 0.92f);
+            matPouch.SetFloat("_Smoothness", 0.94f);
             matPouch.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
             matPouch.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
             matPouch.SetInt("_ZWrite", 0);
@@ -79,14 +98,14 @@ namespace TramChanh.EditorTools
 
             // 2. Amber Tea Liquid Material
             Material matLiquid = LoadOrCreateMaterial("MAT_TeaLiquid_Amber", urpLit);
-            matLiquid.SetColor("_BaseColor", new Color(0.85f, 0.42f, 0.08f, 0.90f));
+            matLiquid.SetColor("_BaseColor", new Color(0.85f, 0.42f, 0.08f, 0.92f));
             matLiquid.SetFloat("_Smoothness", 0.88f);
             matLiquid.SetFloat("_Metallic", 0.05f);
             EditorUtility.SetDirty(matLiquid);
 
             // 3. Coconut Jelly (Nata de Coco) Cubes Material
             Material matJelly = LoadOrCreateMaterial("MAT_CoconutJelly", urpLit);
-            matJelly.SetColor("_BaseColor", new Color(0.96f, 0.97f, 0.98f, 0.82f));
+            matJelly.SetColor("_BaseColor", new Color(0.96f, 0.97f, 0.98f, 0.85f));
             matJelly.SetFloat("_Smoothness", 0.65f);
             EditorUtility.SetDirty(matJelly);
 
@@ -101,7 +120,7 @@ namespace TramChanh.EditorTools
             // 5. Commercial Red Plastic Rack Material
             Material matRack = LoadOrCreateMaterial("MAT_TeaRack_RedPlastic", urpLit);
             Texture2D rackTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_TeaRack_RedPlastic_BaseColor.png");
-            if (rackTex != null) matRack.SetTexture("_BaseColorMap", rackTex);
+            if (rackTex != null) matRack.SetTexture("_BaseMap", rackTex);
             matRack.SetColor("_BaseColor", new Color(0.83f, 0.14f, 0.10f));
             matRack.SetFloat("_Smoothness", 0.58f);
             EditorUtility.SetDirty(matRack);
@@ -110,7 +129,7 @@ namespace TramChanh.EditorTools
             Material matSteel = LoadOrCreateMaterial("MAT_Steel_Brushed", urpLit);
             Texture2D steelTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Steel_Brushed_BaseColor.png");
             Texture2D steelMask = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Steel_Brushed_MaskMap.png");
-            if (steelTex != null) matSteel.SetTexture("_BaseColorMap", steelTex);
+            if (steelTex != null) matSteel.SetTexture("_BaseMap", steelTex);
             if (steelMask != null) matSteel.SetTexture("_MetallicGlossMap", steelMask);
             matSteel.SetColor("_BaseColor", new Color(0.85f, 0.87f, 0.88f));
             matSteel.SetFloat("_Metallic", 0.92f);
@@ -125,7 +144,33 @@ namespace TramChanh.EditorTools
             matCover.renderQueue = (int)RenderQueue.Transparent;
             EditorUtility.SetDirty(matCover);
 
+            // 8. Authentic Menu Board Material
+            Material matMenu = LoadOrCreateMaterial("MAT_Menu_Board", urpLit);
+            Texture2D menuTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Menu_Board_BaseColor.png");
+            if (menuTex != null) matMenu.SetTexture("_BaseMap", menuTex);
+            matMenu.SetColor("_BaseColor", Color.white);
+            matMenu.SetFloat("_Smoothness", 0.82f);
+            EditorUtility.SetDirty(matMenu);
+
             AssetDatabase.SaveAssets();
+        }
+
+        private static Mesh LoadMesh(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            Mesh direct = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (direct != null) return direct;
+            foreach (var sub in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (sub is Mesh m) return m;
+            }
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (go != null)
+            {
+                var mf = go.GetComponentInChildren<MeshFilter>();
+                if (mf != null && mf.sharedMesh != null) return mf.sharedMesh;
+            }
+            return null;
         }
 
         public static void UpgradeTeaBagPrefab()
@@ -136,11 +181,11 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh pouchClosedMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_TeaBag_Pouch_Closed.obj");
-            Mesh pouchOpenMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_TeaBag_Pouch_Open.obj");
-            Mesh liquidMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_TeaBag_Liquid.obj");
-            Mesh jellyMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_Topping_CoconutJellyCubes.obj");
-            Mesh iceMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_Ice_Cubes.obj");
+            Mesh pouchClosedMesh = LoadMesh($"{ModelsFolder}/SM_TeaBag_Pouch_Closed.obj");
+            Mesh pouchOpenMesh = LoadMesh($"{ModelsFolder}/SM_TeaBag_Pouch_Open.obj");
+            Mesh liquidMesh = LoadMesh($"{ModelsFolder}/SM_TeaBag_Liquid.obj");
+            Mesh jellyMesh = LoadMesh($"{ModelsFolder}/SM_Topping_CoconutJellyCubes.obj");
+            Mesh iceMesh = LoadMesh($"{ModelsFolder}/SM_Ice_Cubes.obj");
 
             Material matPouch = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_TeaBag_Pouch.mat");
             Material matLiquid = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_TeaLiquid_Amber.mat");
@@ -181,7 +226,7 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh rackMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_RedTeaRack.obj");
+            Mesh rackMesh = LoadMesh($"{ModelsFolder}/SM_RedTeaRack.obj");
             Material rackMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_TeaRack_RedPlastic.mat");
 
             Transform rack = root.transform.Find("Rack");
@@ -200,16 +245,38 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh frameMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_ToppingStation_Frame.obj");
-            Mesh coverMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_ToppingStation_Cover.obj");
+            Mesh frameMesh = LoadMesh($"{ModelsFolder}/SM_ToppingStation_Frame.obj");
+            Mesh coverMesh = LoadMesh($"{ModelsFolder}/SM_ToppingStation_Cover.obj");
+
             Material steelMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Steel_Brushed.mat");
             Material coverMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_ToppingStation_Cover.mat");
 
-            Transform stationFrame = root.transform.Find("StationFrame");
-            if (stationFrame != null) ReplaceVisualMesh(stationFrame, frameMesh, steelMat);
+            Transform frame = root.transform.Find("StationFrame") ?? root.transform.Find("Frame");
+            if (frame != null)
+            {
+                frame.localPosition = Vector3.zero;
+                ReplaceVisualMesh(frame, frameMesh, steelMat);
+            }
 
-            Transform cover = root.transform.Find("CoverPivot/TransparentCover");
-            if (cover != null) ReplaceVisualMesh(cover, coverMesh, coverMat);
+            Transform cover = root.transform.Find("CoverPivot/TransparentCover") ?? root.transform.Find("CoverPivot/Cover");
+            if (cover != null)
+            {
+                ReplaceVisualMesh(cover, coverMesh, coverMat);
+            }
+
+            // Hide primitive cubes inside LemonJellyBin and CoconutJellyBin to show frame GN pans
+            Transform lemonBin = root.transform.Find("LemonJellyBin");
+            if (lemonBin != null)
+            {
+                foreach (var mr in lemonBin.GetComponentsInChildren<MeshRenderer>())
+                    mr.enabled = false;
+            }
+            Transform coconutBin = root.transform.Find("CoconutJellyBin");
+            if (coconutBin != null)
+            {
+                foreach (var mr in coconutBin.GetComponentsInChildren<MeshRenderer>())
+                    mr.enabled = false;
+            }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
             PrefabUtility.UnloadPrefabContents(root);
@@ -224,28 +291,16 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh wellMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_IceBin_Well.obj");
-            Mesh lidsMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_IceBin_Lids.obj");
+            Mesh wellMesh = LoadMesh($"{ModelsFolder}/SM_IceBin_Well.obj");
+            Mesh lidsMesh = LoadMesh($"{ModelsFolder}/SM_IceBin_Lids.obj");
+
             Material steelMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Steel_Brushed.mat");
 
-            Transform bin = root.transform.Find("Bin");
+            Transform bin = root.transform.Find("Bin") ?? root.transform.Find("Well");
             if (bin != null) ReplaceVisualMesh(bin, wellMesh, steelMat);
 
-            // Add sliding lids child under bin if not present
-            Transform lids = root.transform.Find("Lids");
-            if (lids == null)
-            {
-                var lidsObj = new GameObject("Lids");
-                lidsObj.transform.SetParent(root.transform, false);
-                var mf = lidsObj.AddComponent<MeshFilter>();
-                mf.sharedMesh = lidsMesh;
-                var mr = lidsObj.AddComponent<MeshRenderer>();
-                mr.sharedMaterial = steelMat;
-            }
-            else
-            {
-                ReplaceVisualMesh(lids, lidsMesh, steelMat);
-            }
+            Transform lids = root.transform.Find("Lids") ?? root.transform.Find("Lid_Left");
+            if (lids != null) ReplaceVisualMesh(lids, lidsMesh, steelMat);
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
             PrefabUtility.UnloadPrefabContents(root);
@@ -260,12 +315,13 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh scoopMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_IceScoop.obj");
+            Mesh scoopMesh = LoadMesh($"{ModelsFolder}/SM_IceScoop.obj");
             Material steelMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Steel_Brushed.mat");
 
             var mf = root.GetComponent<MeshFilter>();
             if (mf == null) mf = root.AddComponent<MeshFilter>();
             mf.sharedMesh = scoopMesh;
+
             var mr = root.GetComponent<MeshRenderer>();
             if (mr == null) mr = root.AddComponent<MeshRenderer>();
             mr.sharedMaterial = steelMat;
@@ -277,7 +333,6 @@ namespace TramChanh.EditorTools
 
         private static void ReplaceVisualMesh(Transform target, Mesh newMesh, Material newMat)
         {
-            // Remove primitive children like PlaceholderPortion, Cube, etc.
             for (int i = target.childCount - 1; i >= 0; i--)
             {
                 Transform child = target.GetChild(i);
@@ -287,12 +342,16 @@ namespace TramChanh.EditorTools
                 }
             }
 
+            target.localScale = Vector3.one;
+
             var mf = target.GetComponent<MeshFilter>();
             if (mf == null) mf = target.gameObject.AddComponent<MeshFilter>();
             mf.sharedMesh = newMesh;
+
             var mr = target.GetComponent<MeshRenderer>();
             if (mr == null) mr = target.gameObject.AddComponent<MeshRenderer>();
             mr.sharedMaterial = newMat;
+            mr.enabled = true;
         }
 
         public static void CreatePreviewScene()
@@ -319,39 +378,99 @@ namespace TramChanh.EditorTools
             // Countertop stage
             var stage = GameObject.CreatePrimitive(PrimitiveType.Cube);
             stage.name = "Countertop_Stage";
-            stage.transform.position = new Vector3(0f, -0.02f, 0f);
-            stage.transform.localScale = new Vector3(2.0f, 0.04f, 1.0f);
-            Material woodMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/TramChanh/Art/Materials/MAT_Stall_WoodCounter.mat");
-            if (woodMat != null) stage.GetComponent<MeshRenderer>().sharedMaterial = woodMat;
+            stage.transform.position = new Vector3(0f, -0.02f, 0.10f);
+            stage.transform.localScale = new Vector3(2.2f, 0.04f, 1.1f);
+            Material stageMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Stage_Counter.mat");
+            if (stageMat == null)
+            {
+                Shader s = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                stageMat = new Material(s);
+                stageMat.name = "MAT_Stage_Counter";
+                stageMat.SetColor("_BaseColor", new Color(0.18f, 0.14f, 0.11f));
+                stageMat.SetFloat("_Smoothness", 0.55f);
+                AssetDatabase.CreateAsset(stageMat, $"{MaterialsFolder}/MAT_Stage_Counter.mat");
+            }
+            stage.GetComponent<MeshRenderer>().sharedMaterial = stageMat;
 
             // Instantiate equipment
+            // 1. Red Tea Rack (Facing camera naturally)
             GameObject teaRackPf = AssetDatabase.LoadAssetAtPath<GameObject>(TeaRackPrefabPath);
             if (teaRackPf != null)
             {
                 var rack = (GameObject)PrefabUtility.InstantiatePrefab(teaRackPf);
-                rack.transform.position = new Vector3(-0.45f, 0f, 0.05f);
+                rack.transform.position = new Vector3(-0.38f, 0f, 0.08f);
+                rack.transform.rotation = Quaternion.identity;
             }
 
+            // 2. Pre-Portioned Tea Bags (Front face facing -Z towards camera)
             GameObject teaBagPf = AssetDatabase.LoadAssetAtPath<GameObject>(TeaBagPrefabPath);
             if (teaBagPf != null)
             {
                 var teabag = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf);
-                teabag.transform.position = new Vector3(-0.15f, 0f, 0.15f);
+                teabag.transform.position = new Vector3(-0.14f, 0f, 0.14f);
+                teabag.transform.rotation = Quaternion.Euler(0f, -6f, 0f);
 
                 var teabag2 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf);
-                teabag2.transform.position = new Vector3(0.02f, 0f, 0.15f);
-                // Set open state for teabag2
+                teabag2.transform.position = new Vector3(0.04f, 0f, 0.14f);
+                teabag2.transform.rotation = Quaternion.Euler(0f, 8f, 0f);
+                // Set open state for teabag2 and show ingredients inside
                 var openObj = teabag2.transform.Find("Visual/Bag_Open");
                 var closedObj = teabag2.transform.Find("Visual/Bag_Closed");
                 if (openObj != null) openObj.gameObject.SetActive(true);
                 if (closedObj != null) closedObj.gameObject.SetActive(false);
+
+                var contentsObj = teabag2.transform.Find("Visual/Contents");
+                if (contentsObj != null)
+                {
+                    contentsObj.gameObject.SetActive(true);
+                    var tea = contentsObj.Find("TeaLiquid");
+                    if (tea != null) tea.gameObject.SetActive(true);
+                    var jelly = contentsObj.Find("CoconutJelly");
+                    if (jelly != null) jelly.gameObject.SetActive(true);
+                    var ice = contentsObj.Find("Ice");
+                    if (ice != null) ice.gameObject.SetActive(true);
+                }
             }
 
+            // 3. Topping Station (Tabletop stainless 4-pan GN station with clear cover)
             GameObject toppingPf = AssetDatabase.LoadAssetAtPath<GameObject>(ToppingStationPrefabPath);
             if (toppingPf != null)
             {
                 var topping = (GameObject)PrefabUtility.InstantiatePrefab(toppingPf);
-                topping.transform.position = new Vector3(0.40f, 0f, 0f);
+                topping.transform.position = new Vector3(0.36f, 0f, 0.10f);
+                topping.transform.rotation = Quaternion.identity;
+            }
+
+            // 4. Stainless Steel Ice Bin
+            GameObject iceBinPf = AssetDatabase.LoadAssetAtPath<GameObject>(IceBinPrefabPath);
+            if (iceBinPf != null)
+            {
+                var iceBin = (GameObject)PrefabUtility.InstantiatePrefab(iceBinPf);
+                iceBin.transform.position = new Vector3(0.78f, 0f, 0.10f);
+                iceBin.transform.rotation = Quaternion.identity;
+            }
+
+            // 5. Stainless Steel Ice Scoop
+            GameObject scoopPf = AssetDatabase.LoadAssetAtPath<GameObject>(IceScoopPrefabPath);
+            if (scoopPf != null)
+            {
+                var scoop = (GameObject)PrefabUtility.InstantiatePrefab(scoopPf);
+                scoop.transform.position = new Vector3(0.75f, 0.02f, 0.32f);
+                scoop.transform.rotation = Quaternion.Euler(0f, 25f, 0f);
+            }
+
+            // 6. Authentic Standing Menu Board (Facing camera)
+            Mesh menuMesh = LoadMesh($"{ModelsFolder}/SM_Menu_Board.obj");
+            Material menuMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Menu_Board.mat");
+            if (menuMesh != null && menuMat != null)
+            {
+                var menuObj = new GameObject("Menu_Board");
+                menuObj.transform.position = new Vector3(-0.68f, 0f, 0.22f);
+                menuObj.transform.rotation = Quaternion.Euler(0f, 8f, 0f);
+                var mf = menuObj.AddComponent<MeshFilter>();
+                mf.sharedMesh = menuMesh;
+                var mr = menuObj.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = menuMat;
             }
 
             EditorSceneManager.SaveScene(scene, PreviewScenePath);
@@ -371,15 +490,20 @@ namespace TramChanh.EditorTools
             cam.farClipPlane = 50f;
 
             // Views:
-            // 1. Close-up on Pre-Portioned Tea Bags
-            camObj.transform.position = new Vector3(-0.06f, 0.18f, -0.28f);
-            camObj.transform.rotation = Quaternion.Euler(22f, -15f, 0f);
+            // 1. Close-up on Pre-Portioned Tea Bags (Showcasing authentic Trạm brand badge & packaging)
+            camObj.transform.position = new Vector3(-0.05f, 0.14f, -0.22f);
+            camObj.transform.rotation = Quaternion.Euler(15f, -8f, 0f);
             CaptureCameraToFile(cam, $"{ScreenshotsFolder}/Drink_TeaBag_Detail.png", 1920, 1080);
 
-            // 2. Full Drink Station Overview
-            camObj.transform.position = new Vector3(0.0f, 0.55f, -0.85f);
-            camObj.transform.rotation = Quaternion.Euler(32f, 0f, 0f);
+            // 2. Full Drink Station Overview (Menu, Rack, Pouches, Topping Station, Ice Bin, Ice Scoop)
+            camObj.transform.position = new Vector3(0.05f, 0.65f, -1.05f);
+            camObj.transform.rotation = Quaternion.Euler(28f, 0f, 0f);
             CaptureCameraToFile(cam, $"{ScreenshotsFolder}/Drink_Station_Overview.png", 1920, 1080);
+
+            // 3. Equipment Detail (Stainless Topping Station & Ice Bin)
+            camObj.transform.position = new Vector3(0.55f, 0.40f, -0.42f);
+            camObj.transform.rotation = Quaternion.Euler(26f, -10f, 0f);
+            CaptureCameraToFile(cam, $"{ScreenshotsFolder}/Drink_Equipment_Detail.png", 1920, 1080);
 
             Object.DestroyImmediate(camObj);
         }

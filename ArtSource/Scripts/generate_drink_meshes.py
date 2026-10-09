@@ -155,7 +155,8 @@ def generate_teabag_pouch(out_path, is_open=False):
     x_vals = np.linspace(-w/2, w/2, num_x)
     
     # Front and rear surfaces
-    for surface_sign in [1.0, -1.0]:
+    for surface_sign in [-1.0, 1.0]:
+        is_front_surf = (surface_sign < 0)
         z_mult = surface_sign
         normal_z = surface_sign
         
@@ -189,8 +190,6 @@ def generate_teabag_pouch(out_path, is_open=False):
                 v3 = grid_v[j+1][i+1]
                 v4 = grid_v[j+1][i]
                 
-                u1 = (x_vals[i] + w/2) / w
-                u2 = (x_vals[i+1] + w/2) / w
                 v_coord1 = y_levels[j] / h
                 v_coord2 = y_levels[j+1] / h
                 
@@ -198,15 +197,22 @@ def generate_teabag_pouch(out_path, is_open=False):
                 norm_len = math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)
                 normal = (n[0]/norm_len, n[1]/norm_len, n[2]/norm_len)
                 
-                if surface_sign > 0:
-                    mesh.add_quad(v1, v2, v3, v4, (u1, v_coord1), (u2, v_coord1), (u2, v_coord2), (u1, v_coord2), normal)
-                else:
+                if is_front_surf:
+                    # Front face: facing -Z (towards viewer/camera), U in [0.0, 0.5] with authentic brand sticker
+                    # Note: Unity OBJ importer inverts X; flipping U ensures un-mirrored front display in Unity
+                    u1 = 0.5 - ((x_vals[i] + w/2) / w) * 0.5
+                    u2 = 0.5 - ((x_vals[i+1] + w/2) / w) * 0.5
                     mesh.add_quad(v1, v4, v3, v2, (u1, v_coord1), (u1, v_coord2), (u2, v_coord2), (u2, v_coord1), normal)
+                else:
+                    # Rear face: facing +Z, U in [0.5, 1.0] with clean frosted film
+                    u1 = 1.0 - ((x_vals[i] + w/2) / w) * 0.5
+                    u2 = 1.0 - ((x_vals[i+1] + w/2) / w) * 0.5
+                    mesh.add_quad(v1, v2, v3, v4, (u1, v_coord1), (u2, v_coord1), (u2, v_coord2), (u1, v_coord2), normal)
 
     # Bottom gusset sealing panel (oval base)
     gusset_segs = 16
     gusset_center = mesh.add_vertex(0.0, 0.008, 0.0)
-    uv_c = mesh.add_uv(0.5, 0.5)
+    uv_c = mesh.add_uv(0.75, 0.15)
     n_down = mesh.add_normal(0.0, -1.0, 0.0)
     
     rim_v = []
@@ -220,8 +226,8 @@ def generate_teabag_pouch(out_path, is_open=False):
         next_i = (i + 1) % gusset_segs
         v1 = rim_v[i]
         v2 = rim_v[next_i]
-        uv1 = mesh.add_uv(0.5 + 0.45 * math.cos(2*math.pi*i/gusset_segs), 0.5 + 0.45 * math.sin(2*math.pi*i/gusset_segs))
-        uv2 = mesh.add_uv(0.5 + 0.45 * math.cos(2*math.pi*next_i/gusset_segs), 0.5 + 0.45 * math.sin(2*math.pi*next_i/gusset_segs))
+        uv1 = mesh.add_uv(0.75 + 0.20 * math.cos(2*math.pi*i/gusset_segs), 0.15 + 0.10 * math.sin(2*math.pi*i/gusset_segs))
+        uv2 = mesh.add_uv(0.75 + 0.20 * math.cos(2*math.pi*next_i/gusset_segs), 0.15 + 0.10 * math.sin(2*math.pi*next_i/gusset_segs))
         mesh.add_face([(gusset_center, uv_c, n_down), (v1, uv1, n_down), (v2, uv2, n_down)])
 
     mesh.write_obj(out_path)
@@ -334,10 +340,10 @@ def generate_red_tea_rack(out_path):
     # Outer basket box (hollowed inside)
     # Bottom plate
     mesh.add_box(-w/2, w/2, 0.0, t, -d/2, d/2)
-    # Front rim (lowered front lip for easy pouch pull)
-    mesh.add_box(-w/2, w/2, t, h * 0.45, d/2 - t, d/2)
-    # Back high support wall
-    mesh.add_box(-w/2, w/2, t, h, -d/2, -d/2 + t)
+    # Front rim (lowered front lip facing -Z for barista pull)
+    mesh.add_box(-w/2, w/2, t, h * 0.45, -d/2, -d/2 + t)
+    # Back high support wall (+Z)
+    mesh.add_box(-w/2, w/2, t, h, d/2 - t, d/2)
     # Left and Right stepped sidewalls
     mesh.add_box(-w/2, -w/2 + t, t, h * 0.85, -d/2 + t, d/2 - t)
     mesh.add_box(w/2 - t, w/2, t, h * 0.85, -d/2 + t, d/2 - t)
@@ -358,52 +364,45 @@ def generate_topping_station(frame_path, cover_path):
     # 5.1 Main Chilled Housing & 6 Recessed GN Pans
     frame = ObjMesh("SM_ToppingStation_Frame")
     w = 0.52
-    h = 0.22
+    h = 0.14  # Tabletop unit sitting directly on counter
     d = 0.36
     
-    # Drop-in perimeter flange lip resting on counter (y = 0.00)
-    flange = 0.02
-    flange_t = 0.005
-    frame.add_box(-w/2 - flange, w/2 + flange, 0.0, flange_t, -d/2 - flange, d/2 + flange)
+    # Outer stainless steel housing body
+    frame.add_box(-w/2, w/2, 0.0, h, -d/2, d/2)
     
-    # Recessed cooling well extending downward (y = -h to 0.0)
-    frame.add_box(-w/2, w/2, -h, 0.0, d/2 - 0.01, d/2) # front
-    frame.add_box(-w/2, w/2, -h, 0.0, -d/2, -d/2 + 0.01) # back
-    frame.add_box(-w/2, -w/2 + 0.01, -h, 0.0, -d/2, d/2) # left
-    frame.add_box(w/2 - 0.01, w/2, -h, 0.0, -d/2, d/2) # right
-    frame.add_box(-w/2, w/2, -h, -h + 0.01, -d/2, d/2) # floor
+    # Top flange rim
+    flange = 0.015
+    flange_t = 0.005
+    frame.add_box(-w/2 - flange, w/2 + flange, h, h + flange_t, -d/2 - flange, d/2 + flange)
     
     # 6 Stainless GN Insert Pans (2 rows of 3 pans)
     pan_w = 0.14
     pan_d = 0.15
-    pan_h = 0.12
+    pan_h = 0.10
     pan_xs = [-0.155, 0.0, 0.155]
     pan_zs = [-0.085, 0.085]
     
     for px in pan_xs:
         for pz in pan_zs:
-            # Pan rim
-            frame.add_box(px - pan_w/2, px + pan_w/2, flange_t, flange_t + 0.003, pz - pan_d/2, pz + pan_d/2)
-            # Pan inner recess
-            frame.add_box(px - pan_w/2 + 0.005, px + pan_w/2 - 0.005, -pan_h, flange_t, pz - pan_d/2 + 0.005, pz + pan_d/2 - 0.005)
+            # Pan rim bevel resting on top plate
+            frame.add_box(px - pan_w/2, px + pan_w/2, h + flange_t, h + flange_t + 0.004, pz - pan_d/2, pz + pan_d/2)
+            # Pan inner metallic volume
+            frame.add_box(px - pan_w/2 + 0.005, px + pan_w/2 - 0.005, h - pan_h, h + flange_t, pz - pan_d/2 + 0.005, pz + pan_d/2 - 0.005)
 
     frame.write_obj(frame_path)
     
-    # 5.2 Roll-Top Transparent Acrylic Cover (Pivot at rear hinge)
+    # 5.2 Roll-Top Transparent Acrylic Cover (Curves over the top of the GN pans)
     cover = ObjMesh("SM_ToppingStation_Cover")
-    # Pivot at (0, 0.02, -d/2 + 0.02)
-    # Curves forward over the top of the pans
-    r_dome = 0.20
+    r_dome = 0.18
     segs = 16
     cw = w + 0.02
     
-    arc_angles = np.linspace(0.0, math.pi * 0.55, segs)
+    arc_angles = np.linspace(0.0, math.pi * 0.52, segs)
     top_rim = []
-    bot_rim = []
     
     for a in arc_angles:
-        cy = 0.01 + r_dome * math.sin(a)
-        cz = -d/2 + 0.02 + r_dome * (1.0 - math.cos(a))
+        cy = h + flange_t + r_dome * math.sin(a)
+        cz = d/2 - 0.02 - r_dome * (1.0 - math.cos(a))
         top_rim.append((cy, cz))
         
     for i in range(segs - 1):
@@ -415,8 +414,8 @@ def generate_topping_station(frame_path, cover_path):
         v3 = cover.add_vertex( cw/2, y2, z2)
         v4 = cover.add_vertex(-cw/2, y2, z2)
         
-        n_rot = (0, math.cos(arc_angles[i]), math.sin(arc_angles[i]))
-        cover.add_quad(v1, v2, v3, v4, (0, i/segs), (1, i/segs), (1, (i+1)/segs), (0, (i+1)/segs), n_rot)
+        n_rot = (0, math.cos(arc_angles[i]), -math.sin(arc_angles[i]))
+        cover.add_quad(v1, v4, v3, v2, (0, i/segs), (0, (i+1)/segs), (1, (i+1)/segs), (1, i/segs), n_rot)
         
     # Stainless lift handle across front edge
     yf_last, zf_last = top_rim[-1]
@@ -477,6 +476,54 @@ def generate_ice_scoop(out_path):
     scoop.add_cylinder((0, bh * 0.7, -bl/2), (0, bh * 0.85, -bl/2 - handle_len), radius=0.011, segments=12)
     scoop.write_obj(out_path)
 
+# ==============================================================================
+# 7. Standing Menu Board Display (A4 Acrylic Easel Stand)
+# ==============================================================================
+def generate_menu_board(out_path):
+    board = ObjMesh("SM_Menu_Board")
+    mw = 0.210  # 210mm A4 width
+    mh = 0.297  # 297mm A4 height
+    thick = 0.004 # 4mm acrylic
+    
+    # 1. Base foot stand (beveled acrylic block)
+    board.add_box(-mw*0.55, mw*0.55, 0.000, 0.016, -0.045, 0.045)
+    
+    # 2. Upright A4 display sheet tilted back by 10 degrees (0.174 rad)
+    tilt = math.radians(10.0)
+    cos_t = math.cos(tilt)
+    sin_t = math.sin(tilt)
+    
+    # Bottom vertices
+    y_b = 0.012
+    z_b = 0.008
+    # Top vertices (tilted back along +Z)
+    y_t = y_b + mh * cos_t
+    z_t = z_b + mh * sin_t
+    
+    # Normal tilted forward-up (towards camera at -Z)
+    n_front = (0.0, sin_t, -cos_t)
+    
+    # Front facing display panel (full UV 0..1 for T_Menu_Board_BaseColor)
+    # Looking from -Z: -mw/2 is left (U=0), +mw/2 is right (U=1)
+    v_bl = board.add_vertex(-mw/2, y_b, z_b)
+    v_br = board.add_vertex( mw/2, y_b, z_b)
+    v_tr = board.add_vertex( mw/2, y_t, z_t)
+    v_tl = board.add_vertex(-mw/2, y_t, z_t)
+    
+    # Winding order facing -Z: v_bl -> v_tl -> v_tr -> v_br
+    # Inverted U in OBJ compensates for Unity importer X inversion
+    board.add_quad(v_bl, v_tl, v_tr, v_br, (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0), n_front)
+    
+    # Back face
+    v_bl_b = board.add_vertex(-mw/2, y_b, z_b + thick)
+    v_br_b = board.add_vertex( mw/2, y_b, z_b + thick)
+    v_tr_b = board.add_vertex( mw/2, y_t, z_t + thick)
+    v_tl_b = board.add_vertex(-mw/2, y_t, z_t + thick)
+    n_back = (0.0, -sin_t, cos_t)
+    board.add_quad(v_bl_b, v_br_b, v_tr_b, v_tl_b, (1.0, 0.0), (0.0, 0.0), (0.0, 1.0), (1.0, 1.0), n_back)
+    
+    board.write_obj(out_path)
+
 def generate_all_drink_assets():
     models_dir = "Assets/TramChanh/Art/Models/DrinkStation"
     os.makedirs(models_dir, exist_ok=True)
@@ -496,6 +543,7 @@ def generate_all_drink_assets():
         os.path.join(models_dir, "SM_IceBin_Lids.obj")
     )
     generate_ice_scoop(os.path.join(models_dir, "SM_IceScoop.obj"))
+    generate_menu_board(os.path.join(models_dir, "SM_Menu_Board.obj"))
     print("All Drink Station 3D Meshes successfully generated!")
 
 if __name__ == "__main__":
