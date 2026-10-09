@@ -5,6 +5,7 @@ using NUnit.Framework;
 using TramChanh.Cakes;
 using TramChanh.Content;
 using TramChanh.Core;
+using TramChanh.Interaction;
 using TramChanh.Orders;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -68,6 +69,20 @@ namespace TramChanh.Tests.EditMode.Cakes
         { var catalog = new CakeRecipeCatalog(_queue, new[] { _recipe }); Assert.That(catalog.TryResolve(_queue.Binding, out var recipe), Is.True); Assert.That(recipe, Is.SameAs(_recipe)); _queue.Live = false; Assert.That(catalog.TryResolve(_queue.Binding, out _), Is.False); }
         [Test] public void TC_CAKE_CupCapacityIs500AndUnconfiguredRecipeIsRejected()
         { Assert.That(MeasureCupDefinition.NominalCapacityMl, Is.EqualTo(500f)); Set(_recipe, "_targetBatterMl", 0f); Assert.That(_recipe.IsConfigured, Is.False); Assert.Throws<ArgumentException>(() => new CakePreparation(_queue.Binding, _queue, _recipe)); }
+        [Test] public void TC_CAKE_UninitializedCupIsBlockedInsteadOfThrowing()
+        {
+            var cupObject = new GameObject("PF_BatterMeasureCup_500ml"); var events = new EventBus();
+            try
+            {
+                var cup = cupObject.AddComponent<BatterMeasureCup>(); var hands = new HeldItemSlot(events);
+                var context = new InteractionContext(new ActorRef(1), ActorRole.Stall, hands, _clock, events);
+                Assert.That(cup.Query(context).BlockedReasonKey, Is.EqualTo("cake.station_uninitialized"));
+                Assert.That(hands.TryPickUp(cup), Is.True);
+                Assert.That(cup.QueryUse(context).BlockedReasonKey, Is.EqualTo("cake.station_uninitialized"));
+                Assert.DoesNotThrow(() => cup.ExecuteUse(context));
+            }
+            finally { events.Dispose(); Object.DestroyImmediate(cupObject); }
+        }
         private void Open() { _clock.Advance(2d); _grill.Advance(); Assert.That(_grill.OpenLid().IsSuccess, Is.True); }
         private void CookStart() { _cake.Measure(120f); Open(); _grill.Pour(_cake); Assert.That(_grill.CloseLid().IsSuccess, Is.True); }
         private static void Set(object target, string field, object value) => target.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).SetValue(target, value);

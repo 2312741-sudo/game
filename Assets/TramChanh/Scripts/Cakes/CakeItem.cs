@@ -44,9 +44,15 @@ namespace TramChanh.Cakes
             { throw new InvalidOperationException("Only wrapped or removed burnt cake enters hands."); }
         }
         public void OnReleased() { }
-        public InteractionQuery QueryUse(InteractionContext context) => new InteractionQuery(
-            ReferenceEquals(context.Hands.Current, this) && _preparation.State == CakeState.Ruined
-                ? CakeStation.GuardActor(context) : Availability.Hidden, "cake.discard_burnt");
+        // Discard (DEC-006): a burnt cake, or a wrapped cake whose order failed while it was in hands
+        // (unbound, so Ready rejects it with ready.no_order and it would otherwise block the hands forever).
+        public InteractionQuery QueryUse(InteractionContext context)
+        {
+            if (!ReferenceEquals(context.Hands.Current, this) || _preparation == null) { return new InteractionQuery(Availability.Hidden, "cake.discard_burnt"); }
+            if (_preparation.State == CakeState.Ruined) { return new InteractionQuery(CakeStation.GuardActor(context), "cake.discard_burnt"); }
+            bool orphaned = _preparation.State == CakeState.Wrapped && !_preparation.BoundItem.IsValid;
+            return new InteractionQuery(orphaned ? CakeStation.GuardActor(context) : Availability.Hidden, "cake.discard_orphan");
+        }
         public void ExecuteUse(InteractionContext context)
         {
             if (!QueryUse(context).Availability.IsAvailable) { return; }

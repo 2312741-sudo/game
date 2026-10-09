@@ -27,6 +27,7 @@ namespace TramChanh.Cakes
         private IIdGenerator _ids;
         private IEventBus _events;
         private ICakeRecipeCatalog _recipes;
+        private IReadyShelfPlacement _readyGate;
         public IGameClock Clock { get; private set; }
         public CakePreparation Current { get; private set; }
         public CakeItem CurrentItem { get; private set; }
@@ -35,11 +36,15 @@ namespace TramChanh.Cakes
         public Transform CakePlacement => _cakePlacement;
         public Transform WrappingArea => _wrappingArea;
         public void Initialize(IStallTicketQueue queue, IIdGenerator ids, IEventBus events, IGameClock clock, ICakeRecipeCatalog recipes)
+            => Initialize(queue, ids, events, clock, recipes, null);
+        /// <param name="readyGate">Optional. While its Cake slot is occupied and no cake is in progress, Fill is blocked
+        /// (<c>ready.slot_full</c>) so no new ticket is claimed that could never be placed (capacity-1 soft-lock).</param>
+        public void Initialize(IStallTicketQueue queue, IIdGenerator ids, IEventBus events, IGameClock clock, ICakeRecipeCatalog recipes, IReadyShelfPlacement readyGate)
         {
             if (Grill != null) { throw new InvalidOperationException("Cake station is already initialized."); }
             _tickets = queue ?? throw new ArgumentNullException(nameof(queue)); _ids = ids ?? throw new ArgumentNullException(nameof(ids));
             _events = events ?? throw new ArgumentNullException(nameof(events)); Clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
+            _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes)); _readyGate = readyGate;
             if (_cup == null || _cup.Definition == null || !_cup.Definition.IsConfigured || _cakePrefab == null || _cakePlacement == null
                 || _lidPivot == null || _wrappingArea == null || _flipAction is not IFlipAction || !CakeRecipe.Finite(_openLidDegrees))
             { throw new InvalidOperationException("Cake station anchors/tools/tuning are not configured."); }
@@ -82,6 +87,7 @@ namespace TramChanh.Cakes
             {
                 case CakeStationAction.Fill:
                     if (!ReferenceEquals(context.Hands.Current, _cup)) { reason = "cake.cup_not_held"; }
+                    else if (Current == null && _readyGate != null && _readyGate.Occupied(ItemKind.Cake)) { reason = "ready.slot_full"; }
                     else if (Current == null && !_tickets.HasPending(ItemKind.Cake)) { reason = "stall.no_ticket.cake"; }
                     else if (Current != null && Current.State != CakeState.Waiting && Current.State != CakeState.BatterMeasured) { reason = "cake.already_poured"; }
                     break;
@@ -131,9 +137,11 @@ namespace TramChanh.Cakes
                 Current = new CakePreparation(claim.Value, _tickets, recipe); claimed = true;
             }
             float ml = Mathf.Min(_cup.Definition.CapacityMl, Current.Measurement.MeasuredMl + _cup.Definition.FillRateMlPerSecond * heldSeconds);
+            CakeState before = Current.State;
             Result result = Current.Measure(ml);
             if (!result.IsSuccess && claimed) { _tickets.Release(Current.BoundItem); Current = null; }
-            if (result.IsSuccess) { _events.Publish(new BatterMeasured(Current.PreparationId, Current.Measurement)); PublishStep(); }
+            // Every measure/top-up is reported; a step completes only when the state changes (no repeat on top-up).
+            if (result.IsSuccess) { _events.Publish(new BatterMeasured(Current.PreparationId, Current.Measurement)); if (Current.State != before) { PublishStep(); } }
             return result;
         }
         internal void EmptyMeasurement()
@@ -154,6 +162,7 @@ namespace TramChanh.Cakes
             Advance(); InteractionQuery query = Query(context, action, sauce);
             if (!query.Availability.IsAvailable) { context.Events.Publish(new ActionBlocked(id, query.BlockedReasonKey)); return; }
             Result result = Result.Success();
+            CakeState? before = Current?.State;
             switch (action)
             {
                 case CakeStationAction.Fill: return;
@@ -195,7 +204,8 @@ namespace TramChanh.Cakes
             if (!result.IsSuccess) { context.Events.Publish(new ActionBlocked(id, result.ReasonKey)); }
             else if (Current != null)
             {
-                CurrentItem?.Apply(); PublishStep();
+                // Lid open/close without a cake transition is not a workflow step.
+                CurrentItem?.Apply(); if (Current.State != before) { PublishStep(); }
                 if (Current.State == CakeState.Wrapped) { Current = null; CurrentItem = null; }
             }
             Advance();
