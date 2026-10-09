@@ -36,15 +36,15 @@ Last refreshed: 2026-10-09 (polish wave started)
 
 | Id | Agent | Branch | Owned files | Depends on | PR | Status |
 |---|---|---|---|---|---|---|
-| MAIN-001 | CLAUDE-01 lead / CLAUDE-05 QA | `wave/MAIN-001-integration` | `Scripts/Core/Bootstrap/**`, `Scenes/Gameplay/SCN_TramChanh_Main.unity`, `Scripts/Editor/Placeholders/TramChanhMainSceneBuilder.cs`, `Tests/PlayMode/Integration/TramChanhMain*` | #16, #17, #18, #19, MAIN-002/003/004 merged into the wave | #22 (draft) | All agent work merged (head 248eac1); blocked only on Unity validation on the Mac |
+| MAIN-001 | CLAUDE-01 lead / CLAUDE-05 QA | `wave/MAIN-001-integration` | `Scripts/Core/Bootstrap/**`, `Scenes/Gameplay/SCN_TramChanh_Main.unity`, `Scripts/Editor/Placeholders/TramChanhMainSceneBuilder.cs`, `Tests/PlayMode/Integration/TramChanhMain*` | #16, #17, #18, #19, MAIN-002/003/004 merged into the wave | #22 (draft) | All agent work merged (head 7dad5e3); blocked only on Unity validation on the Mac |
 | MAIN-002 | CLAUDE-02 drink | `feature/MAIN-002-drink-workflow` | `Scripts/Drinks/**`, `Tests/*/Drinks/**` | MAIN-001 base | via #22 | Done (c7fbf68): prompt fix + Ready-slot gate, 69/69 harness |
 | MAIN-003 | CLAUDE-03 cake | `feature/MAIN-003-cake-workflow` | `Scripts/Cakes/**`, `Tests/*/Cakes/**` | MAIN-001 base, PR #16 review | via #22 | Done (4c76d50): PR #16 F1–F4 fixed, 28/28 harness |
 | MAIN-004 | CLAUDE-04 lobby/orders | `feature/MAIN-004-lobby-orders` | `Scripts/Orders/**`, `Scripts/Lobby/**`, `Scripts/UI/Orders/**`, `Scripts/Customers/**`, matching EditMode tests | MAIN-001 base | via #22 | Done (f950ff3): mixed-order regressions, no prod change |
-| MAIN-101 | CLAUDE-01 main scene | `wave/MAIN-001-integration` | bootstrap, `SCN_TramChanh_Main`, `PF_Placeholder_VehiclePoint` collider, `DrinkWaveSceneBuilder` vehicle trigger | — | #22 | In progress: vehicle point made aimable (180b73e); scene wiring audit |
-| MAIN-102 | CLAUDE-02 reliability | `feature/MAIN-102-reliability` | `Scripts/{Drinks,Cakes,Orders,Lobby,Stall/Runtime}/**` + their tests | wave head 248eac1 | via #22 | In progress: 15 deadlock scenarios, drink discard, tea rack restock |
-| MAIN-103 | CLAUDE-03 player UX | `feature/MAIN-103-player-ux` | `Scripts/UI/**` (C# only), `Tests/EditMode/UI/**`, `SO_PromptText_TramChanhMain.asset` | wave head 248eac1 | via #22 | In progress: held-item/active-order panels, full vi/en key coverage |
-| MAIN-104 | CLAUDE-04 art contracts | `feature/MAIN-104-art-contracts` | `Docs/Coordination/ART_INTEGRATION_HANDOFF.md`, `Automation/art_contract_audit.py` | — | via #22 | In progress (docs + read-only audit; no prefab/mesh edits) |
-| MAIN-105 | CLAUDE-05 QA | `feature/MAIN-105-qa-validation` | `Scripts/Editor/QA/**`, `Automation/unity_validate.sh`, `Automation/static_preflight.py`, `Docs/QA/**` | — | via #22 | In progress: test inventory, Editor QA menu, Mac batch validation |
+| MAIN-101 | CLAUDE-01 main scene | `wave/MAIN-001-integration` | bootstrap, `SCN_TramChanh_Main`, `PF_Placeholder_VehiclePoint` collider, `DrinkWaveSceneBuilder` vehicle trigger | — | #22 | Done: vehicle trigger, cake InteractableRefs, HUD wiring, raycast reach tests (head 7dad5e3) |
+| MAIN-102 | CLAUDE-02 reliability | `feature/MAIN-102-reliability` | `Scripts/{Drinks,Cakes,Orders,Lobby,Stall/Runtime}/**` + their tests | wave head 248eac1 | via #22 | Done (c04f502): drink discard, rack restock, cup return, deadlock model check |
+| MAIN-103 | CLAUDE-03 player UX | `feature/MAIN-103-player-ux` | `Scripts/UI/**` (C# only), `Tests/EditMode/UI/**`, `SO_PromptText_TramChanhMain.asset` | wave head 248eac1 | via #22 | Done (a682746): HUD panels, 202/202 keys vi/en |
+| MAIN-104 | CLAUDE-04 art contracts | `feature/MAIN-104-art-contracts` | `Docs/Coordination/ART_INTEGRATION_HANDOFF.md`, `Automation/art_contract_audit.py` | — | via #22 | Done (20788fe): handoff posted on #20; audit 0 FAIL |
+| MAIN-105 | CLAUDE-05 QA | `feature/MAIN-105-qa-validation` | `Scripts/Editor/QA/**`, `Automation/unity_validate.sh`, `Automation/static_preflight.py`, `Docs/QA/**` | — | via #22 | Done (bf5731c): QA menu, unity_validate.sh, static preflight PASS |
 | ART-* | Antigravity | to be announced on #20 | art folders only | anchor contract above | — | Not started |
 
 ## Pending source PRs
