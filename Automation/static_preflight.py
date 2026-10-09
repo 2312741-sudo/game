@@ -146,12 +146,25 @@ def load_allow(path):
     return allow
 
 
+def git_tracked(root):
+    """Set of repo-relative paths Git tracks, or None when Git is unavailable."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {p.decode("utf-8") for p in out.split(b"\0") if p}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", default=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     ap.add_argument("--scope", default="Assets/TramChanh", help="folder whose .unity/.prefab/.asset files are scanned")
     ap.add_argument("--allow-external", help="file of GUIDs known to live in registry packages")
     ap.add_argument("--json", help="also write machine-readable findings here")
+    ap.add_argument("--include-untracked", action="store_true",
+                    help="also scan files Git does not track (default: tracked only, so locally generated "
+                         "settings such as the URP asset from Apply Project Settings do not fail the check)")
     a = ap.parse_args()
     root = os.path.abspath(a.root)
     scope = os.path.join(root, a.scope)
@@ -176,6 +189,14 @@ def main():
         for fn in sorted(fns):
             if fn.endswith(SCANNED_EXT):
                 targets.append(os.path.join(dp, fn))
+
+    if not a.include_untracked:
+        tracked = git_tracked(root)
+        if tracked is not None:
+            skipped = [t for t in targets if rel(root, t) not in tracked]
+            targets = [t for t in targets if rel(root, t) in tracked]
+            for t in skipped:
+                infos.append("UNTRACKED_SKIPPED %s (use --include-untracked to scan it)" % rel(root, t))
 
     parsed_cache = {}
 
