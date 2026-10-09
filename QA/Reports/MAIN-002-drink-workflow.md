@@ -69,3 +69,35 @@ No changes to Stall, Orders, Interaction, Lobby, bootstrap, scenes, prefabs or a
   - `TC_INT_007` zero-allocation assertions were checked with the CLR `GC.GetAllocatedBytesForCurrentThread`, not Unity's profiler.
 - **Drinks compile check.** Drinks was compiled against only its asmdef references (Core, Content, Interaction, Orders): succeeded.
 - **Not run.** PlayMode tests (`TeaRackPickupPlayModeTests`, `DrinkWaveFlowTests`, `ReadyPresentationTests`) and asset/scene tests were not run. Root should run full Unity EditMode and PlayMode on this branch.
+
+## Follow-up: Ready-slot gate on the tea rack (lead request)
+
+**Soft-lock.** The drink Ready slot has capacity 1. It can hold order A's drink while A waits for its cake. If the player then takes a bag, the bag claims order B's drink. Placing that bag fails with `ready.slot_full`, pickup fails with `hands.full`, and a bag cannot be put down.
+
+**Fix.** The change is additive. `TeaRackController` gained this overload:
+
+`Initialize(IStallTicketQueue, IIdGenerator, IEventBus, IReadyShelfPlacement readyGate)`
+
+- The gate must not be null, otherwise the overload throws `ArgumentNullException`.
+- While `readyGate.Occupied(ItemKind.Drink)` is true, `Query` returns Blocked `ready.slot_full`.
+- `Execute` runs `Query` first, so it publishes `ActionBlocked` and never reaches `TeaRackInventory.TryTakeBag` or `ClaimNext`.
+- Reasons checked earlier keep priority: role, pause, `hands.full`, `drink.rack.empty`, `stall.no_ticket.drink`.
+- The 3-argument overload is unchanged and has no gate.
+
+**Lead action.** Switch the main bootstrap (`Core/Bootstrap/DrinkWaveBootstrap.cs`, outside drink ownership) to the 4-argument overload and pass the `ReadyShelf`.
+
+**Localization.** `ready.slot_full` is present in `SO_PromptText_DrinkWave.asset`. It is **missing** from `SO_PromptText_TeaPickupTest.asset`. That asset is not edited here. The tea-pickup test scene uses the ungated 3-argument path, so it never shows this reason unless that scene is switched to the gate.
+
+**Tests.** New file `Tests/EditMode/Drinks/TeaRackReadyGateTests.cs`. It uses the real `TeaRackController` (instantiated bags), `OrderService`, `StallTicketQueue` and `ReadyShelf`, and has 4 tests:
+
+- Blocked while occupied, with no ticket claimed. After two Execute calls: hands empty, stock unchanged, B's item still Pending, B still SentToStall.
+- Available again after the Ready order is picked up. Before pickup it is still blocked once A is Ready, and afterwards Execute claims B.
+- The 3-argument rack keeps its old behaviour.
+- A null gate throws, and earlier reasons keep priority.
+
+**Harness results.**
+
+- **69/69 passed.** Same harness as above, whose `Object.Instantiate` stand-in now clones hierarchies.
+- **Mutation check:** with the gate check removed, the result is 67/69 and both gate tests fail.
+- **Drinks-only asmdef compile:** succeeded.
+- **Unity:** not run.

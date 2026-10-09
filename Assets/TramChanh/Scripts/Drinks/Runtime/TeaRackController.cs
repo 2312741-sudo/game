@@ -19,12 +19,33 @@ namespace TramChanh.Drinks.Runtime
         private TeaRackInventory _inventory;
         private TeaBagItem[] _bags;
         private IStallTicketQueue _tickets;
+        private IReadyShelfPlacement _readyGate;
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
         public int Stock => _inventory?.Stock ?? 0;
         public int Capacity => _inventory?.Capacity ?? 0;
 
         public void Initialize(IStallTicketQueue tickets, IIdGenerator ids, IEventBus events)
+        {
+            InitializeStock(tickets, ids, events);
+        }
+
+        /// <summary>
+        /// Same as the 3-argument overload, plus a Ready-slot gate: while the drink Ready slot is occupied the
+        /// rack refuses to hand out a bag (and never claims a ticket), because a finished drink could not be
+        /// placed and a held bag cannot be put down.
+        /// </summary>
+        public void Initialize(IStallTicketQueue tickets, IIdGenerator ids, IEventBus events, IReadyShelfPlacement readyGate)
+        {
+            if (readyGate == null)
+            {
+                throw new ArgumentNullException(nameof(readyGate));
+            }
+            InitializeStock(tickets, ids, events);
+            _readyGate = readyGate;
+        }
+
+        private void InitializeStock(IStallTicketQueue tickets, IIdGenerator ids, IEventBus events)
         {
             if (_inventory != null)
             {
@@ -71,6 +92,10 @@ namespace TramChanh.Drinks.Runtime
                 if (available.IsAvailable && (_tickets == null || !_tickets.HasPending(ItemKind.Drink)))
                 {
                     available = Availability.Blocked("stall.no_ticket.drink");
+                }
+                if (available.IsAvailable && _readyGate != null && _readyGate.Occupied(ItemKind.Drink))
+                {
+                    available = Availability.Blocked("ready.slot_full");
                 }
             }
             return new InteractionQuery(available, "drink.rack.take_bag");
