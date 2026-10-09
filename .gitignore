@@ -54,4 +54,5 @@ ArtSource/**/__pycache__/
 # Visual validation scratch outputs
 *.slnx
 test-results.xml
-unity_test.log
+*.log
+*.xml

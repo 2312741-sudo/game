@@ -40,6 +40,29 @@ namespace TramChanh.EditorTools
             Debug.Log("[TramChanh] Cake Equipment Reconstruction Complete!");
         }
 
+        public static Mesh LoadMesh(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            Mesh direct = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (direct != null) return direct;
+
+            var subAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+            foreach (var sub in subAssets)
+            {
+                if (sub is Mesh m) return m;
+            }
+
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model != null)
+            {
+                MeshFilter mf = model.GetComponentInChildren<MeshFilter>();
+                if (mf != null && mf.sharedMesh != null) return mf.sharedMesh;
+            }
+
+            Debug.LogError("[TramChanh] Failed to load mesh from path: " + path);
+            return null;
+        }
+
         public static void CreatePbrMaterials()
         {
             EnsureFolder(MaterialsFolder);
@@ -63,7 +86,7 @@ namespace TramChanh.EditorTools
             Material matDisplay = LoadOrCreateMaterial("MAT_Grill_Display_Digital", urpLit);
             Texture2D dispTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Grill_Display_BaseColor.png");
             Texture2D dispEm = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Grill_Display_Emission.png");
-            if (dispTex != null) matDisplay.SetTexture("_BaseColorMap", dispTex);
+            if (dispTex != null) matDisplay.SetTexture("_BaseMap", dispTex);
             if (dispEm != null)
             {
                 matDisplay.SetTexture("_EmissionMap", dispEm);
@@ -109,7 +132,7 @@ namespace TramChanh.EditorTools
             // 9. Toasted Rolled Cake (Bánh Lăn Nướng)
             Material matCake = LoadOrCreateMaterial("MAT_RollCake_Baked", urpLit);
             Texture2D cakeTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_RollCake_BaseColor.png");
-            if (cakeTex != null) matCake.SetTexture("_BaseColorMap", cakeTex);
+            if (cakeTex != null) matCake.SetTexture("_BaseMap", cakeTex);
             matCake.SetColor("_BaseColor", new Color(0.92f, 0.70f, 0.40f));
             matCake.SetFloat("_Smoothness", 0.25f);
             EditorUtility.SetDirty(matCake);
@@ -117,7 +140,7 @@ namespace TramChanh.EditorTools
             // 10. Kraft Wrapping Paper
             Material matKraft = LoadOrCreateMaterial("MAT_KraftPaper_Wrapper", urpLit);
             Texture2D kraftTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_KraftPaper_BaseColor.png");
-            if (kraftTex != null) matKraft.SetTexture("_BaseColorMap", kraftTex);
+            if (kraftTex != null) matKraft.SetTexture("_BaseMap", kraftTex);
             matKraft.SetColor("_BaseColor", new Color(0.78f, 0.62f, 0.44f));
             matKraft.SetFloat("_Smoothness", 0.18f);
             EditorUtility.SetDirty(matKraft);
@@ -133,8 +156,8 @@ namespace TramChanh.EditorTools
             string prefabPath = AssetDatabase.GetAssetPath(prefab);
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
 
-            Mesh baseMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_Grill_Elmich_Base.obj");
-            Mesh lidMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{ModelsFolder}/SM_Grill_Elmich_Lid.obj");
+            Mesh baseMesh = LoadMesh($"{ModelsFolder}/SM_Grill_Elmich_Base.obj");
+            Mesh lidMesh = LoadMesh($"{ModelsFolder}/SM_Grill_Elmich_Lid.obj");
 
             Material matBody = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Grill_Elmich_Black.mat");
             Material matPlate = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Grill_Plate_Ribbed.mat");
@@ -180,22 +203,22 @@ namespace TramChanh.EditorTools
             EnsureFolder(Path.GetDirectoryName(CupPrefabPath));
 
             // 1. Measuring Cup 500ml
-            Mesh cupMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{PropsModelsFolder}/SM_BatterMeasureCup_500ml.obj");
+            Mesh cupMesh = LoadMesh($"{PropsModelsFolder}/SM_BatterMeasureCup_500ml.obj");
             Material cupMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_MeasuringCup_Translucent.mat");
             CreateOrUpdatePrefab(CupPrefabPath, "PF_BatterMeasureCup_500ml", cupMesh, cupMat, new Vector3(0.10f, 0.14f, 0.10f));
 
             // 2. Sauce Bag
-            Mesh sauceMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{PropsModelsFolder}/SM_SauceBag.obj");
+            Mesh sauceMesh = LoadMesh($"{PropsModelsFolder}/SM_SauceBag.obj");
             Material sauceMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Sauce_Brown.mat");
             CreateOrUpdatePrefab(SauceBagPrefabPath, "PF_SauceBag", sauceMesh, sauceMat, new Vector3(0.08f, 0.22f, 0.08f));
 
             // 3. Spatula
-            Mesh spatMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{PropsModelsFolder}/SM_Spatula.obj");
+            Mesh spatMesh = LoadMesh($"{PropsModelsFolder}/SM_Spatula.obj");
             Material steelMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Grill_StainlessAccents.mat");
             CreateOrUpdatePrefab(SpatulaPrefabPath, "PF_Spatula", spatMesh, steelMat, new Vector3(0.04f, 0.05f, 0.32f));
 
             // 4. Scissors
-            Mesh scisMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{PropsModelsFolder}/SM_Scissors.obj");
+            Mesh scisMesh = LoadMesh($"{PropsModelsFolder}/SM_Scissors.obj");
             Material redMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Scissors_Red.mat");
             CreateOrUpdatePrefab(ScissorsPrefabPath, "PF_Scissors", scisMesh, redMat, new Vector3(0.08f, 0.02f, 0.21f));
         }
@@ -205,8 +228,8 @@ namespace TramChanh.EditorTools
             EnsureFolder(Path.GetDirectoryName(RollCakePrefabPath));
 
             // Baked Roll Cake with Kraft Paper wrapper
-            Mesh cakeMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{FoodModelsFolder}/SM_RollCake_Baked.obj");
-            Mesh wrapMesh = AssetDatabase.LoadAssetAtPath<Mesh>($"{FoodModelsFolder}/SM_RollCake_Wrapper.obj");
+            Mesh cakeMesh = LoadMesh($"{FoodModelsFolder}/SM_RollCake_Baked.obj");
+            Mesh wrapMesh = LoadMesh($"{FoodModelsFolder}/SM_RollCake_Wrapper.obj");
             Material cakeMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_RollCake_Baked.mat");
             Material wrapMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_KraftPaper_Wrapper.mat");
 
@@ -298,49 +321,40 @@ namespace TramChanh.EditorTools
             // Countertop stage
             var stage = GameObject.CreatePrimitive(PrimitiveType.Cube);
             stage.name = "Countertop_Stage";
-            stage.transform.position = new Vector3(0f, -0.02f, 0f);
-            stage.transform.localScale = new Vector3(2.0f, 0.04f, 1.0f);
+            stage.transform.position = new Vector3(0f, -0.05f, 0f);
+            stage.transform.localScale = new Vector3(1.4f, 0.1f, 0.9f);
+            Material woodMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/TramChanh/Art/Materials/MAT_Stall_WoodCounter.mat");
+            if (woodMat != null) stage.GetComponent<Renderer>().sharedMaterial = woodMat;
 
             // Instantiate Grill
             GameObject grillPf = AssetDatabase.LoadAssetAtPath<GameObject>(GrillPrefabPath);
             if (grillPf != null)
             {
                 var grill = (GameObject)PrefabUtility.InstantiatePrefab(grillPf);
-                grill.transform.position = new Vector3(-0.25f, 0f, 0.05f);
+                grill.transform.position = new Vector3(-0.25f, 0f, 0f);
+                grill.transform.rotation = Quaternion.Euler(0f, -15f, 0f);
             }
 
-            // Instantiate Tools & Baked Cake
-            GameObject cupPf = AssetDatabase.LoadAssetAtPath<GameObject>(CupPrefabPath);
-            if (cupPf != null)
-            {
-                var cup = (GameObject)PrefabUtility.InstantiatePrefab(cupPf);
-                cup.transform.position = new Vector3(0.18f, 0f, 0.15f);
-            }
-
-            GameObject cakePf = AssetDatabase.LoadAssetAtPath<GameObject>(RollCakePrefabPath);
-            if (cakePf != null)
-            {
-                var cake = (GameObject)PrefabUtility.InstantiatePrefab(cakePf);
-                cake.transform.position = new Vector3(0.32f, 0f, -0.05f);
-                cake.transform.rotation = Quaternion.Euler(0f, 30f, 0f);
-            }
-
-            GameObject spatPf = AssetDatabase.LoadAssetAtPath<GameObject>(SpatulaPrefabPath);
-            if (spatPf != null)
-            {
-                var spat = (GameObject)PrefabUtility.InstantiatePrefab(spatPf);
-                spat.transform.position = new Vector3(0.15f, 0f, -0.15f);
-            }
-
-            GameObject scisPf = AssetDatabase.LoadAssetAtPath<GameObject>(ScissorsPrefabPath);
-            if (scisPf != null)
-            {
-                var scis = (GameObject)PrefabUtility.InstantiatePrefab(scisPf);
-                scis.transform.position = new Vector3(0.35f, 0f, -0.22f);
-            }
+            // Instantiate Accessories
+            InstantiateAt(CupPrefabPath, new Vector3(0.25f, 0f, -0.15f), Quaternion.Euler(0f, 25f, 0f));
+            InstantiateAt(SauceBagPrefabPath, new Vector3(0.42f, 0f, 0.10f), Quaternion.Euler(0f, -40f, 0f));
+            InstantiateAt(SpatulaPrefabPath, new Vector3(0.12f, 0f, 0.15f), Quaternion.Euler(0f, 65f, 0f));
+            InstantiateAt(ScissorsPrefabPath, new Vector3(0.35f, 0f, -0.05f), Quaternion.Euler(0f, 15f, 0f));
+            InstantiateAt(RollCakePrefabPath, new Vector3(-0.25f, 0.05f, 0f), Quaternion.Euler(0f, -15f, 0f));
 
             EditorSceneManager.SaveScene(scene, PreviewScenePath);
             Debug.Log("[TramChanh] Saved Cake Preview Scene: " + PreviewScenePath);
+        }
+
+        private static void InstantiateAt(string prefabPath, Vector3 pos, Quaternion rot)
+        {
+            var pf = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (pf != null)
+            {
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(pf);
+                instance.transform.position = pos;
+                instance.transform.rotation = rot;
+            }
         }
 
         public static void CaptureScreenshots()
@@ -350,13 +364,15 @@ namespace TramChanh.EditorTools
 
             var camObj = new GameObject("QACamera");
             var cam = camObj.AddComponent<Camera>();
-            cam.fieldOfView = 45f;
+            cam.fieldOfView = 42f;
             cam.nearClipPlane = 0.05f;
-            cam.farClipPlane = 50f;
+            cam.farClipPlane = 20f;
+            cam.clearFlags = CameraClearFlags.Color;
+            cam.backgroundColor = new Color(0.04f, 0.05f, 0.07f);
 
-            // 1. Close-up on Elmich Contact Grill
-            camObj.transform.position = new Vector3(-0.25f, 0.32f, -0.42f);
-            camObj.transform.rotation = Quaternion.Euler(32f, 0f, 0f);
+            // 1. Close-up on Elmich Grill & Spatula
+            camObj.transform.position = new Vector3(-0.20f, 0.35f, -0.55f);
+            camObj.transform.rotation = Quaternion.Euler(28f, 0f, 0f);
             CaptureCameraToFile(cam, $"{ScreenshotsFolder}/Cake_Grill_Detail.png", 1920, 1080);
 
             // 2. Overview of Cake Preparation Station
@@ -369,7 +385,7 @@ namespace TramChanh.EditorTools
 
         private static void CaptureCameraToFile(Camera cam, string filePath, int width, int height)
         {
-            RenderTexture rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
+            RenderTexture rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
             rt.antiAliasing = 4;
             cam.targetTexture = rt;
             cam.Render();

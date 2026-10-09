@@ -124,7 +124,7 @@ class ObjMesh:
             for vt in self.uvs:
                 f.write(f"vt {vt[0]:.6f} {vt[1]:.6f}\n")
             for vn in self.normals:
-                f.write(f"vn {vn[0]:.6f} {vn[1]:.6f}\n")
+                f.write(f"vn {vn[0]:.6f} {vn[1]:.6f} {vn[2]:.6f}\n")
             f.write("s 1\n")
             for face in self.faces:
                 f.write("f " + " ".join([f"{v}/{vt}/{vn}" for v, vt, vn in face]) + "\n")
