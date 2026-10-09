@@ -6,9 +6,9 @@ Bản đầy đủ (tiếng Anh) nằm ở `Docs/QA/PLAYTEST_MAIN_LOOP.md`.
 
 ## Chuẩn bị (khoảng 5 phút)
 
-1. Chỉ mở thư mục **`/Users/nthtam/Lưu trữ/game-QA-22`** trong Unity Hub, bằng Unity **6000.6.0f1**.
+1. Chỉ mở thư mục **`$HOME/Lưu trữ/game-QA-22`** trong Unity Hub, bằng Unity **6000.6.0f1**.
    Không mở `Lưu trữ/game`, vì Antigravity đang làm việc ở đó.
-2. Trong Terminal, gõ `git -C "/Users/nthtam/Lưu trữ/game-QA-22" rev-parse --short HEAD` và ghi lại mã commit vào báo cáo.
+2. Trong Terminal, gõ `git -C "$HOME/Lưu trữ/game-QA-22" rev-parse --short HEAD` và ghi lại mã commit vào báo cáo.
 3. Trong Unity, chọn menu **Tram Chanh ▸ Scenes ▸ Open Main Game**.
 4. Mở **Window ▸ General ▸ Console** và bấm **Clear**.
 5. Bấm **Play**, rồi click một lần vào cửa sổ Game để khóa chuột.
@@ -78,7 +78,7 @@ Màn hình có ba vùng:
 
 - [ ] Bấm dừng Play. Ghi lại **mọi dòng đỏ** trong Console.
 - [ ] Chụp màn hình cửa sổ Game (`Cmd+Shift+4`, nhấn Space, click vào cửa sổ Unity) ở các bước 1, 2, 3, 4, 7. Lưu vào `~/TramChanh-validation/choi-thu/`.
-- [ ] Chạy `git -C "/Users/nthtam/Lưu trữ/game-QA-22" status --short`. Nếu Unity tự sửa file `.mat`, chỉ ghi lại tên file, không commit.
+- [ ] Chạy `git -C "$HOME/Lưu trữ/game-QA-22" status --short`. Nếu Unity tự sửa file `.mat`, chỉ ghi lại tên file, không commit.
 
 ## Mẫu báo cáo (gửi lại cho Claude để đăng lên PR #22 và Issue #20)
 
