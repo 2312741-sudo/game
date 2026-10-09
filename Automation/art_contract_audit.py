@@ -9,6 +9,7 @@ prefab variants, and checks the gameplay contract that art swaps must preserve:
   * collider layers (8 Environment, 9 Interactable, 10 Player, 11 NPC, 12 HeldItem)
   * every project MonoBehaviour script GUID resolves to an existing .cs file
   * serialized gameplay references still point at the expected child
+  * optional TABLE_01..TABLE_10 environment anchors (TABLE_ANCHOR_CONTRACT.md)
 
 Exit code 0 = no FAIL (WARN lines are known gaps), 1 = at least one FAIL, 2 = usage error.
 
@@ -959,6 +960,57 @@ def environment_checks(audit, label, prefab):
         audit.add(W, label, "Camera/AudioListener in environment (bootstrap disables them at runtime): %s" % cams)
 
 
+TABLE_COUNT = 10
+TABLE_EXACT = re.compile(r"^TABLE_(0[1-9]|10)$")
+TABLE_LIKE = re.compile(r"^table[ _-]?\d+$", re.IGNORECASE)
+
+
+def table_anchor_checks(audit, label, prefab):
+    """TABLES-03: optional TABLE_01..TABLE_10 dine-in anchors (Docs/Coordination/TABLE_ANCHOR_CONTRACT.md).
+
+    Missing anchors are a WARN (the bootstrap uses TablePoint/CakeTablePoint and its fallback layout).
+    Present anchors must be exact, unique and direct children of the root or of a single 'CustomerArea' child;
+    a missing 'Seat' child is a WARN; gameplay components on table furniture are a FAIL.
+    """
+    root = prefab.root
+    found = {}
+    for node in root.walk():
+        if node is root:
+            continue
+        if TABLE_EXACT.match(node.name):
+            found.setdefault(node.name, []).append(node)
+        elif TABLE_LIKE.match(node.name):
+            audit.add(F, label, "'%s' looks like a table anchor but is misnamed (use TABLE_01..TABLE_%02d: two digits, upper case)" % (node.path(root), TABLE_COUNT))
+    areas = [c for c in root.children if c.name == "CustomerArea"]
+    if len(areas) > 1:
+        audit.add(F, label, "%d direct 'CustomerArea' children; table anchors need a single CustomerArea" % len(areas))
+    missing = []
+    for number in range(1, TABLE_COUNT + 1):
+        name = "TABLE_%02d" % number
+        nodes = found.get(name, [])
+        if not nodes:
+            missing.append(name)
+            continue
+        if len(nodes) > 1:
+            audit.add(F, label, "table anchor '%s' is duplicated: %s" % (name, ", ".join(n.path(root) for n in nodes)))
+            continue
+        node = nodes[0]
+        placed = node.parent is root or (len(areas) == 1 and node.parent is areas[0])
+        audit.add("OK" if placed else F, label, "table anchor '%s' %s" % (node.path(root), "placed under the root/CustomerArea" if placed else "must be a direct child of the environment root or of its single CustomerArea child"))
+        if not any(c.name == "Seat" for c in node.children):
+            audit.add(W, label, "table anchor '%s' has no 'Seat' child (bootstrap uses its default seat offset)" % node.path(root))
+        gameplay = [n.path(root) for n in node.walk() for c in n.components if c.label in ("TableOrderPoint", "VehicleOrderPoint", "InteractableRef")]
+        if gameplay:
+            audit.add(F, label, "table anchor '%s' carries gameplay components %s; furniture must stay visual (the bootstrap adds the point)" % (name, gameplay))
+        bad_layers = [n.path(root) for n in node.walk() if n.layer != 8 and any(c.type in COLLIDERS and str(c.data.get("m_IsTrigger", "0")) != "1" for c in n.components)]
+        if bad_layers:
+            audit.add(W, label, "table anchor '%s' has solid colliders off the Environment layer: %s" % (name, bad_layers))
+    if len(missing) == TABLE_COUNT:
+        audit.add(W, label, "no TABLE_01..TABLE_%02d anchors (optional): bootstrap uses TablePoint/CakeTablePoint + fallback layout" % TABLE_COUNT)
+    elif missing:
+        audit.add(W, label, "table anchors missing (fallback layout used for them): %s" % ", ".join(missing))
+
+
 def cake_station_checks(audit, label, prefab):
     points = [(n, c) for n in prefab.root.walk() for c in n.components if c.label == "CakeStationPoint"]
     actions = sorted(int(_f(c.data.get("_action"), 0)) for _, c in points)
@@ -1186,7 +1238,7 @@ CONTRACTS = [
         nodes=[("Anchors/InteractionPoint", F, "TramChanhMainBootstrap Find(\"Anchors/InteractionPoint\")"), ("Anchors/CustomerWaitPoint", W, "spec anchor (missing today)")],
         components=[(".", "VehicleOrderPoint", F), (".", "InteractableRef", F)],
         refs=[(".", "InteractableRef", "_behaviour", ".")], focus="any", visual_root="Visual", custom=[vehicle_checks])),
-    ("PF_AccelRoadsideEnvironment", P + "ACCEL01/Environment/PF_AccelRoadsideEnvironment.prefab", C(custom=[environment_checks])),
+    ("PF_AccelRoadsideEnvironment", P + "ACCEL01/Environment/PF_AccelRoadsideEnvironment.prefab", C(custom=[environment_checks, table_anchor_checks])),
     ("PF_Player", P + "NPC/PF_Player.prefab", C(
         nodes=[("PlayerCamera", F, "FirstPersonController._camera"), ("PlayerCamera/HandSocket", F, "parent of the scene-added HoldAnchor (tests)")],
         components=[(".", "CharacterController", F), (".", "PlayerInputReader", F), (".", "FirstPersonController", F), (".", "PlayerInteractor", F)],
