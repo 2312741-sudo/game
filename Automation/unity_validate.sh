@@ -124,7 +124,13 @@ if [ "$RUN_QA" -eq 1 ]; then
   say "Running $QA_METHOD (batch mode)..."
   "$UNITY" -batchmode -nographics -quit -projectPath "$ROOT" -executeMethod "$QA_METHOD" -logFile "$OUT/qa_runall.log"
   rc=$?
-  if [ -f "$ROOT/Temp/TramChanhQA/report.txt" ]; then cp "$ROOT/Temp/TramChanhQA/report.txt" "$OUT/qa_report.txt"; fi
+  if [ -f "$ROOT/Temp/TramChanhQA/report.txt" ]; then
+    cp "$ROOT/Temp/TramChanhQA/report.txt" "$OUT/qa_report.txt"
+  else
+    # Unity can delete Temp/ when a batch run quits; the same report is printed to the log.
+    sed -n '/^Tram Chanh QA - /,/^SUMMARY:/p' "$OUT/qa_runall.log" > "$OUT/qa_report.txt"
+    [ -s "$OUT/qa_report.txt" ] || rm -f "$OUT/qa_report.txt"
+  fi
   if [ "$rc" -eq 0 ]; then
     note "QA menu RunAllBatch: exit 0 (no validator errors)"
   else

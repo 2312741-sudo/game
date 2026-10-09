@@ -321,7 +321,7 @@ namespace TramChanh.Tests.EditMode.UI
         {
             foreach (var reference in typeof(HudKeys).Assembly.GetReferencedAssemblies())
             {
-                Assert.That(reference.Name, Is.Not.AnyOf("TramChanh.Drinks", "TramChanh.Cakes", "TramChanh.Lobby", "TramChanh.Stall"));
+                Assert.That(new[] { "TramChanh.Drinks", "TramChanh.Cakes", "TramChanh.Lobby", "TramChanh.Stall" }, Has.No.Member(reference.Name));
             }
         }
 

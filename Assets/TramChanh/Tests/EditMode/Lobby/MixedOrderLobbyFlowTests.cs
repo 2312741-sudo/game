@@ -135,7 +135,7 @@ namespace TramChanh.Tests.EditMode.Lobby
             Assert.That(_entry.Items, Is.EqualTo(Mixed));
             Assert.That(_entry.Enter(), Is.True);
             Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.Entered));
-            Assert.That(_queue.Tickets, Does.Not.Contain(id));
+            Assert.That(_queue.Tickets, Has.No.Member(id));
             Assert.That(_entry.Send(), Is.True);
             Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.SentToStall));
             Assert.That(_entry.IsOpen, Is.False);

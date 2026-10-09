@@ -95,7 +95,10 @@ namespace TramChanh.Drinks.Runtime
         /// bag; a bag still held or in preparation keeps its slot. No ticket is claimed and no event is published.
         /// The previous bag object is not touched: it belongs to the shelf, a served bundle, or was destroyed.
         /// </summary>
-        public int RestockEmptySlots() => _inventory == null ? 0 : _inventory.RestockWhenEmpty(SpawnBag);
+        public int RestockEmptySlots() => _inventory == null ? 0 : _inventory.RestockWhenEmpty(_spawnBag ??= SpawnBag);
+
+        // Query runs every frame; a cached delegate keeps the method-group conversion from allocating each call.
+        private Action<int> _spawnBag;
 
         public InteractionQuery Query(InteractionContext context)
         {
