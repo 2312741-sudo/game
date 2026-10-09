@@ -12,12 +12,19 @@ namespace TramChanh.Lobby
         [SerializeField] private int _id;
         [SerializeField] private Transform _interactionPoint;
         private IReadyShelfPickup _shelf;
+        private IOrderService _orders;
+        private IEventBus _events;
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
 
-        public void Initialize(IReadyShelfPickup shelf)
+        public void Initialize(IReadyShelfPickup shelf, IOrderService orders, IEventBus events)
         {
-            _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
+            if (shelf == null) { throw new ArgumentNullException(nameof(shelf)); }
+            if (orders == null) { throw new ArgumentNullException(nameof(orders)); }
+            if (events == null) { throw new ArgumentNullException(nameof(events)); }
+            _shelf = shelf;
+            _orders = orders;
+            _events = events;
         }
         public InteractionQuery Query(InteractionContext context)
         {
@@ -57,10 +64,16 @@ namespace TramChanh.Lobby
             var reservation = new GameObject("ServedOrder");
             SceneManager.MoveGameObjectToScene(reservation, gameObject.scene);
             var bundle = reservation.AddComponent<ServedOrder>();
-            bundle.Initialize(orderId);
             bool committed = false;
             try
             {
+                bundle.Initialize(orderId);
+                bundle.BindDelivery(_orders, _events);
+                if (bundle == null || bundle.IsRetired)
+                {
+                    context.Events.Publish(new ActionBlocked(Id, "ready.no_complete_order"));
+                    return;
+                }
                 // Reserve only empty carrying space. Order/item events remain owned by shelf commit.
                 if (!context.Hands.TryPickUp(bundle) || !ReferenceEquals(context.Hands.Current, bundle))
                 {
@@ -78,6 +91,13 @@ namespace TramChanh.Lobby
                     context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
                     return;
                 }
+                // Shelf observers may fail or deliver the order before the reservation can adopt visuals.
+                if (bundle == null || bundle.IsRetired || !ReferenceEquals(context.Hands.Current, bundle) ||
+                    _orders.Get(orderId)?.Status != OrderStatus.PickedUpByLobby)
+                {
+                    context.Events.Publish(new ActionBlocked(Id, "ready.no_complete_order"));
+                    return;
+                }
                 bundle.Populate(result.Value);
                 committed = true;
             }
@@ -85,20 +105,7 @@ namespace TramChanh.Lobby
             {
                 if (!committed)
                 {
-                    if (ReferenceEquals(context.Hands.Current, bundle))
-                    {
-                        context.Hands.TryRelease();
-                    }
-                    reservation.transform.SetParent(null, true);
-                    reservation.SetActive(false);
-                    if (Application.isPlaying)
-                    {
-                        Destroy(reservation);
-                    }
-                    else
-                    {
-                        DestroyImmediate(reservation);
-                    }
+                    if (bundle != null) { bundle.ReleaseAndRetire(); }
                 }
             }
         }

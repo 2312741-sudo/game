@@ -96,7 +96,7 @@ namespace TramChanh.App
             DisableEquipment(anchors, StallAnchorId.WipeArea);
             foreach (TeaRackController rack in Station.GetComponentsInChildren<TeaRackController>(true)) { rack.Initialize(Tickets, _ids, _events); }
             foreach (ReadyCounterPoint ready in Station.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
-            foreach (ReadyOrderPickupPoint pickup in Station.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf); }
+            foreach (ReadyOrderPickupPoint pickup in Station.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
             GameObject table = Instantiate(_tablePointPrefab, _runtime.transform);
             table.transform.SetPositionAndRotation(originalTable.position, originalTable.rotation);
             originalTable.gameObject.SetActive(false);

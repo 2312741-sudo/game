@@ -3,7 +3,7 @@ using TramChanh.Core;
 
 namespace TramChanh.Orders
 {
-    internal sealed class Order : IReadOnlyOrder
+    internal sealed class Order : IReadOnlyOrder, IOrderDeliveryInfo
     {
         public OrderId Id { get; }
         public OrderOrigin Origin { get; }
@@ -15,6 +15,8 @@ namespace TramChanh.Orders
         public double SentAt { get; internal set; }
         public double StatusEnteredAt { get; internal set; }
         public FailureReason? FailureReason { get; internal set; }
+        public int DeliveryAttempts { get; internal set; }
+        public int QualityScore { get; internal set; }
         internal List<OrderItem> MutableItems { get; } = new List<OrderItem>();
 
         public Order(OrderId id, OrderOrigin origin, CustomerId customer, IReadOnlyList<ItemRequest> requested, double createdAt)
