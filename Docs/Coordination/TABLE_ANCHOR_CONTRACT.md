@@ -79,7 +79,7 @@ Antigravity does not edit `SCN_TramChanh_Main` or the bootstrap. Claude does not
 
 Resolution order per table: (1) env `TABLE_nn` (direct child, else deep search); (2) for 1 and 2 only, env `TablePoint` / `CakeTablePoint`; (3) the fallback below. Coordinates are local to the environment root, in metres, with rotation equal to the environment root's rotation.
 
-> Lead: values are copied from `TramChanhMainBootstrap._fallbackTablePositions` at `c7a5de6`. The field is serialized, so if `SCN_TramChanh_Main` ever overrides it, update this table.
+> Confirmed by the lead: `SCN_TramChanh_Main` does not serialize `_fallbackTablePositions`, so these code defaults are what the game uses. If the scene ever overrides the field, update this table in the same change.
 
 | Table | Source when no `TABLE_nn` | x | y | z |
 |---|---|---|---|---|
