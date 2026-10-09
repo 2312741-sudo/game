@@ -17,6 +17,20 @@ How to keep the Unity Editor on your Mac showing the same project that Codex, Cl
 
 `ProjectSettings/` (except `ProjectVersion.txt`) is not tracked. On open, `TramChanhProjectSetup` (an `[InitializeOnLoad]` script) applies layers, Linear colour space, the Input System setting and creates and assigns the URP asset. On the first open it logs "[TramChanh] Project setup applied"; wait for the import to finish before judging the lighting.
 
+## First time: get the script without touching your clone
+
+Your clone does not have the script yet. Copy it to a folder **outside** the repo and point it at your clone:
+
+```bash
+cd /path/to/your/clone
+git fetch origin chore/UNITY-LOCAL-SYNC
+git show origin/chore/UNITY-LOCAL-SYNC:Automation/unity_local_sync.sh > ~/unity_local_sync.sh
+export TRAMCHANH_PROJECT=/path/to/your/clone
+bash ~/unity_local_sync.sh diagnose
+```
+
+Once your clone is on a branch that contains it, `bash Automation/unity_local_sync.sh ...` works without the variable.
+
 ## Check what you have (read-only)
 
 ```bash
