@@ -23,7 +23,7 @@ Your clone does not have the script yet. Copy it to a folder **outside** the rep
 
 ```bash
 cd /path/to/your/clone
-git fetch origin chore/UNITY-LOCAL-SYNC
+git fetch origin +chore/UNITY-LOCAL-SYNC:refs/remotes/origin/chore/UNITY-LOCAL-SYNC
 git show origin/chore/UNITY-LOCAL-SYNC:Automation/unity_local_sync.sh > ~/unity_local_sync.sh
 export TRAMCHANH_PROJECT=/path/to/your/clone
 bash ~/unity_local_sync.sh diagnose
