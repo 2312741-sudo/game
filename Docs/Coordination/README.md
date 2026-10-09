@@ -38,7 +38,7 @@ Last refreshed: 2026-10-09
 |---|---|---|---|---|---|---|
 | MAIN-001 | CLAUDE-01 lead / CLAUDE-05 QA | `wave/MAIN-001-integration` | `Scripts/Core/Bootstrap/**`, `Scenes/Gameplay/SCN_TramChanh_Main.unity`, `Scripts/Editor/Placeholders/TramChanhMainSceneBuilder.cs`, `Tests/PlayMode/Integration/TramChanhMain*` | #16, #17, #18, #19, MAIN-002/003/004 merged into the wave | #22 (draft) | Scene + bootstrap pushed; awaiting MAIN-003 and Unity validation |
 | MAIN-002 | CLAUDE-02 drink | `feature/MAIN-002-drink-workflow` | `Scripts/Drinks/**`, `Tests/*/Drinks/**` | MAIN-001 base | via #22 | Done (c7fbf68): prompt fix + Ready-slot gate, 69/69 harness |
-| MAIN-003 | CLAUDE-03 cake | `feature/MAIN-003-cake-workflow` | `Scripts/Cakes/**`, `Tests/*/Cakes/**` | MAIN-001 base, PR #16 review | — | In progress |
+| MAIN-003 | CLAUDE-03 cake | `feature/MAIN-003-cake-workflow` | `Scripts/Cakes/**`, `Tests/*/Cakes/**` | MAIN-001 base, PR #16 review | via #22 | Done (4c76d50): PR #16 F1–F4 fixed, 28/28 harness |
 | MAIN-004 | CLAUDE-04 lobby/orders | `feature/MAIN-004-lobby-orders` | `Scripts/Orders/**`, `Scripts/Lobby/**`, `Scripts/UI/Orders/**`, `Scripts/Customers/**`, matching EditMode tests | MAIN-001 base | via #22 | Done (f950ff3): mixed-order regressions, no prod change |
 | ART-* | Antigravity | to be announced on #20 | art folders only | anchor contract above | — | Not started |
 
@@ -46,7 +46,7 @@ Last refreshed: 2026-10-09
 
 | PR | Branch | Content | State |
 |---|---|---|---|
-| #16 | `feature/ACCEL-01-cake` | Recipe-driven cake station | Draft; under review by MAIN-003 |
+| #16 | `feature/ACCEL-01-cake` | Recipe-driven cake station | Changes required (F1–F4), fixed in #22 |
 | #17 | `feature/ACCEL-01-orders` | Order delivery, reusable customer points | Draft; approved in review |
 | #18 | `feature/ACCEL-01-scene` | Roadside night environment and anchors | Draft |
 | #19 | `chore/UNITY-LOCAL-SYNC` | Local sync guide and scene menu | Open |
