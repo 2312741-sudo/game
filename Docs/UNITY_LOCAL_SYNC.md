@@ -15,7 +15,7 @@ How to keep the Unity Editor on your Mac showing the same project that Codex, Cl
 
 **Opening the wrong scene looks like "the project did not update".** `SCN_TeaRackPickupTest` is a gray test scene on every branch. Unity re-opens the last scene it had, so it keeps showing that one until you open another. In the Editor use the menu **Tram Chanh ▸ Scenes** (added by this guide's PR) to open the right one.
 
-`ProjectSettings/` (except `ProjectVersion.txt`) is not tracked. On open, `TramChanhProjectSetup` (an `[InitializeOnLoad]` script) applies layers, Linear colour space, the Input System setting and creates and assigns the URP asset. Wait for the Console line "Project setup applied" before judging how the lighting looks.
+`ProjectSettings/` (except `ProjectVersion.txt`) is not tracked. On open, `TramChanhProjectSetup` (an `[InitializeOnLoad]` script) applies layers, Linear colour space, the Input System setting and creates and assigns the URP asset. On the first open it logs "[TramChanh] Project setup applied"; wait for the import to finish before judging the lighting.
 
 ## Check what you have (read-only)
 
