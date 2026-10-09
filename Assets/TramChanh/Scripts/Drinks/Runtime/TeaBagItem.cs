@@ -10,6 +10,7 @@ namespace TramChanh.Drinks.Runtime
 {
     public sealed class TeaBagItem : MonoBehaviour, IHoldable, IHeldItemAction, IPreparedItem, IInteractable
     {
+        public const string DiscardOrphanPromptKey = "drink.discard_orphan";
         [SerializeField] private Transform _handGrip;
         [SerializeField] private Transform _placementPoint;
         [SerializeField] private TeaBagStateView _stateView;
@@ -54,6 +55,12 @@ namespace TramChanh.Drinks.Runtime
                 return new InteractionQuery(Availability.Hidden, "drink.bag.open");
             }
             Availability available = DrinkActionGuards.Actor(context);
+            // MAIN-102 (mirrors cake.discard_orphan): the bound order item is no longer live, so this bag can
+            // never be placed Ready and would otherwise block the hands forever. Discard replaces the step action.
+            if (_preparation != null && _preparation.IsOrphaned)
+            {
+                return new InteractionQuery(available, DiscardOrphanPromptKey);
+            }
             if (!available.IsAvailable)
             {
                 return new InteractionQuery(available, State == TeaBagState.PickedUp ? "drink.bag.open" : "drink.bag.shake");
@@ -86,6 +93,11 @@ namespace TramChanh.Drinks.Runtime
                 _stateView?.SetShaking(false);
                 return;
             }
+            if (query.PromptKey == DiscardOrphanPromptKey)
+            {
+                Discard(context);
+                return;
+            }
             Result result = State == TeaBagState.PickedUp ? CompleteStep(_preparation.Open()) : CompleteStep(_preparation.Shake());
             _stateView?.SetShaking(false);
             _stateView?.Apply(State);
@@ -93,6 +105,23 @@ namespace TramChanh.Drinks.Runtime
             {
                 context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
             }
+        }
+
+        // Publishes nothing order-related: the order owner already released the item before the bag became orphaned.
+        private void Discard(InteractionContext context)
+        {
+            if (!_preparation.Retire().IsSuccess)
+            {
+                return;
+            }
+            _stateView?.SetShaking(false);
+            if (ReferenceEquals(context.Hands.Current, this))
+            {
+                context.Hands.TryRelease();
+            }
+            gameObject.SetActive(false);
+            if (Application.isPlaying) { Destroy(gameObject); }
+            else { DestroyImmediate(gameObject); }
         }
 
         public Result AddCoconutJelly() => CompleteStep(_preparation.AddCoconutJelly());
