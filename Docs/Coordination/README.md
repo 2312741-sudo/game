@@ -4,7 +4,7 @@ Owner: **Claude Code lead coordinator (CLAUDE-01)**. Only the lead edits this fi
 Other agents (Claude subagents, Google Antigravity) report through the coordination
 issue **#20** or on their own PRs and issues.
 
-Last refreshed: 2026-10-09
+Last refreshed: 2026-10-09 (polish wave started)
 
 ## Protocol
 
@@ -40,6 +40,11 @@ Last refreshed: 2026-10-09
 | MAIN-002 | CLAUDE-02 drink | `feature/MAIN-002-drink-workflow` | `Scripts/Drinks/**`, `Tests/*/Drinks/**` | MAIN-001 base | via #22 | Done (c7fbf68): prompt fix + Ready-slot gate, 69/69 harness |
 | MAIN-003 | CLAUDE-03 cake | `feature/MAIN-003-cake-workflow` | `Scripts/Cakes/**`, `Tests/*/Cakes/**` | MAIN-001 base, PR #16 review | via #22 | Done (4c76d50): PR #16 F1–F4 fixed, 28/28 harness |
 | MAIN-004 | CLAUDE-04 lobby/orders | `feature/MAIN-004-lobby-orders` | `Scripts/Orders/**`, `Scripts/Lobby/**`, `Scripts/UI/Orders/**`, `Scripts/Customers/**`, matching EditMode tests | MAIN-001 base | via #22 | Done (f950ff3): mixed-order regressions, no prod change |
+| MAIN-101 | CLAUDE-01 main scene | `wave/MAIN-001-integration` | bootstrap, `SCN_TramChanh_Main`, `PF_Placeholder_VehiclePoint` collider, `DrinkWaveSceneBuilder` vehicle trigger | — | #22 | In progress: vehicle point made aimable (180b73e); scene wiring audit |
+| MAIN-102 | CLAUDE-02 reliability | `feature/MAIN-102-reliability` | `Scripts/{Drinks,Cakes,Orders,Lobby,Stall/Runtime}/**` + their tests | wave head 248eac1 | via #22 | In progress: 15 deadlock scenarios, drink discard, tea rack restock |
+| MAIN-103 | CLAUDE-03 player UX | `feature/MAIN-103-player-ux` | `Scripts/UI/**` (C# only), `Tests/EditMode/UI/**`, `SO_PromptText_TramChanhMain.asset` | wave head 248eac1 | via #22 | In progress: held-item/active-order panels, full vi/en key coverage |
+| MAIN-104 | CLAUDE-04 art contracts | `feature/MAIN-104-art-contracts` | `Docs/Coordination/ART_INTEGRATION_HANDOFF.md`, `Automation/art_contract_audit.py` | — | via #22 | In progress (docs + read-only audit; no prefab/mesh edits) |
+| MAIN-105 | CLAUDE-05 QA | `feature/MAIN-105-qa-validation` | `Scripts/Editor/QA/**`, `Automation/unity_validate.sh`, `Automation/static_preflight.py`, `Docs/QA/**` | — | via #22 | In progress: test inventory, Editor QA menu, Mac batch validation |
 | ART-* | Antigravity | to be announced on #20 | art folders only | anchor contract above | — | Not started |
 
 ## Pending source PRs
