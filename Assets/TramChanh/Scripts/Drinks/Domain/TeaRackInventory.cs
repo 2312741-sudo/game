@@ -4,10 +4,17 @@ using TramChanh.Orders;
 
 namespace TramChanh.Drinks.Domain
 {
-    /// <summary>Stored pre-portioned bags only; no quantities, refill or preparation steps.</summary>
+    /// <summary>Stored pre-portioned bags only; no quantities or preparation steps.</summary>
+    /// <remarks>
+    /// MAIN-102 restock (provisional, DEC-015 TBD): pre-portioned bags are restocked from storage. When the rack
+    /// has no stored bag, every slot whose bag has left play for good (Ready, or a discarded orphan) receives a
+    /// fresh, unbound Stored bag with a new preparation identity. Stock never exceeds capacity. A slot whose bag
+    /// is still held or in preparation is never refilled. Restocking claims no ticket and publishes nothing.
+    /// </remarks>
     public sealed class TeaRackInventory
     {
         private readonly DrinkPreparation[] _bags;
+        private readonly IIdGenerator _ids;
         public int Capacity => _bags.Length;
         public int Stock
         {
@@ -32,6 +39,7 @@ namespace TramChanh.Drinks.Domain
                 throw new ArgumentOutOfRangeException(nameof(initialStock));
             }
             ids ??= new SequentialIdGenerator();
+            _ids = ids;
             _bags = new DrinkPreparation[capacity];
             for (int i = 0; i < initialStock; i++)
             {
@@ -40,6 +48,33 @@ namespace TramChanh.Drinks.Domain
         }
 
         public DrinkPreparation BagAt(int index) => _bags[index];
+
+        /// <summary>A slot may be restocked only when it is empty or its bag can never return to the rack.</summary>
+        public static bool IsRestockable(DrinkPreparation bag) => bag == null || bag.State == TeaBagState.Ready || bag.IsRetired;
+
+        /// <summary>
+        /// Restocks terminal slots only while the rack is empty of stored bags. Calls <paramref name="restocked"/> once per
+        /// refilled slot index and returns the number of new bags.
+        /// </summary>
+        public int RestockWhenEmpty(Action<int> restocked = null)
+        {
+            if (Stock > 0)
+            {
+                return 0;
+            }
+            int count = 0;
+            for (int i = 0; i < _bags.Length; i++)
+            {
+                if (!IsRestockable(_bags[i]))
+                {
+                    continue;
+                }
+                _bags[i] = new DrinkPreparation(new PreparationId(_ids.Next()));
+                count++;
+                restocked?.Invoke(i);
+            }
+            return count;
+        }
 
         public int NextStoredIndex()
         {
