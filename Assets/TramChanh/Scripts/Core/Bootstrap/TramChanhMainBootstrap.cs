@@ -35,6 +35,9 @@ namespace TramChanh.App
         public const int TableCount = 10;
         public const int FirstTableInteractableId = 31;
         public const string SeatAnchor = "Seat";
+        private const double MaxCustomerTickSeconds = 0.25d;
+        // Vehicle customers use their own id range so they never share an id with director-seated customers (100+).
+        private const int FirstVehicleCustomerId = 1000000;
         /// <summary>Environment anchor name for table n (1-based): TABLE_01..TABLE_10.</summary>
         public static string TableAnchorName(int tableNumber) => "TABLE_" + tableNumber.ToString("00");
 
@@ -82,7 +85,7 @@ namespace TramChanh.App
         private EventBus _events;
         private IIdGenerator _ids;
         private GameObject _runtime;
-        private int _nextCustomer = 1;
+        private int _nextCustomer = FirstVehicleCustomerId;
         private Animator[] _animators = Array.Empty<Animator>();
 
         public bool IsInitialized { get; private set; }
@@ -196,6 +199,7 @@ namespace TramChanh.App
             Customers = new CustomerDirector(customerSeats, _customerSettings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
             Customers.CustomerSeated += OnCustomerSeated;
             Customers.CustomerLeft += OnCustomerLeft;
+            Customers.CustomerRequestFailed += OnCustomerRequestFailed;
 
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
@@ -214,7 +218,14 @@ namespace TramChanh.App
             Transform source = FindAnchor(name);
             if (source == null && number == 1) { source = FindAnchor(TableAnchor); }
             if (source == null && number == 2) { source = FindAnchor(CakeTableAnchor); }
-            bool environmentShowsFurniture = source != null && source.GetComponentInChildren<Renderer>(true) != null;
+            bool environmentShowsFurniture = false;
+            if (source != null)
+            {
+                foreach (Renderer renderer in source.GetComponentsInChildren<Renderer>(false))
+                {
+                    if (renderer.enabled) { environmentShowsFurniture = true; break; }
+                }
+            }
             var root = new GameObject(name).transform;
             root.SetParent(_runtime.transform, false);
             if (source != null) { root.SetPositionAndRotation(source.position, source.rotation); }
@@ -229,7 +240,12 @@ namespace TramChanh.App
             var seat = new GameObject(SeatAnchor).transform;
             seat.SetParent(root, false);
             if (artSeat != null) { seat.SetPositionAndRotation(artSeat.position, artSeat.rotation); }
-            else { seat.localPosition = _defaultSeatOffset; seat.localRotation = Quaternion.LookRotation(-_defaultSeatOffset.normalized); }
+            else
+            {
+                seat.localPosition = _defaultSeatOffset;
+                Vector3 facing = new Vector3(-_defaultSeatOffset.x, 0f, -_defaultSeatOffset.z);
+                seat.localRotation = facing.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(facing.normalized) : Quaternion.identity;
+            }
 
             GameObject table = Instantiate(_tablePointPrefab, root, false);
             table.name = _tablePointPrefab.name + "_" + name;
@@ -244,11 +260,23 @@ namespace TramChanh.App
 
         private void OnCustomerSeated(CustomerSeatedEvent seated)
         {
+            // Presentation only: a faulty visual must never abort composition or the director's tick (§6.4 spirit).
+            try { ShowCustomer(seated); }
+            catch (Exception error) { UnityEngine.Debug.LogException(error, this); }
+        }
+
+        private void ShowCustomer(CustomerSeatedEvent seated)
+        {
             if (seated.SeatIndex < 0 || seated.SeatIndex >= _seatAnchors.Count) { return; }
             OnCustomerLeft(seated.SeatIndex);
             Transform seat = _seatAnchors[seated.SeatIndex];
             GameObject visual;
-            if (_customerVisualPrefab != null) { visual = Instantiate(_customerVisualPrefab, seat, false); }
+            if (_customerVisualPrefab != null)
+            {
+                visual = Instantiate(_customerVisualPrefab, seat, false);
+                // Contract: customer visuals never block movement or the interaction ray.
+                foreach (Collider collider in visual.GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
+            }
             else
             {
                 // Development placeholder only (DEC-010): no collider so it never blocks movement or the interaction ray.
@@ -264,11 +292,21 @@ namespace TramChanh.App
 
         private void OnCustomerLeft(int seatIndex)
         {
-            if (_customerVisuals.TryGetValue(seatIndex, out GameObject visual))
+            try
             {
-                _customerVisuals.Remove(seatIndex);
-                if (visual != null) { Destroy(visual); }
+                if (_customerVisuals.TryGetValue(seatIndex, out GameObject visual))
+                {
+                    _customerVisuals.Remove(seatIndex);
+                    if (visual != null) { Destroy(visual); }
+                }
             }
+            catch (Exception error) { UnityEngine.Debug.LogException(error, this); }
+        }
+
+        private void OnCustomerRequestFailed(CustomerRequestFailedEvent failed)
+        {
+            string table = failed.SeatIndex >= 0 && failed.SeatIndex < _tables.Count ? _tables[failed.SeatIndex].name : "seat " + failed.SeatIndex;
+            UnityEngine.Debug.LogWarning("Customer could not be seated at " + table + ": " + failed.ReasonKey, this);
         }
 
         private VehicleOrderPoint PlaceVehicle(string anchorName, int interactableId, VehicleId vehicleId)
@@ -292,13 +330,21 @@ namespace TramChanh.App
 
         private Transform FindAnchor(string anchorName)
         {
-            Transform direct = Environment.transform.Find(anchorName);
-            if (direct != null) { return direct; }
+            Transform found = null;
+            int count = 0;
             foreach (Transform child in Environment.GetComponentsInChildren<Transform>(true))
             {
-                if (child.name == anchorName) { return child; }
+                if (child.name != anchorName) { continue; }
+                count++;
+                // A direct child of the environment root wins, as in RequireAnchor.
+                if (found == null || (child.parent == Environment.transform && found.parent != Environment.transform)) { found = child; }
             }
-            return null;
+            if (count > 1)
+            {
+                // Environment + modular prefabs must name each anchor once (TABLE_ANCHOR_CONTRACT).
+                UnityEngine.Debug.LogError("Duplicate environment anchor '" + anchorName + "' (" + count + "); using " + found.parent.name + "/" + found.name + ".", this);
+            }
+            return found;
         }
 
         private Transform RequireAnchor(string anchorName)
@@ -340,7 +386,8 @@ namespace TramChanh.App
             _clock?.Tick();
             foreach (Animator animator in _animators) { if (animator != null) { animator.speed = _clock.IsPaused ? 0f : 1f; } }
             if (!IsInitialized || _clock.IsPaused) { return; }
-            Customers.Tick(_clock.DeltaTime);
+            // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
+            Customers.Tick(Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds));
             // Completed orders free their point; a new customer arrives after the provisional pause.
             foreach (CustomerSeat seat in _seats)
             {
@@ -374,6 +421,7 @@ namespace TramChanh.App
             {
                 Customers.CustomerSeated -= OnCustomerSeated;
                 Customers.CustomerLeft -= OnCustomerLeft;
+                Customers.CustomerRequestFailed -= OnCustomerRequestFailed;
             }
             if (_entryUI != null)
             {

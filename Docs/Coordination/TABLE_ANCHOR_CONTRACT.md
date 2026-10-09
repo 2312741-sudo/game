@@ -18,7 +18,7 @@ The game has 10 dine-in tables plus the takeaway vehicle. Gameplay reads table p
 | Id mapping | `TABLE_nn` has gameplay `TableId = nn` and interactable id `30 + nn` (TABLE_01 is 31, TABLE_10 is 40). The vehicle keeps interactable id 22. |
 | Never renumber | A table keeps its number for its whole life, because order history and tests refer to the TableId. If you remove a table, leave a gap and do not shift the other numbers. If you add one, ask on issue #20 first; the count is fixed at 10 in code (`TramChanhMainBootstrap.TableCount`). |
 | Uniqueness | Each name appears **once** in the environment prefab, including inactive objects and nested prefabs. A duplicate is a FAIL or ERROR. |
-| Placement | A `TABLE_nn` is a direct child of the environment root (`PF_AccelRoadsideEnvironment`) **or** of a single direct child named `CustomerArea`. The audit FAILs other placements. The QA menu only WARNs, because the bootstrap also falls back to a deep search. |
+| Placement | A `TABLE_nn` is a direct child of the environment root (`PF_AccelRoadsideEnvironment`) **or** of a single direct child named `CustomerArea`. Other placements are a WARN in both the audit and the QA menu, because the bootstrap also falls back to a deep search. Misnamed or duplicated anchors are a FAIL/ERROR. |
 | Optional | All 10 anchors are optional. Any table without an anchor uses the fallback layout (section 8). The audit reports missing anchors as WARN. |
 
 ## 2. Child anchors under `TABLE_nn`

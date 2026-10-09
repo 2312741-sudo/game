@@ -9,16 +9,16 @@ Never touch `Lưu trữ/game`: Antigravity works there.
 ## 1. Worktree
 
 ```bash
-cd "/Users/nthtam/Lưu trữ/game"
+cd "$HOME/Lưu trữ/game"
 git fetch origin feature/TABLES-10-integration
-git worktree add "/Users/nthtam/Lưu trữ/game-QA-24" FETCH_HEAD   # detached, read-only use
-git -C "/Users/nthtam/Lưu trữ/game-QA-24" rev-parse --short HEAD
+git worktree add "$HOME/Lưu trữ/game-QA-24" FETCH_HEAD   # detached, read-only use
+git -C "$HOME/Lưu trữ/game-QA-24" rev-parse --short HEAD
 ```
 
 ## 2. Automated (batch)
 
 ```bash
-cd "/Users/nthtam/Lưu trữ/game-QA-24"
+cd "$HOME/Lưu trữ/game-QA-24"
 bash Automation/unity_validate.sh
 ```
 

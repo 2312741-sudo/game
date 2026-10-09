@@ -116,7 +116,9 @@ namespace TramChanh.Tests.PlayMode.Integration
                 foreach (InteractableRef reference in root.GetComponentsInChildren<InteractableRef>())
                 {
                     if (reference.Target == null) { continue; }
-                    Collider trigger = reference.GetComponent<Collider>() ?? reference.GetComponentInChildren<Collider>();
+                    Collider trigger = reference.GetComponent<Collider>();
+                    // Unity fake-null: never use ?? on UnityEngine.Object.
+                    if (trigger == null) { trigger = reference.GetComponentInChildren<Collider>(); }
                     if (trigger == null || !trigger.enabled || trigger.gameObject.layer != TramChanhLayers.InteractableIndex) { continue; }
                     Vector3 local = stall.InverseTransformPoint(trigger.bounds.center);
                     // Worker side is -z; the Ready counter and pickup face customers at +z.

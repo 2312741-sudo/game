@@ -392,6 +392,60 @@ namespace TramChanh.Tests.PlayMode.Integration
             return bounds.Contains(new Vector3(anchor.position.x, bounds.center.y, anchor.position.z));
         }
 
+        [UnityTest]
+        public IEnumerator TABLES_008_DirectorRunsInTheSceneWithVisualsFurnitureAndPlaceholderRules()
+        {
+            // Opening state: exactly one seated dine-in customer, and its visual sits under that table's Seat.
+            Assert.That(_bootstrap.Customers.ActiveCustomers, Is.EqualTo(1), "The scene opens with one dine-in customer.");
+            int seated = -1;
+            for (int i = 0; i < TramChanhMainBootstrap.TableCount; i++)
+            {
+                Transform visual = _bootstrap.TableAnchors[i].Find("Seat/Customer_" + TramChanhMainBootstrap.TableAnchorName(i + 1));
+                Assert.That(visual != null, Is.EqualTo(_bootstrap.Customers.IsOccupied(i)), TramChanhMainBootstrap.TableAnchorName(i + 1) + " visual must match occupancy.");
+                if (_bootstrap.Customers.IsOccupied(i)) { seated = i; }
+            }
+            Assert.That(seated, Is.GreaterThanOrEqualTo(0));
+            Assert.That(_bootstrap.Tables[seated].ActiveOrder.IsValid, Is.True);
+            Assert.That(_bootstrap.Orders.Get(_bootstrap.Tables[seated].ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+
+            // A second arrival creates a second visual on a different, previously free table.
+            int next = _bootstrap.Customers.SpawnNow();
+            Assert.That(next, Is.Not.EqualTo(seated).And.GreaterThanOrEqualTo(0));
+            Assert.That(_bootstrap.TableAnchors[next].Find("Seat/Customer_" + TramChanhMainBootstrap.TableAnchorName(next + 1)), Is.Not.Null);
+            Assert.That(_bootstrap.Customers.ActiveCustomers, Is.EqualTo(2));
+
+            // Pause holds the director: no arrivals while the game clock is paused, whatever real time passes.
+            var context = _bootstrap.Interactor.Context;
+            context.Clock.Pause();
+            int before = _bootstrap.Customers.ActiveCustomers;
+            float until = Time.realtimeSinceStartup + 0.5f;
+            while (Time.realtimeSinceStartup < until) { yield return null; }
+            Assert.That(_bootstrap.Customers.ActiveCustomers, Is.EqualTo(before));
+            context.Clock.Resume();
+
+            // Environment placeholders: static seated customers are replaced by dynamic ones.
+            foreach (string name in new[] { "DineInCustomer", "CakeDineInCustomer" })
+            {
+                Transform placeholder = FindDeep(_bootstrap.Environment.transform, name);
+                if (placeholder != null) { Assert.That(placeholder.gameObject.activeInHierarchy, Is.False, name + " must be hidden at runtime."); }
+            }
+
+            // Furniture rule: gameplay crate hidden where the environment draws furniture, visible at fallback tables.
+            for (int i = 0; i < TramChanhMainBootstrap.TableCount; i++)
+            {
+                string tableName = TramChanhMainBootstrap.TableAnchorName(i + 1);
+                Transform art = FindDeep(_bootstrap.Environment.transform, tableName);
+                if (art == null && i == 0) { art = FindDeep(_bootstrap.Environment.transform, TramChanhMainBootstrap.TableAnchor); }
+                if (art == null && i == 1) { art = FindDeep(_bootstrap.Environment.transform, TramChanhMainBootstrap.CakeTableAnchor); }
+                bool artFurniture = false;
+                if (art != null) { foreach (Renderer r in art.GetComponentsInChildren<Renderer>(false)) { if (r.enabled) { artFurniture = true; break; } } }
+                bool gameplayVisible = false;
+                foreach (Renderer r in _bootstrap.Tables[i].GetComponentsInChildren<Renderer>(true)) { if (r.enabled) { gameplayVisible = true; break; } }
+                Assert.That(gameplayVisible, Is.EqualTo(!artFurniture), tableName + ": exactly one of environment furniture or the gameplay placeholder must be visible.");
+            }
+            yield return null;
+        }
+
         private static Transform FindDeep(Transform root, string name)
         {
             Transform direct = root.Find(name);
