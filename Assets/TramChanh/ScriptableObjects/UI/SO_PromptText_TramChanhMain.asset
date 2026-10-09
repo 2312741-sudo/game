@@ -622,3 +622,12 @@ MonoBehaviour:
   - _key: hud.toast.wrong_target
     _en: 'Wrong place, this order is for {0}'
     _vi: "Sai ch\u1ED7, \u0111\u01A1n n\xE0y c\u1EE7a {0}"
+  - _key: drink.discard_orphan
+    _en: 'Discard tea bag (order cancelled)'
+    _vi: 'Bỏ túi trà (đơn đã hủy)'
+  - _key: cake.cup.return
+    _en: 'Put the measuring cup back'
+    _vi: 'Đặt ca đong về chỗ cũ'
+  - _key: drink.discard.not_orphaned
+    _en: 'Nothing to discard'
+    _vi: 'Không có gì để bỏ'

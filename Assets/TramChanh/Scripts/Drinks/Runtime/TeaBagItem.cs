@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace TramChanh.Drinks.Runtime
 {
-    public sealed class TeaBagItem : MonoBehaviour, IHoldable, IHeldItemAction, IPreparedItem, IInteractable
+    public sealed class TeaBagItem : MonoBehaviour, IHoldable, IHeldItemAction, IPreparedItem, IInteractable, IPreparationFeedback
     {
         public const string DiscardOrphanPromptKey = "drink.discard_orphan";
         [SerializeField] private Transform _handGrip;
@@ -24,6 +24,27 @@ namespace TramChanh.Drinks.Runtime
         public PreparationId PreparationId => _preparation?.PreparationId ?? default;
         public ItemKind Kind => ItemKind.Drink;
         public OrderItemRef BoundItem => _preparation?.BoundItem ?? default;
+        // ACCEL-01 IPreparationFeedback: read-only HUD keys; no gameplay command.
+        public string PreparationStateKey => "drink.state." + State.ToString().ToLowerInvariant();
+        public string NextActionKey
+        {
+            get
+            {
+                if (_preparation != null && _preparation.IsOrphaned) { return DiscardOrphanPromptKey; }
+                switch (State)
+                {
+                    case TeaBagState.Stored:
+                    case TeaBagState.PickedUp: return "drink.bag.open";
+                    case TeaBagState.Opened: return "drink.add_coconut";
+                    case TeaBagState.CoconutJellyAdded: return "drink.add_lemon";
+                    case TeaBagState.LemonJellyAdded: return "drink.add_ice";
+                    case TeaBagState.IceAdded: return "drink.bag.shake";
+                    case TeaBagState.Shaken: return "drink.wipe";
+                    case TeaBagState.Wiped: return "ready.place_item";
+                    default: return "ready.pick_up_order";
+                }
+            }
+        }
         public bool IsFinished => _preparation != null && _preparation.IsFinished;
         public int Quality => _preparation?.Quality ?? 0;
         public InteractableId Id => new InteractableId(PreparationId.Value);
