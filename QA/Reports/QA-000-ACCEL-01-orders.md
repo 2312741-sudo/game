@@ -1,7 +1,7 @@
 # QA-000 — Repo, docs and skeleton check
 
 - Date: 2026-10-09
-- Commit: `90eb301`
+- Commit: `813fb5c`
 - Script: `Automation/qa000_repo_check.py` (read-only, no Unity required)
 
 | # | Criterion | Result | Detail |
@@ -99,3 +99,4 @@
 | 91 | GT-001 constants (1.8 / 0.8 / 1.0 / 1.2) defined once in StallDimensions.cs | **PASS** |  |
 
 **Overall: PASS**
+
