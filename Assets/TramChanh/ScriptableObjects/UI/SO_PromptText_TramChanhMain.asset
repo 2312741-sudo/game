@@ -367,3 +367,42 @@ MonoBehaviour:
   - _key: role.not_stall
     _en: 'Stall role required'
     _vi: 'Cần vai trò quầy'
+  - _key: cake.discard_orphan
+    _en: 'Discard cake (order cancelled)'
+    _vi: 'Bỏ bánh (đơn đã hủy)'
+  - _key: cake.state.battermeasured
+    _en: 'Batter measured'
+    _vi: 'Đã đong bột'
+  - _key: cake.state.batterpoured
+    _en: 'Batter poured'
+    _vi: 'Đã đổ bột'
+  - _key: cake.state.cooking
+    _en: 'Cooking'
+    _vi: 'Đang nướng'
+  - _key: cake.state.cooked
+    _en: 'Cooked'
+    _vi: 'Đã chín'
+  - _key: cake.state.flipped
+    _en: 'Flipped'
+    _vi: 'Đã lật'
+  - _key: cake.state.cut
+    _en: 'Cut'
+    _vi: 'Đã cắt'
+  - _key: cake.state.sauced
+    _en: 'Sauced'
+    _vi: 'Đã rưới sốt'
+  - _key: cake.state.rolled
+    _en: 'Rolled'
+    _vi: 'Đã cuộn'
+  - _key: cake.state.wrapped
+    _en: 'Wrapped'
+    _vi: 'Đã gói'
+  - _key: cake.state.ready
+    _en: 'Ready'
+    _vi: 'Sẵn sàng giao'
+  - _key: cake.state.delivered
+    _en: 'Delivered'
+    _vi: 'Đã giao'
+  - _key: cake.state.ruined
+    _en: 'Burnt'
+    _vi: 'Bánh cháy'

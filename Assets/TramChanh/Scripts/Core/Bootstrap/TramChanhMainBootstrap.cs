@@ -128,7 +128,7 @@ namespace TramChanh.App
             foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true)) { rack.Initialize(Tickets, _ids, _events, Shelf); }
             foreach (ReadyCounterPoint ready in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
             foreach (ReadyOrderPickupPoint pickup in DrinkStation.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
-            CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes));
+            CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes), Shelf);
 
             var drink = new[] { new ItemRequest(_drinkDefinition.Id, 1) };
             var cakeOnly = new[] { new ItemRequest(_cakeRecipes[0].ItemDefinition.Id, 1) };
