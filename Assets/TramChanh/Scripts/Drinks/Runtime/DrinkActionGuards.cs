@@ -16,7 +16,10 @@ namespace TramChanh.Drinks.Runtime
 
         public static Availability Step(InteractionContext context, TeaBagItem bag, Domain.TeaBagState expected, string reason)
         {
-            if (bag == null)
+            // A step the held bag has already completed is not offered again. Blocking it with the
+            // "need previous step" reason would teach a step the bag already passed (e.g. a wiped bag
+            // at the coconut bin reading "Open the bag first"), so it is Hidden like a finished held action.
+            if (bag == null || (int)bag.State > (int)expected)
             {
                 return Availability.Hidden;
             }
