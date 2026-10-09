@@ -46,3 +46,12 @@ sysinfo.txt
 # QA scratch output (reports in QA/Reports are committed)
 /QA/Output/
 /Automation/__pycache__/
+
+# Private reference photographs (safety for public repo)
+ArtSource/References/
+ArtSource/**/__pycache__/
+
+# Visual validation scratch outputs
+*.slnx
+test-results.xml
+unity_test.log
