@@ -103,9 +103,94 @@ namespace TramChanh.Tests.PlayMode.Cakes
             burnt.ExecuteUse(_context); Assert.That(_context.Hands.Current, Is.Null); _station.Cup.Execute(_context);
             Assert.That(_station.Measure(_context, 2f).IsSuccess, Is.True); yield return null;
         }
-        private void SendOrder()
+        [UnityTest] public IEnumerator TC_CAKE_StepEventsPublishOncePerCanonicalStepAndNeverForLidOrTopUp()
         {
-            var items = new[] { new ItemRequest(_recipe.ItemDefinition.Id, 1) }; var origin = OrderOrigin.ForTable(new TableId(1));
+            var published = new System.Collections.Generic.List<CakeState>();
+            using var steps = _events.Subscribe<CakeStepCompleted>(message => published.Add(message.State));
+            SendOrder(); var driver = new InteractionActionDriver(_context); CakeItem item = DriveToWrapped(driver, true);
+            Assert.That(_context.Hands.Current, Is.SameAs(item));
+            Assert.That(published, Is.EqualTo(new[] { CakeState.BatterMeasured, CakeState.BatterPoured, CakeState.Cooking, CakeState.Cooked,
+                CakeState.Flipped, CakeState.Cut, CakeState.Sauced, CakeState.Rolled, CakeState.Wrapped }));
+            yield return null;
+        }
+        [UnityTest] public IEnumerator TC_CAKE_WrappedCakeOfFailedOrderCanBeDiscardedFromHands()
+        {
+            SendOrder(); var driver = new InteractionActionDriver(_context); CakeItem item = DriveToWrapped(driver, false);
+            Assert.That(item.QueryUse(_context).Availability.Status, Is.EqualTo(AvailabilityStatus.Hidden));
+            _orders.Fail(_order, FailureReason.CancelledByDebug);
+            var counter = _counterObject.GetComponent<ReadyCounterPoint>();
+            Assert.That(counter.Query(_context).BlockedReasonKey, Is.EqualTo("ready.no_order"));
+            InteractionQuery discard = item.QueryUse(_context);
+            Assert.That(discard.Availability.IsAvailable, Is.True); Assert.That(discard.PromptKey, Is.EqualTo("cake.discard_orphan"));
+            _clock.Pause(); Assert.That(item.QueryUse(_context).BlockedReasonKey, Is.EqualTo("game.paused")); _clock.Resume();
+            driver.BeginHeld(); Assert.That(_context.Hands.Current, Is.Null); yield return null; Assert.That(item == null, Is.True);
+            SendOrder(); _station.Cup.Execute(_context); Assert.That(_station.Measure(_context, 2f).IsSuccess, Is.True); yield return null;
+        }
+        [UnityTest] public IEnumerator TC_CAKE_OccupiedReadyCakeSlotBlocksNewClaimUntilCleared()
+        {
+            SendOrder(); OrderId first = _order; var driver = new InteractionActionDriver(_context); DriveToWrapped(driver, false);
+            _counterObject.GetComponent<ReadyCounterPoint>().Execute(_context); Assert.That(_shelf.Occupied(ItemKind.Cake), Is.True); Assert.That(_context.Hands.Current, Is.Null);
+            var gatedObject = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/ACCEL01/Cakes/PF_CakeStation.prefab"));
+            try
+            {
+                var gated = gatedObject.GetComponent<CakeStation>();
+                gated.Initialize(_queue, new SequentialIdGenerator(), _events, _clock, new CakeRecipeCatalog(_queue, new[] { _recipe }), _shelf);
+                SendOrder(2); OrderId second = _order; gated.Cup.Execute(_context);
+                var fill = gated.GetComponentsInChildren<CakeStationPoint>().Single(point => point.Action == CakeStationAction.Fill);
+                Assert.That(fill.Query(_context).BlockedReasonKey, Is.EqualTo("ready.slot_full"));
+                driver.Begin(fill); _clock.Advance(2d); driver.Release();
+                Assert.That(gated.Measure(_context, 2f).ReasonKey, Is.EqualTo("ready.slot_full"));
+                Assert.That(gated.Current, Is.Null); Assert.That(_queue.HasPending(ItemKind.Cake), Is.True); Assert.That(_orders.Get(second).Status, Is.EqualTo(OrderStatus.SentToStall));
+                Assert.That(_shelf.PickUp(first, new ActorRef(1)).IsSuccess, Is.True); Assert.That(_shelf.Occupied(ItemKind.Cake), Is.False);
+                Assert.That(fill.Query(_context).Availability.IsAvailable, Is.True);
+                driver.Begin(fill); _clock.Advance(2d); driver.Release();
+                Assert.That(gated.Current, Is.Not.Null); Assert.That(gated.Current.BoundItem.OrderId, Is.EqualTo(second)); Assert.That(_orders.Get(second).Status, Is.EqualTo(OrderStatus.InPreparation));
+                gated.Cup.ExecuteUse(_context); _context.Hands.TryRelease();
+            }
+            finally { Object.Destroy(gatedObject); }
+            yield return null;
+        }
+        [UnityTest] public IEnumerator TC_CAKE_ReadyGateDoesNotStopCakeAlreadyInProgress()
+        {
+            var gate = new ToggleGate(); var gatedObject = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/ACCEL01/Cakes/PF_CakeStation.prefab"));
+            try
+            {
+                var gated = gatedObject.GetComponent<CakeStation>();
+                gated.Initialize(_queue, new SequentialIdGenerator(), _events, _clock, new CakeRecipeCatalog(_queue, new[] { _recipe }), gate);
+                SendOrder(); gated.Cup.Execute(_context);
+                var fill = gated.GetComponentsInChildren<CakeStationPoint>().Single(point => point.Action == CakeStationAction.Fill);
+                Assert.That(gated.Measure(_context, 1f).IsSuccess, Is.True); gate.IsOccupied = true;
+                Assert.That(fill.Query(_context).Availability.IsAvailable, Is.True); Assert.That(gated.Measure(_context, 1f).IsSuccess, Is.True);
+                Assert.That(gated.Current.Measurement.MeasuredMl, Is.EqualTo(120f));
+                gated.Cup.ExecuteUse(_context); Assert.That(gated.Current, Is.Null);
+                Assert.That(fill.Query(_context).BlockedReasonKey, Is.EqualTo("ready.slot_full")); _context.Hands.TryRelease();
+            }
+            finally { Object.Destroy(gatedObject); }
+            yield return null;
+        }
+        private sealed class ToggleGate : IReadyShelfPlacement
+        {
+            public bool IsOccupied;
+            public Availability CanPlace(IPreparedItem item) => Availability.Blocked("test.gate");
+            public Result PlaceReady(IPreparedItem item) => Result.Fail("test.gate");
+            public bool Occupied(ItemKind kind) => IsOccupied && kind == ItemKind.Cake;
+        }
+        private CakeItem DriveToWrapped(InteractionActionDriver driver, bool topUp)
+        {
+            _station.Cup.Execute(_context); var fill = Point(CakeStationAction.Fill);
+            if (topUp) { driver.Begin(fill); _clock.Advance(1d); driver.Release(); driver.Begin(fill); _clock.Advance(1d); driver.Release(); }
+            else { driver.Begin(fill); _clock.Advance(2d); driver.Release(); }
+            var grill = Point(CakeStationAction.Grill); _clock.Advance(2d); _station.Advance();
+            grill.Execute(_context); grill.Execute(_context); grill.Execute(_context); Assert.That(_station.Current.State, Is.EqualTo(CakeState.Cooking));
+            _clock.Advance(_recipe.CookedThreshold); _station.Advance(); grill.Execute(_context); grill.Execute(_context);
+            Assert.That(_station.Current.State, Is.EqualTo(CakeState.Flipped));
+            var roll = Point(CakeStationAction.RollArea); Hold(driver, roll, _recipe.CutHoldSeconds); Hold(driver, Point(CakeStationAction.Sauce), _recipe.SauceHoldSeconds); Hold(driver, roll, _recipe.RollHoldSeconds);
+            CakeItem item = _station.CurrentItem; Point(CakeStationAction.Wrap).Execute(_context);
+            Assert.That(item.Preparation.State, Is.EqualTo(CakeState.Wrapped)); Assert.That(_context.Hands.Current, Is.SameAs(item)); return item;
+        }
+        private void SendOrder(int table = 1)
+        {
+            var items = new[] { new ItemRequest(_recipe.ItemDefinition.Id, 1) }; var origin = OrderOrigin.ForTable(new TableId(table));
             _order = _orders.RequestService(origin, new CustomerId(1), items).Value; Assert.That(_orders.BeginTaking(_order, new ActorRef(1), origin).IsSuccess, Is.True);
             Assert.That(_orders.Enter(_order, items).IsSuccess, Is.True); Assert.That(_orders.SendToStall(_order).IsSuccess, Is.True);
         }

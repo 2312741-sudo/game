@@ -26,6 +26,7 @@ namespace TramChanh.Cakes
         public InteractionQuery Query(InteractionContext context)
         {
             Availability guard = CakeStation.GuardActor(context);
+            if (guard.IsAvailable && _station == null) { guard = Availability.Blocked("cake.station_uninitialized"); }
             if (guard.IsAvailable && _station != null && _station.Current != null && _station.Current.State != CakeState.Waiting && _station.Current.State != CakeState.BatterMeasured) { guard = Availability.Blocked("cake.station_busy"); }
             if (guard.IsAvailable && context.Hands.Current != null) { guard = Availability.Blocked("hands.full"); }
             return new InteractionQuery(guard, "cake.cup.pickup");
@@ -42,6 +43,7 @@ namespace TramChanh.Cakes
         {
             if (!ReferenceEquals(context.Hands.Current, this)) { return new InteractionQuery(Availability.Hidden, "cake.empty_back"); }
             Availability guard = CakeStation.GuardActor(context);
+            if (guard.IsAvailable && _station == null) { guard = Availability.Blocked("cake.station_uninitialized"); }
             if (guard.IsAvailable && _station.Current != null && _station.Current.State != CakeState.Waiting && _station.Current.State != CakeState.BatterMeasured)
             { guard = Availability.Blocked("cake.already_poured"); }
             return new InteractionQuery(guard, "cake.empty_back");
