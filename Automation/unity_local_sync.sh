@@ -143,11 +143,13 @@ update() {
   git_in rev-parse --verify --quiet "origin/$target" >/dev/null || die "origin/$target does not exist."
   cur="$(git_in rev-parse --abbrev-ref HEAD)"
   if [ "$cur" != "$target" ]; then
-    if git_in rev-parse --verify --quiet "refs/heads/$target" >/dev/null; then
-      git_in switch "$target" || die "git refused to switch (it would overwrite local files). Nothing was changed; see the backup above."
-    else
-      git_in switch -c "$target" --track "origin/$target" || die "git refused to create $target. Nothing was changed."
+    if ! git_in rev-parse --verify --quiet "refs/heads/$target" >/dev/null; then
+      # Create the local branch as a plain ref first (no checkout), then switch with an ordinary, atomic switch.
+      git_in branch "$target" "origin/$target" || die "could not create local branch $target. Nothing was changed."
+      git_in branch --set-upstream-to="origin/$target" "$target" >/dev/null 2>&1 || true
     fi
+    git_in switch "$target" || die "git refused to switch (it would overwrite local files). Nothing was changed; see the backup above."
+    [ "$(git_in rev-parse --abbrev-ref HEAD)" = "$target" ] || die "after the switch HEAD is not $target; run 'git status' and check the backup above."
   fi
   git_in merge --ff-only "origin/$target" || die "$target has local commits that are not on origin/$target (diverged). Nothing was overwritten; push or rename your branch first."
   say ""
