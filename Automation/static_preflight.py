@@ -146,12 +146,25 @@ def load_allow(path):
     return allow
 
 
+def git_tracked(root):
+    """Set of repo-relative paths Git tracks, or None when Git is unavailable."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {p.decode("utf-8") for p in out.split(b"\0") if p}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", default=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     ap.add_argument("--scope", default="Assets/TramChanh", help="folder whose .unity/.prefab/.asset files are scanned")
     ap.add_argument("--allow-external", help="file of GUIDs known to live in registry packages")
     ap.add_argument("--json", help="also write machine-readable findings here")
+    ap.add_argument("--include-untracked", action="store_true",
+                    help="also scan files Git does not track (default: tracked only, so locally generated "
+                         "settings such as the URP asset from Apply Project Settings do not fail the check)")
     a = ap.parse_args()
     root = os.path.abspath(a.root)
     scope = os.path.join(root, a.scope)
@@ -176,6 +189,14 @@ def main():
         for fn in sorted(fns):
             if fn.endswith(SCANNED_EXT):
                 targets.append(os.path.join(dp, fn))
+
+    tracked = git_tracked(root)
+    if not a.include_untracked:
+        if tracked is not None:
+            skipped = [t for t in targets if rel(root, t) not in tracked]
+            targets = [t for t in targets if rel(root, t) in tracked]
+            for t in skipped:
+                infos.append("UNTRACKED_SKIPPED %s (use --include-untracked to scan it)" % rel(root, t))
 
     parsed_cache = {}
 
@@ -217,6 +238,10 @@ def main():
                 e["count"] += 1
                 continue
             stats["resolved_guid_refs"] += 1
+            # A tracked file must not depend on a .meta that only exists in this working copy:
+            # a fresh clone would lose the reference even though this checkout resolves it.
+            if tracked is not None and rp in tracked and not any(pth + ".meta" in tracked for pth in paths):
+                fails.append("GUID_ONLY_IN_UNTRACKED_META %s:%d %s -> %s (commit the asset and its .meta)" % (rp, line_no, key, paths[0]))
             # 3. cross-file fileID check into project YAML assets (type 2 = serialized asset)
             target = os.path.join(root, paths[0])
             if typ == 2 and target.endswith(YAML_LIKE_EXT) and os.path.isfile(target):
