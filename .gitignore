@@ -56,3 +56,4 @@ ArtSource/**/__pycache__/
 test-results.xml
 *.log
 *.xml
+unity_test.log
