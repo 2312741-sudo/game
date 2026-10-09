@@ -631,3 +631,6 @@ MonoBehaviour:
   - _key: drink.discard.not_orphaned
     _en: 'Nothing to discard'
     _vi: 'Không có gì để bỏ'
+  - _key: customers.seat.missing_point
+    _en: 'This table has no order point configured'
+    _vi: 'Bàn này chưa được cấu hình điểm gọi món'
