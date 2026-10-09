@@ -92,7 +92,7 @@ namespace TramChanh.App
             _player.Initialize(_input, _clock, _balance.MoveSpeed, _balance.LookSensitivity, _balance.Gravity, _balance.PitchLimit);
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
             _heldView.Initialize(context.Hands, _events);
-            _prompt.Initialize(_events, _interactor);
+            _prompt.Initialize(_events, _interactor, Orders);
             _entryUI.Initialize(_events);
             _lobby.Initialize(Orders, _events);
             _entryUI.Shown += OnEntryShown;
