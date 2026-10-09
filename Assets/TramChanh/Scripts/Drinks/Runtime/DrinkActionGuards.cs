@@ -28,6 +28,12 @@ namespace TramChanh.Drinks.Runtime
             {
                 return actor;
             }
+            // MAIN-102: an orphaned bag (its order failed) can never reach Ready; stop further steps and point
+            // the player at the held discard instead of letting them finish an unplaceable drink.
+            if (bag.Preparation != null && bag.Preparation.IsOrphaned)
+            {
+                return Availability.Blocked("ready.no_order");
+            }
             return bag.State == expected ? Availability.Available : Availability.Blocked(reason);
         }
     }

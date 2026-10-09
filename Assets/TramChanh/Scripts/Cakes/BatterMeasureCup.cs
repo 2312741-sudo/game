@@ -44,14 +44,20 @@ namespace TramChanh.Cakes
             if (!ReferenceEquals(context.Hands.Current, this)) { return new InteractionQuery(Availability.Hidden, "cake.empty_back"); }
             Availability guard = CakeStation.GuardActor(context);
             if (guard.IsAvailable && _station == null) { guard = Availability.Blocked("cake.station_uninitialized"); }
+            // MAIN-102: an empty cup (no measurement / claim in progress) can be put back on its stand. Without this the
+            // cup could only leave the hands by pouring, so picking it up with no cake ticket blocked the hands forever
+            // (no order entry, no tea bag, hence no cake ticket could ever arrive).
+            if (_station != null && _station.Current == null) { return new InteractionQuery(guard, ReturnPromptKey); }
             if (guard.IsAvailable && _station.Current != null && _station.Current.State != CakeState.Waiting && _station.Current.State != CakeState.BatterMeasured)
             { guard = Availability.Blocked("cake.already_poured"); }
             return new InteractionQuery(guard, "cake.empty_back");
         }
+        public const string ReturnPromptKey = "cake.cup.return";
         public void ExecuteUse(InteractionContext context)
         {
             InteractionQuery query = QueryUse(context);
             if (!query.Availability.IsAvailable) { context.Events.Publish(new ActionBlocked(Id, query.BlockedReasonKey ?? "cake.cup_not_held")); return; }
+            if (query.PromptKey == ReturnPromptKey) { context.Hands.TryRelease(); ReturnHome(); return; }
             if (_station.Current != null) { _station.EmptyMeasurement(); } ApplyLevel(0f);
         }
         internal void ReturnHome()

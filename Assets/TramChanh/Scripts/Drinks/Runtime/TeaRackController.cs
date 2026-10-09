@@ -20,6 +20,7 @@ namespace TramChanh.Drinks.Runtime
         private TeaBagItem[] _bags;
         private IStallTicketQueue _tickets;
         private IReadyShelfPlacement _readyGate;
+        private IEventBus _events;
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
         public int Stock => _inventory?.Stock ?? 0;
@@ -63,11 +64,11 @@ namespace TramChanh.Drinks.Runtime
                 throw new ArgumentNullException(nameof(ids));
             }
             _inventory = new TeaRackInventory(_balance.TeaRackCapacity, _balance.TeaRackInitialStock, ids);
+            _events = events;
             _bags = new TeaBagItem[_inventory.Capacity];
             for (int i = 0; i < _inventory.Capacity; i++)
             {
-                DrinkPreparation preparation = _inventory.BagAt(i);
-                if (preparation == null)
+                if (_inventory.BagAt(i) == null)
                 {
                     continue;
                 }
@@ -75,15 +76,30 @@ namespace TramChanh.Drinks.Runtime
                 {
                     throw new InvalidOperationException("Each stocked bag requires a placement slot.");
                 }
-                TeaBagItem bag = Instantiate(_bagPrefab, _bagSlots[i], false);
-                bag.transform.localPosition = -bag.PlacementPoint.localPosition;
-                bag.Initialize(preparation, _recipe, events);
-                _bags[i] = bag;
+                SpawnBag(i);
             }
         }
 
+        private void SpawnBag(int index)
+        {
+            // Only initially stocked slots are ever restocked, and their anchors were validated at initialization.
+            TeaBagItem bag = Instantiate(_bagPrefab, _bagSlots[index], false);
+            bag.transform.localPosition = -bag.PlacementPoint.localPosition;
+            bag.Initialize(_inventory.BagAt(index), _recipe, _events);
+            _bags[index] = bag;
+        }
+
+        /// <summary>
+        /// MAIN-102: restock pre-portioned bags from storage once the rack has no stored bag (quantity policy is
+        /// DEC-015 TBD). Only slots whose bag is Ready or a discarded orphan are refilled, each with a fresh unbound
+        /// bag; a bag still held or in preparation keeps its slot. No ticket is claimed and no event is published.
+        /// The previous bag object is not touched: it belongs to the shelf, a served bundle, or was destroyed.
+        /// </summary>
+        public int RestockEmptySlots() => _inventory == null ? 0 : _inventory.RestockWhenEmpty(SpawnBag);
+
         public InteractionQuery Query(InteractionContext context)
         {
+            RestockEmptySlots();
             Availability available = DrinkActionGuards.Actor(context);
             if (available.IsAvailable)
             {
