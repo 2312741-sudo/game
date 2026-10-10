@@ -1,0 +1,16 @@
+{
+  "name": "TramChanh.People",
+  "rootNamespace": "TramChanh.People",
+  "references": [
+    "TramChanh.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
