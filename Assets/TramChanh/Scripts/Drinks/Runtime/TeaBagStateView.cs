@@ -83,12 +83,21 @@ namespace TramChanh.Drinks.Runtime
         public void Apply(TeaBagState state)
         {
             bool open = (int)state >= (int)TeaBagState.Opened;
-            _bagClosed?.SetActive(!open);
-            _bagOpen?.SetActive(open);
-            _coconutJelly?.SetActive((int)state >= (int)TeaBagState.CoconutJellyAdded);
-            _lemonJelly?.SetActive((int)state >= (int)TeaBagState.LemonJellyAdded);
-            _ice?.SetActive((int)state >= (int)TeaBagState.IceAdded);
-            _condensation?.SetActive(state == TeaBagState.Shaken);
+            SetVisible(_bagClosed, !open);
+            SetVisible(_bagOpen, open);
+            SetVisible(_coconutJelly, (int)state >= (int)TeaBagState.CoconutJellyAdded);
+            SetVisible(_lemonJelly, (int)state >= (int)TeaBagState.LemonJellyAdded);
+            SetVisible(_ice, (int)state >= (int)TeaBagState.IceAdded);
+            SetVisible(_condensation, state == TeaBagState.Shaken);
+        }
+
+        // Unity's == null, not ?.: an unassigned serialized field is a fake-null object that ?. would call into.
+        private static void SetVisible(GameObject target, bool visible)
+        {
+            if (target != null)
+            {
+                target.SetActive(visible);
+            }
         }
 
         public void SetShaking(bool shaking)

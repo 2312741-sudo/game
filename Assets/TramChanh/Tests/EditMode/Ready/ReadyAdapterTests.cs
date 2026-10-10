@@ -48,7 +48,7 @@ namespace TramChanh.Tests.EditMode.Ready
             _pickup = Child("LobbyPickup").AddComponent<ReadyOrderPickupPoint>();
             Configure(_pickup, "_id", 32);
             Configure(_pickup, "_interactionPoint", _pickup.transform);
-            _pickup.Initialize(_shelf);
+            _pickup.Initialize(_shelf, _shelf, _events);
             _item = Child("PreparedDrink").AddComponent<PreparedHoldable>();
             _item.Initialize(ItemKind.Drink);
         }
@@ -398,7 +398,7 @@ namespace TramChanh.Tests.EditMode.Ready
             public bool TryRelease() => false;
         }
 
-        private sealed class Shelf : IReadyShelf
+        private sealed class Shelf : IReadyShelf, IOrderService
         {
             private readonly IEventBus _events;
             public IPreparedItem Stored;
@@ -413,7 +413,42 @@ namespace TramChanh.Tests.EditMode.Ready
             public IReadOnlyList<IPreparedItem> Snapshot;
             public readonly List<OrderId> PickedOrders = new List<OrderId>();
             public OrderId NextReadyOrder => NextOverride.IsValid ? NextOverride : Stored != null ? Stored.BoundItem.OrderId : default;
-            public Shelf(IEventBus events) => _events = events;
+            private readonly Dictionary<OrderId, FixtureOrder> _orders = new Dictionary<OrderId, FixtureOrder>();
+            public IReadOnlyList<IReadOnlyOrder> Active => System.Array.Empty<IReadOnlyOrder>();
+            public Shelf(IEventBus events)
+            {
+                _events = events;
+                events.Subscribe<OrderStatusChanged>(change => ((FixtureOrder)Get(change.OrderId)).Status = change.Status);
+            }
+            public IReadOnlyOrder Get(OrderId id)
+            {
+                if (!id.IsValid) { return null; }
+                if (!_orders.TryGetValue(id, out FixtureOrder order))
+                {
+                    order = new FixtureOrder(id);
+                    _orders.Add(id, order);
+                }
+                return order;
+            }
+            public Result<OrderId> RequestService(OrderOrigin origin, CustomerId customer, IReadOnlyList<ItemRequest> requested) => Result<OrderId>.Fail("fixture.unsupported");
+            public Result BeginTaking(OrderId id, ActorRef actor, OrderOrigin point) => Result.Fail("fixture.unsupported");
+            public Result Enter(OrderId id, IReadOnlyList<ItemRequest> entered) => Result.Fail("fixture.unsupported");
+            public Result SendToStall(OrderId id) => Result.Fail("fixture.unsupported");
+            public Result Fail(OrderId id, FailureReason reason) => Result.Fail("fixture.unsupported");
+            private sealed class FixtureOrder : IReadOnlyOrder
+            {
+                public OrderId Id { get; }
+                public OrderOrigin Origin => OrderOrigin.ForTable(new TableId(Id.Value));
+                public CustomerId CustomerId => new CustomerId(Id.Value);
+                public OrderStatus Status { get; set; } = OrderStatus.Ready;
+                public IReadOnlyList<ItemRequest> RequestedItems => System.Array.Empty<ItemRequest>();
+                public IReadOnlyList<IReadOnlyOrderItem> Items => System.Array.Empty<IReadOnlyOrderItem>();
+                public double CreatedAt => 0d;
+                public double SentAt => 0d;
+                public double StatusEnteredAt => 0d;
+                public FailureReason? FailureReason => null;
+                public FixtureOrder(OrderId id) { Id = id; }
+            }
             public Availability CanPlace(IPreparedItem item) => Stored == null ? Availability.Available : Availability.Blocked("ready.occupied");
             public bool Occupied(ItemKind kind) => Stored != null && Stored.Kind == kind;
             public Result PlaceReady(IPreparedItem item)
@@ -435,7 +470,7 @@ namespace TramChanh.Tests.EditMode.Ready
             {
                 PickupCalls++;
                 PickedOrders.Add(orderId);
-                if (Snapshot != null) { return Result<IReadOnlyList<IPreparedItem>>.Success(Snapshot); }
+                if (Snapshot != null) { ((FixtureOrder)Get(orderId)).Status = OrderStatus.PickedUpByLobby; return Result<IReadOnlyList<IPreparedItem>>.Success(Snapshot); }
                 if (PickupFailure)
                 {
                     return Result<IReadOnlyList<IPreparedItem>>.Fail("ready.rejected");

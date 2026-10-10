@@ -1,0 +1,131 @@
+# ACCEL-01 roadside night environment — validation
+
+Date: 2026-10-09 (Asia/Ho_Chi_Minh)
+Source/assets: `3ef8afa223a357c4a7692b8b196c7e0b1977142f`
+Base: `f4eb584` (locked ACCEL-01 shared contracts).
+Unity: **6000.6.0f1**, existing package pins unchanged.
+
+The saved environment adds a sidewalk, road, neighbourhood facades, warm stall lamps/LED strip, cool street lighting, menu/snack placeholders, red stools and yellow crate tables with steel trays. The canonical nested stall and new sign retain their roots, scale and stall anchors. Independent TablePoint, CakeTablePoint and VehiclePoint plus PlayerSpawn, LobbyPosition and ReadyHandoff are ready for App composition.
+
+This lane is environment-only. It contains no player, order, preparation or audio-listener component; the final ACCEL-01 scene installs separately validated gameplay station prefabs and HUD.
+
+## Verification
+
+- RED: all **7/7** new saved-asset tests failed on absent environment prefab/scene; zero C# diagnostics.
+- Saved assets built with `AccelRoadsideSceneBuilder.BuildAndSave`.
+- GREEN: **7/7** focused asset tests passed.
+- Final compile: PASS; **zero C# errors/warnings**.
+- Full EditMode: **291/291 passed**, zero skipped/inconclusive.
+- Full PlayMode: **33/33 passed**, zero skipped/inconclusive.
+- QA-000: PASS from clean detached checkout of source/assets commit above.
+- GPU preview: real 1600×1000 PNG produced by `CapturePreview` with pinned URP; zero C#/shader/missing-reference diagnostics. Root reviewed the actual image and accepted sign sizing, warm/cool night palette, sidewalk and crate furniture. Expected observer-fault logs in existing tests remain explicitly asserted.
+
+Final source/tests: `work/validation/accel-scene-resume-final-clean`; preview log: `work/validation/accel-scene-preview-clean.log` in the task workspace. Review image: `outputs/ACCEL-01-roadside-night.png` in the task workspace.
+
+All new layout, colours and vehicle/customer silhouettes are marked provisional. The menu uses supplied item names without invented prices, portions or recipe values. No drink measuring step is introduced.
+
+## QA-000 clean-checkout report
+
+# QA-000 — Repo, docs and skeleton check
+
+- Date: 2026-10-09
+- Commit: `3ef8afa`
+- Script: `Automation/qa000_repo_check.py` (read-only, no Unity required)
+
+| # | Criterion | Result | Detail |
+|---|---|---|---|
+| 1 | Doc present and non-empty: `Docs/ARCHITECTURE.md` | **PASS** |  |
+| 2 | Doc present and non-empty: `Docs/ORDER_SYSTEM.md` | **PASS** |  |
+| 3 | Doc present and non-empty: `Docs/INTERACTION_SYSTEM.md` | **PASS** |  |
+| 4 | Doc present and non-empty: `Docs/DRINK_WORKFLOW.md` | **PASS** |  |
+| 5 | Doc present and non-empty: `Docs/CAKE_WORKFLOW.md` | **PASS** |  |
+| 6 | Doc present and non-empty: `Docs/ASSET_INTEGRATION.md` | **PASS** |  |
+| 7 | Doc present and non-empty: `Docs/PROJECT_TASK_PLAN.md` | **PASS** |  |
+| 8 | Doc present and non-empty: `Docs/CODING_CONVENTIONS.md` | **PASS** |  |
+| 9 | Doc present and non-empty: `Docs/Reference/TramChanh_AI_GameDev_Workflow.md` | **PASS** |  |
+| 10 | Doc present and non-empty: `Docs/Reference/TramChanh_3D_Asset_Pipeline.md` | **PASS** |  |
+| 11 | ARCHITECTURE.md lists ground truths GT-001…GT-008 | **PASS** |  |
+| 12 | Current branch | **INFO** | HEAD |
+| 13 | Working tree clean | **PASS** |  |
+| 14 | Remote branch `main` exists ([WF] §17) | **PASS** |  |
+| 15 | Remote branch `develop` exists ([WF] §17) | **PASS** |  |
+| 16 | ProjectVersion.txt pins a Unity 6 editor | **PASS** | m_EditorVersion: 6000.6.0f1 |
+| 17 | Package `com.unity.render-pipelines.universal` in manifest | **PASS** | 17.6.0 |
+| 18 | Package `com.unity.inputsystem` in manifest | **PASS** | 1.20.0 |
+| 19 | Package `com.unity.test-framework` in manifest | **PASS** | 1.8.0 |
+| 20 | Package `com.unity.ai.navigation` in manifest | **PASS** | 2.0.14 |
+| 21 | Folder `Assets/TramChanh/Art/Models` | **PASS** |  |
+| 22 | Folder `Assets/TramChanh/Art/Materials` | **PASS** |  |
+| 23 | Folder `Assets/TramChanh/Art/Textures` | **PASS** |  |
+| 24 | Folder `Assets/TramChanh/Art/Animations` | **PASS** |  |
+| 25 | Folder `Assets/TramChanh/Art/VFX` | **PASS** |  |
+| 26 | Folder `Assets/TramChanh/Audio/SFX` | **PASS** |  |
+| 27 | Folder `Assets/TramChanh/Audio/Ambient` | **PASS** |  |
+| 28 | Folder `Assets/TramChanh/Audio/Music` | **PASS** |  |
+| 29 | Folder `Assets/TramChanh/Prefabs/Stall` | **PASS** |  |
+| 30 | Folder `Assets/TramChanh/Prefabs/Workstations` | **PASS** |  |
+| 31 | Folder `Assets/TramChanh/Prefabs/Items` | **PASS** |  |
+| 32 | Folder `Assets/TramChanh/Prefabs/NPC` | **PASS** |  |
+| 33 | Folder `Assets/TramChanh/Prefabs/UI` | **PASS** |  |
+| 34 | Folder `Assets/TramChanh/Prefabs/CustomerArea` | **PASS** |  |
+| 35 | Folder `Assets/TramChanh/Scenes/Bootstrap` | **PASS** |  |
+| 36 | Folder `Assets/TramChanh/Scenes/Gameplay` | **PASS** |  |
+| 37 | Folder `Assets/TramChanh/Scenes/Test` | **PASS** |  |
+| 38 | Folder `Assets/TramChanh/Scripts/Core` | **PASS** |  |
+| 39 | Folder `Assets/TramChanh/Scripts/Orders` | **PASS** |  |
+| 40 | Folder `Assets/TramChanh/Scripts/Interaction` | **PASS** |  |
+| 41 | Folder `Assets/TramChanh/Scripts/Drinks` | **PASS** |  |
+| 42 | Folder `Assets/TramChanh/Scripts/Cakes` | **PASS** |  |
+| 43 | Folder `Assets/TramChanh/Scripts/Lobby` | **PASS** |  |
+| 44 | Folder `Assets/TramChanh/Scripts/Customers` | **PASS** |  |
+| 45 | Folder `Assets/TramChanh/Scripts/Inventory` | **PASS** |  |
+| 46 | Folder `Assets/TramChanh/Scripts/UI` | **PASS** |  |
+| 47 | Folder `Assets/TramChanh/Scripts/Save` | **PASS** |  |
+| 48 | Folder `Assets/TramChanh/Scripts/Debug` | **PASS** |  |
+| 49 | Folder `Assets/TramChanh/Scripts/Stall` | **PASS** |  |
+| 50 | Folder `Assets/TramChanh/Scripts/Editor` | **PASS** |  |
+| 51 | Folder `Assets/TramChanh/ScriptableObjects/Items` | **PASS** |  |
+| 52 | Folder `Assets/TramChanh/ScriptableObjects/Recipes` | **PASS** |  |
+| 53 | Folder `Assets/TramChanh/ScriptableObjects/Customers` | **PASS** |  |
+| 54 | Folder `Assets/TramChanh/ScriptableObjects/Balance` | **PASS** |  |
+| 55 | Folder `Assets/TramChanh/Tests/EditMode` | **PASS** |  |
+| 56 | Folder `Assets/TramChanh/Tests/PlayMode` | **PASS** |  |
+| 57 | Repo file `.gitignore` | **PASS** |  |
+| 58 | Repo file `.gitattributes` | **PASS** |  |
+| 59 | Repo file `.editorconfig` | **PASS** |  |
+| 60 | Git LFS configured for FBX/PNG/BLEND | **PASS** |  |
+| 61 | Assembly set matches ARCHITECTURE.md §4 | **PASS** | extra=[] missing=[] |
+| 62 | `TramChanh.Core` references | **PASS** |  |
+| 63 | `TramChanh.Content` references | **PASS** |  |
+| 64 | `TramChanh.Interaction` references | **PASS** |  |
+| 65 | `TramChanh.Orders` references | **PASS** |  |
+| 66 | `TramChanh.Stall` references | **PASS** |  |
+| 67 | `TramChanh.Drinks` references | **PASS** |  |
+| 68 | `TramChanh.Cakes` references | **PASS** |  |
+| 69 | `TramChanh.Lobby` references | **PASS** |  |
+| 70 | `TramChanh.Customers` references | **PASS** |  |
+| 71 | `TramChanh.UI` references | **PASS** |  |
+| 72 | `TramChanh.App` references | **PASS** |  |
+| 73 | `TramChanh.DevTools` references | **PASS** |  |
+| 74 | `TramChanh.Editor` references | **PASS** |  |
+| 75 | `TramChanh.Tests.EditMode` references | **PASS** |  |
+| 76 | `TramChanh.Tests.PlayMode` references | **PASS** |  |
+| 77 | `TramChanh.Orders` does not reference `TramChanh.Drinks` | **PASS** |  |
+| 78 | `TramChanh.Orders` does not reference `TramChanh.Cakes` | **PASS** |  |
+| 79 | `TramChanh.Orders` does not reference `TramChanh.Lobby` | **PASS** |  |
+| 80 | `TramChanh.Orders` does not reference `TramChanh.UI` | **PASS** |  |
+| 81 | `TramChanh.Drinks` does not reference `TramChanh.Cakes` | **PASS** |  |
+| 82 | `TramChanh.Cakes` does not reference `TramChanh.Drinks` | **PASS** |  |
+| 83 | `TramChanh.Interaction` does not reference `TramChanh.Orders` | **PASS** |  |
+| 84 | `TramChanh.Interaction` does not reference `TramChanh.Drinks` | **PASS** |  |
+| 85 | `TramChanh.Interaction` does not reference `TramChanh.Cakes` | **PASS** |  |
+| 86 | No assembly reference cycles | **PASS** |  |
+| 87 | Test assemblies are test-only (UNITY_INCLUDE_TESTS, not auto-referenced) | **PASS** |  |
+| 88 | GT-002: no old-sign asset files | **PASS** |  |
+| 89 | GT-002: every sign asset is the NEW sign | **PASS** |  |
+| 90 | Measuring cup uses only canonical names (PF/SM_BatterMeasureCup_500ml) | **PASS** |  |
+| 91 | GT-001 constants (1.8 / 0.8 / 1.0 / 1.2) defined once in StallDimensions.cs | **PASS** |  |
+
+**Overall: PASS**
+
+

@@ -14,6 +14,16 @@ namespace TramChanh.Drinks.Domain
         public OrderItemRef BoundItem => _tickets == null || _tickets.IsBound(_boundItem) ? _boundItem : default;
         public bool IsFinished => State == TeaBagState.Wiped || State == TeaBagState.Ready;
         public int Quality => 100;
+        /// <summary>
+        /// MAIN-102: the bag was claimed for an order item that is no longer live (the order failed or the claim
+        /// was released) while the bag was still being prepared. Such a bag can never be placed Ready, so it is
+        /// offered a discard (<c>drink.discard_orphan</c>). A bag that was never claimed (no ticket queue) is not orphaned.
+        /// </summary>
+        public bool IsOrphaned => _tickets != null && !IsRetired
+            && (int)State >= (int)TeaBagState.PickedUp && (int)State <= (int)TeaBagState.Wiped
+            && !_tickets.IsBound(_boundItem);
+        /// <summary>The bag was discarded and left play; its rack slot may be restocked.</summary>
+        public bool IsRetired { get; private set; }
 
         public DrinkPreparation(PreparationId preparationId, SequenceMode mode = SequenceMode.Strict)
         {
@@ -55,6 +65,17 @@ namespace TramChanh.Drinks.Domain
             _boundItem = binding;
             _tickets = tickets;
             State = TeaBagState.PickedUp;
+        }
+
+        /// <summary>Discard an orphaned bag. Order state is untouched: the owner already released the item.</summary>
+        internal bool Retire()
+        {
+            if (!IsOrphaned)
+            {
+                return false;
+            }
+            IsRetired = true;
+            return true;
         }
 
         internal void RollbackBoundPickup()

@@ -4,7 +4,7 @@ using TramChanh.Core;
 
 namespace TramChanh.Orders
 {
-    public sealed class StallTicketQueue : IStallTicketQueue
+    public sealed class StallTicketQueue : IStallTicketQueue, IOrderItemCatalog
     {
         private readonly OrderService _orders;
         public IReadOnlyList<OrderId> Tickets => _orders.Tickets;
@@ -46,5 +46,11 @@ namespace TramChanh.Orders
 
         public Result Release(OrderItemRef item) => _orders.Release(item);
         public bool IsBound(OrderItemRef item) => _orders.IsBound(item);
+        public bool TryGetItemDefinition(OrderItemRef binding, out string itemDefinitionId)
+        {
+            OrderItem item = _orders.BoundItem(binding);
+            itemDefinitionId = item?.ItemDefinitionId;
+            return item != null;
+        }
     }
 }

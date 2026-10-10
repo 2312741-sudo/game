@@ -59,7 +59,7 @@ namespace TramChanh.Tests.EditMode.Ready
             _pickup = Child("ReadyPickup").AddComponent<ReadyOrderPickupPoint>();
             Set(_pickup, "_id", 42);
             Set(_pickup, "_interactionPoint", _pickup.transform);
-            _pickup.Initialize(_shelf);
+            _pickup.Initialize(_shelf, _orders, _events);
         }
 
         [SetUp] public void SetUp() => Build(1);
