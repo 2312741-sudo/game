@@ -49,3 +49,12 @@ sysinfo.txt
 
 # Local .NET/NUnit harness output (never commit)
 /TestResult.xml
+
+# Private reference photographs (safety for public repo)
+ArtSource/References/
+ArtSource/**/__pycache__/
+
+# Visual validation scratch outputs (named files only; no global *.xml/*.log)
+*.slnx
+test-results.xml
+unity_test.log
