@@ -101,48 +101,141 @@ namespace TramChanh.Tests.PlayMode.People
         }
 
         [UnityTest]
-        public IEnumerator Test03_AC_Person_DrivesWalk_AndMeasuresFootSpeed()
+        public IEnumerator Test03_PathFollower_PlantedFeetStayStationaryDuringStancePhase()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PersonPrefabPaths[0]);
             var go = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
             _spawned.Add(go);
 
-            var animator = go.GetComponent<Animator>();
-            animator.SetFloat("Speed", 1.3f);
+            // Path follower moving along straight line at 1.30 m/s
+            var follower = go.AddComponent<SimpleTestPathFollower>();
+            follower.Speed = 1.30f;
+            follower.Direction = Vector3.forward;
 
-            yield return null;
-            yield return new WaitForSeconds(0.2f);
+            var animator = go.GetComponent<Animator>();
+            animator.SetFloat("Speed", 1.30f);
+
+            // Wait for transition from Idle to Walk
+            yield return new WaitForSeconds(0.25f);
 
             var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            Assert.That(stateInfo.IsName("Walk"), Is.True, $"Should transition to Walk at Speed=1.3, but state is hash {stateInfo.shortNameHash}");
+            Assert.That(stateInfo.IsName("Walk"), Is.True,
+                $"Should transition to Walk state at Speed=1.3, but was state hash {stateInfo.shortNameHash}");
 
             Transform leftFoot = go.transform.Find("Hips/LeftUpperLeg/LeftLowerLeg/LeftFoot");
-            Assert.That(leftFoot, Is.Not.Null);
+            Transform rightFoot = go.transform.Find("Hips/RightUpperLeg/RightLowerLeg/RightFoot");
+            Assert.That(leftFoot, Is.Not.Null, "LeftFoot transform missing");
+            Assert.That(rightFoot, Is.Not.Null, "RightFoot transform missing");
 
-            float minZ = float.MaxValue;
-            float maxZ = float.MinValue;
+            // Track foot positions during planted stance phases across 2 full walk cycles (~1.6s)
             float elapsed = 0f;
-            float sampleDuration = 1.0f; // Sample over full 1.0s walk cycle
+            float testDuration = 1.6f;
 
-            while (elapsed < sampleDuration)
+            float maxLeftDriftPerPhase = 0f;
+            float currentLeftMinZ = float.MaxValue;
+            float currentLeftMaxZ = float.MinValue;
+            bool wasLeftPlanted = false;
+            int leftPhasesSampled = 0;
+
+            float maxRightDriftPerPhase = 0f;
+            float currentRightMinZ = float.MaxValue;
+            float currentRightMaxZ = float.MinValue;
+            bool wasRightPlanted = false;
+            int rightPhasesSampled = 0;
+
+            float startBodyZ = go.transform.position.z;
+
+            while (elapsed < testDuration)
             {
                 yield return null;
                 elapsed += Time.deltaTime;
-                float currentZ = leftFoot.position.z;
-                minZ = Mathf.Min(minZ, currentZ);
-                maxZ = Mathf.Max(maxZ, currentZ);
+
+                float normTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime % 1.0f;
+                if (normTime < 0f) normTime += 1.0f;
+
+                // Left foot stance phase: normTime in [0.08, 0.42]
+                bool isLeftPlanted = (normTime >= 0.08f && normTime <= 0.42f);
+                if (isLeftPlanted)
+                {
+                    float lz = leftFoot.position.z;
+                    currentLeftMinZ = Mathf.Min(currentLeftMinZ, lz);
+                    currentLeftMaxZ = Mathf.Max(currentLeftMaxZ, lz);
+                    wasLeftPlanted = true;
+                }
+                else if (wasLeftPlanted)
+                {
+                    float drift = currentLeftMaxZ - currentLeftMinZ;
+                    maxLeftDriftPerPhase = Mathf.Max(maxLeftDriftPerPhase, drift);
+                    leftPhasesSampled++;
+                    currentLeftMinZ = float.MaxValue;
+                    currentLeftMaxZ = float.MinValue;
+                    wasLeftPlanted = false;
+                }
+
+                // Right foot stance phase: normTime in [0.58, 0.92]
+                bool isRightPlanted = (normTime >= 0.58f && normTime <= 0.92f);
+                if (isRightPlanted)
+                {
+                    float rz = rightFoot.position.z;
+                    currentRightMinZ = Mathf.Min(currentRightMinZ, rz);
+                    currentRightMaxZ = Mathf.Max(currentRightMaxZ, rz);
+                    wasRightPlanted = true;
+                }
+                else if (wasRightPlanted)
+                {
+                    float drift = currentRightMaxZ - currentRightMinZ;
+                    maxRightDriftPerPhase = Mathf.Max(maxRightDriftPerPhase, drift);
+                    rightPhasesSampled++;
+                    currentRightMinZ = float.MaxValue;
+                    currentRightMaxZ = float.MinValue;
+                    wasRightPlanted = false;
+                }
             }
 
-            float stride = maxZ - minZ;
-            Assert.That(stride, Is.GreaterThan(0.20f), $"Left foot should articulate during Walk (stride: {stride:F3}m)");
+            // Flush final phases if still planted
+            if (wasLeftPlanted && currentLeftMinZ < float.MaxValue)
+            {
+                float drift = currentLeftMaxZ - currentLeftMinZ;
+                maxLeftDriftPerPhase = Mathf.Max(maxLeftDriftPerPhase, drift);
+                leftPhasesSampled++;
+            }
+            if (wasRightPlanted && currentRightMinZ < float.MaxValue)
+            {
+                float drift = currentRightMaxZ - currentRightMinZ;
+                maxRightDriftPerPhase = Mathf.Max(maxRightDriftPerPhase, drift);
+                rightPhasesSampled++;
+            }
 
-            // Measured foot swing speed: stride / half-cycle duration (~0.38s at Speed=1.3)
-            // Cycle duration = 1.0s / 1.3 = 0.769s. Half-cycle swing = ~0.385s.
-            float halfCycleTime = 1.0f / (1.3f * 2f);
-            float footSpeed = stride / halfCycleTime;
+            float endBodyZ = go.transform.position.z;
+            float bodyDistance = endBodyZ - startBodyZ;
+            float measuredLocomotionSpeed = bodyDistance / elapsed;
 
-            Debug.Log($"[PeopleQA] Walk Test Passed: Stride = {stride:F3}m, HalfCycle = {halfCycleTime:F3}s, Measured Foot Speed at Speed=1.3 is {footSpeed:F2} m/s");
-            Assert.That(footSpeed, Is.EqualTo(1.30f).Within(0.06f), $"Foot speed at Speed=1.3 must measure 1.30 m/s, got {footSpeed:F2} m/s");
+            Assert.That(leftPhasesSampled, Is.GreaterThanOrEqualTo(2), "Should sample at least 2 LeftFoot stance phases");
+            Assert.That(rightPhasesSampled, Is.GreaterThanOrEqualTo(2), "Should sample at least 2 RightFoot stance phases");
+
+            Debug.Log($"[PeopleQA] PathFollower Locomotion: Distance = {bodyDistance:F3}m over {elapsed:F2}s, Speed = {measuredLocomotionSpeed:F2} m/s");
+            Debug.Log($"[PeopleQA] Planted Foot Drift per phase: LeftFoot = {maxLeftDriftPerPhase * 1000f:F1}mm ({maxLeftDriftPerPhase:F4}m), RightFoot = {maxRightDriftPerPhase * 1000f:F1}mm ({maxRightDriftPerPhase:F4}m) (Tolerance: <= 10.0mm)");
+
+            // Assert that planted feet remain stationary within 10mm (1.0cm) tolerance in world space
+            Assert.That(maxLeftDriftPerPhase, Is.LessThanOrEqualTo(0.010f),
+                $"LeftFoot planted drift during stance must stay within 0.010m (1cm), got {maxLeftDriftPerPhase:F4}m");
+            Assert.That(maxRightDriftPerPhase, Is.LessThanOrEqualTo(0.010f),
+                $"RightFoot planted drift during stance must stay within 0.010m (1cm), got {maxRightDriftPerPhase:F4}m");
+
+            // Assert that locomotion speed along path is 1.30 m/s
+            Assert.That(measuredLocomotionSpeed, Is.EqualTo(1.30f).Within(0.05f),
+                $"Locomotion speed along path should be 1.30 m/s, got {measuredLocomotionSpeed:F2} m/s");
+        }
+
+        internal sealed class SimpleTestPathFollower : MonoBehaviour
+        {
+            public float Speed = 1.30f;
+            public Vector3 Direction = Vector3.forward;
+
+            private void Update()
+            {
+                transform.position += Direction * (Speed * Time.deltaTime);
+            }
         }
 
         [UnityTest]

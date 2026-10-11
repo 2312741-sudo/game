@@ -149,8 +149,6 @@ namespace TramChanh.EditorTools
             var walkClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Walk.anim");
             var sitClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Sit_Down.anim");
 
-            CalibrateWalkAnimation(1.30f);
-
             if (walkClip != null)
             {
                 // Measure stride displacement by sampling walk clip on Person_01
@@ -238,67 +236,170 @@ namespace TramChanh.EditorTools
             return maxZ - minZ;
         }
 
-        public static void CalibrateWalkAnimation(float targetFootSpeed = 1.30f)
+        [MenuItem("TramChanh/People/Build Accurate Walk Clip")]
+        public static void BuildKinematicallyAccurateWalkClip()
         {
             var walkClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Walk.anim");
             if (walkClip == null) return;
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PersonPrefabPaths[0]);
-            var go = Object.Instantiate(prefab);
+            float L1 = 0.4128f;
+            float L2 = 0.3735f;
+            float maxReach = L1 + L2 - 0.0005f;
+            float Y0 = -Mathf.Sqrt(maxReach * maxReach - 0.25f * 0.25f);
+            float dY = 0.022f;
 
-            try
+            int sampleCount = 41; // 0.025s steps for 1.0s loop
+            var leftThighKeys = new Keyframe[sampleCount];
+            var leftKneeKeys = new Keyframe[sampleCount];
+            var rightThighKeys = new Keyframe[sampleCount];
+            var rightKneeKeys = new Keyframe[sampleCount];
+
+            var leftArmKeys = new Keyframe[sampleCount];
+            var rightArmKeys = new Keyframe[sampleCount];
+
+            var hipsYawKeys = new Keyframe[sampleCount];
+            var hipsRollKeys = new Keyframe[sampleCount];
+            var spineYawKeys = new Keyframe[sampleCount];
+
+            float stepDt = 1.0f / (sampleCount - 1);
+            for (int i = 0; i < sampleCount; i++)
             {
-                float halfCycle = (walkClip.length / 1.3f) / 2f;
-                float targetStride = targetFootSpeed * halfCycle;
+                float t = i * stepDt;
+                if (i == sampleCount - 1) t = 1.0f;
 
-                for (int pass = 0; pass < 4; pass++)
+                // Left leg: stance in [0.0, 0.5], swing in (0.5, 1.0]
+                float leftTz, leftTy;
+                if (t <= 0.5f)
                 {
-                    float currentStride = MeasureWalkStride(walkClip, go);
-                    float currentSpeed = currentStride / halfCycle;
-                    if (Mathf.Abs(currentSpeed - targetFootSpeed) < 0.005f)
-                    {
-                        Debug.Log($"[PeopleQA] Walk Speed Calibrated on pass {pass}: Stride = {currentStride:F4}m, Speed = {currentSpeed:F2} m/s");
-                        break;
-                    }
-
-                    if (currentStride <= 0.001f) break;
-                    float ratio = targetStride / currentStride;
-                    Debug.Log($"[PeopleQA] Calibration Pass {pass + 1}: Current Speed = {currentSpeed:F2} m/s -> applying ratio {ratio:F4}");
-
-                    var bindings = AnimationUtility.GetCurveBindings(walkClip);
-                    foreach (var b in bindings)
-                    {
-                        bool isLegOrArmPitch = (b.path.Contains("UpperLeg") || b.path.Contains("LowerLeg") || b.path.Contains("UpperArm"))
-                                               && b.propertyName.EndsWith(".x");
-                        bool isSpineYaw = b.path == "Hips/Spine" && b.propertyName.EndsWith(".y");
-                        bool isHipsRollYaw = b.path == "Hips" && (b.propertyName.EndsWith(".y") || b.propertyName.EndsWith(".z"));
-
-                        if (isLegOrArmPitch || isSpineYaw || isHipsRollYaw)
-                        {
-                            var curve = AnimationUtility.GetEditorCurve(walkClip, b);
-                            if (curve != null)
-                            {
-                                var keys = curve.keys;
-                                for (int i = 0; i < keys.Length; i++)
-                                {
-                                    keys[i].value *= ratio;
-                                    keys[i].inTangent *= ratio;
-                                    keys[i].outTangent *= ratio;
-                                }
-                                curve.keys = keys;
-                                AnimationUtility.SetEditorCurve(walkClip, b, curve);
-                            }
-                        }
-                    }
-
-                    EditorUtility.SetDirty(walkClip);
-                    AssetDatabase.SaveAssets();
+                    float u = t / 0.5f;
+                    leftTz = 0.25f - 0.50f * u;
+                    leftTy = Y0 - dY * Mathf.Sin(Mathf.PI * u);
                 }
+                else
+                {
+                    float u = (t - 0.5f) / 0.5f;
+                    leftTz = -0.25f * Mathf.Cos(Mathf.PI * u);
+                    leftTy = Y0 + 0.080f * Mathf.Sin(Mathf.PI * u);
+                }
+
+                SolveLegIK(L1, L2, maxReach, leftTy, leftTz, out float leftThighX, out float leftKneeX);
+                leftThighKeys[i] = new Keyframe(t, leftThighX);
+                leftKneeKeys[i] = new Keyframe(t, leftKneeX);
+
+                // Right leg: 180 deg / 0.5s phase shift
+                float rightT = (t + 0.5f) % 1.0f;
+                float rightTz, rightTy;
+                if (rightT <= 0.5f)
+                {
+                    float u = rightT / 0.5f;
+                    rightTz = 0.25f - 0.50f * u;
+                    rightTy = Y0 - dY * Mathf.Sin(Mathf.PI * u);
+                }
+                else
+                {
+                    float u = (rightT - 0.5f) / 0.5f;
+                    rightTz = -0.25f * Mathf.Cos(Mathf.PI * u);
+                    rightTy = Y0 + 0.080f * Mathf.Sin(Mathf.PI * u);
+                }
+
+                SolveLegIK(L1, L2, maxReach, rightTy, rightTz, out float rightThighX, out float rightKneeX);
+                rightThighKeys[i] = new Keyframe(t, rightThighX);
+                rightKneeKeys[i] = new Keyframe(t, rightKneeX);
+
+                // Arms (opposing leg pitch)
+                float armSwing = Mathf.Sin(2f * Mathf.PI * t) * 20f;
+                leftArmKeys[i] = new Keyframe(t, armSwing);
+                rightArmKeys[i] = new Keyframe(t, -armSwing);
+
+                // Hips / Spine subtle rotations
+                float hipsYaw = Mathf.Sin(2f * Mathf.PI * t) * 1.5f;
+                float hipsRoll = Mathf.Cos(2f * Mathf.PI * t) * 1.0f;
+                hipsYawKeys[i] = new Keyframe(t, hipsYaw);
+                hipsRollKeys[i] = new Keyframe(t, hipsRoll);
+                spineYawKeys[i] = new Keyframe(t, -hipsYaw * 0.7f);
             }
-            finally
+
+            var leftThighCurve = new AnimationCurve(leftThighKeys);
+            var leftKneeCurve = new AnimationCurve(leftKneeKeys);
+            var rightThighCurve = new AnimationCurve(rightThighKeys);
+            var rightKneeCurve = new AnimationCurve(rightKneeKeys);
+
+            var leftArmCurve = new AnimationCurve(leftArmKeys);
+            var rightArmCurve = new AnimationCurve(rightArmKeys);
+
+            var hipsYawCurve = new AnimationCurve(hipsYawKeys);
+            var hipsRollCurve = new AnimationCurve(hipsRollKeys);
+            var spineYawCurve = new AnimationCurve(spineYawKeys);
+
+            SmoothCurveTangents(leftThighCurve);
+            SmoothCurveTangents(leftKneeCurve);
+            SmoothCurveTangents(rightThighCurve);
+            SmoothCurveTangents(rightKneeCurve);
+
+            SmoothCurveTangents(leftArmCurve);
+            SmoothCurveTangents(rightArmCurve);
+
+            SmoothCurveTangents(hipsYawCurve);
+            SmoothCurveTangents(hipsRollCurve);
+            SmoothCurveTangents(spineYawCurve);
+
+            // Set curves
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/LeftUpperLeg", typeof(Transform), "localEulerAnglesRaw.x"), leftThighCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/LeftUpperLeg/LeftLowerLeg", typeof(Transform), "localEulerAnglesRaw.x"), leftKneeCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/RightUpperLeg", typeof(Transform), "localEulerAnglesRaw.x"), rightThighCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/RightUpperLeg/RightLowerLeg", typeof(Transform), "localEulerAnglesRaw.x"), rightKneeCurve);
+
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/Spine/Chest/LeftShoulder/LeftUpperArm", typeof(Transform), "localEulerAnglesRaw.x"), leftArmCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/Spine/Chest/RightShoulder/RightUpperArm", typeof(Transform), "localEulerAnglesRaw.x"), rightArmCurve);
+
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips", typeof(Transform), "localEulerAnglesRaw.y"), hipsYawCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips", typeof(Transform), "localEulerAnglesRaw.z"), hipsRollCurve);
+            AnimationUtility.SetEditorCurve(walkClip, EditorCurveBinding.FloatCurve("Hips/Spine", typeof(Transform), "localEulerAnglesRaw.y"), spineYawCurve);
+
+            EditorUtility.SetDirty(walkClip);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[PeopleQA] Successfully built kinematically accurate walk clip AN_Person_Walk.anim!");
+        }
+
+        private static void SmoothCurveTangents(AnimationCurve curve)
+        {
+            var keys = curve.keys;
+            int n = keys.Length;
+            for (int i = 0; i < n; i++)
             {
-                Object.DestroyImmediate(go);
+                int prev = (i == 0) ? n - 2 : i - 1;
+                int next = (i == n - 1) ? 1 : i + 1;
+
+                float dt = (i == 0) ? (keys[1].time - keys[0].time) * 2f :
+                           (i == n - 1) ? (keys[n - 1].time - keys[n - 2].time) * 2f :
+                           keys[next].time - keys[prev].time;
+
+                float dv = keys[next].value - keys[prev].value;
+                float slope = dt > 0.0001f ? dv / dt : 0f;
+
+                keys[i].inTangent = slope;
+                keys[i].outTangent = slope;
             }
+            curve.keys = keys;
+        }
+
+        private static void SolveLegIK(float L1, float L2, float maxReach, float ty, float tz, out float thighX, out float kneeX)
+        {
+            float D = Mathf.Sqrt(ty * ty + tz * tz);
+            D = Mathf.Clamp(D, 0.1f, maxReach);
+
+            float cosFlex = (D * D - L1 * L1 - L2 * L2) / (2f * L1 * L2);
+            cosFlex = Mathf.Clamp(cosFlex, -1f, 1f);
+            float kneeFlexRad = Mathf.Acos(cosFlex);
+
+            float alpha = Mathf.Atan2(tz, -ty);
+            float cosHipTri = (L1 * L1 + D * D - L2 * L2) / (2f * L1 * D);
+            cosHipTri = Mathf.Clamp(cosHipTri, -1f, 1f);
+            float hipTriRad = Mathf.Acos(cosHipTri);
+
+            float thighAngleRad = -(alpha + hipTriRad);
+            thighX = thighAngleRad * Mathf.Rad2Deg;
+            kneeX = kneeFlexRad * Mathf.Rad2Deg;
         }
 
         public static void CreatePreviewSceneAndScreenshots()
