@@ -56,15 +56,16 @@ namespace TramChanh.App.People
             for (int i = 0; i <= 10; i++) { Put(root, anchors, "WP_SidewalkSouth_" + (i + 1).ToString("00"), -10f + 2f * i, -3.8f); }
             Vector2[] alley =
             {
-                new Vector2(-9f, 2.4f), new Vector2(-9f, -0.8f), new Vector2(-7.1f, -0.8f), new Vector2(-4.6f, -0.8f), new Vector2(-2.4f, -0.8f),
-                new Vector2(-1.6f, -1.6f), new Vector2(1.6f, -1.6f), new Vector2(3f, -1.4f), new Vector2(4.9f, -1.3f), new Vector2(7.6f, -1.3f),
-                new Vector2(7.6f, -3.2f),
+                // West leg stays at z = -0.5 (clear of tables 8/9 and the plant); east leg loops behind the stall to the east tables.
+                new Vector2(-9f, 2.4f), new Vector2(-9f, -0.5f), new Vector2(-7.1f, -0.5f), new Vector2(-4.6f, -0.5f), new Vector2(-2.4f, -0.5f),
+                new Vector2(-1.6f, -1.6f), new Vector2(1.6f, -1.6f), new Vector2(3f, -1.55f), new Vector2(4.9f, -1.55f), new Vector2(7.6f, -1.55f),
+                new Vector2(6.6f, -0.1f), new Vector2(6.6f, 1.4f), new Vector2(5.2f, 1.4f),
             };
             for (int i = 0; i < alley.Length; i++) { Put(root, anchors, "WP_Alley_" + (i + 1).ToString("00"), alley[i].x, alley[i].y); }
             for (int i = 0; i <= 8; i++)
             {
-                Put(root, anchors, "WP_RoadEast_" + (i + 1).ToString("00"), -16f + 4f * i, 5.6f);
-                Put(root, anchors, "WP_RoadWest_" + (i + 1).ToString("00"), 16f - 4f * i, 7.4f);
+                Put(root, anchors, "WP_RoadEast_" + (i + 1).ToString("00"), -12f + 3f * i, 5.6f);
+                Put(root, anchors, "WP_RoadWest_" + (i + 1).ToString("00"), 12f - 3f * i, 9.6f);
             }
             Put(root, anchors, StreetEntryWest, -11f, 2.9f);
             Put(root, anchors, StreetEntryEast, 10.5f, -3.8f);

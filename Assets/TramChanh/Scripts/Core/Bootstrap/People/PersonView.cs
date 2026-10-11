@@ -22,13 +22,18 @@ namespace TramChanh.App.People
         private bool _hasSpeed, _hasSitting, _hasEating;
 
         public bool IsWalking => _follower != null && !_follower.Arrived;
-        public int Tag { get; set; }
 
         public void Prepare()
         {
             // Contract: visuals only. Disable any collider an art prefab may bring.
             foreach (Collider collider in GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
             _animator = GetComponentInChildren<Animator>(true);
+            if (_animator != null)
+            {
+                // The path follower owns the root; animation must never move it.
+                _animator.applyRootMotion = false;
+                _animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            }
             _hasSpeed = _hasSitting = _hasEating = false;
             if (_animator != null && _animator.runtimeAnimatorController != null)
             {
@@ -48,6 +53,14 @@ namespace TramChanh.App.People
             SetSitting(false);
             SetEating(false);
             Apply();
+            if (_follower.Arrived) { Finish(); }
+        }
+
+        /// <summary>Keeps walking the current path and replaces the arrival callback (e.g. hand-over to a leaver pool).</summary>
+        public void ContinueThen(Action<PersonView> onArrived)
+        {
+            if (IsWalking) { _onArrived = onArrived; }
+            else { onArrived?.Invoke(this); }
         }
 
         public void Place(Vector3 position, Quaternion rotation)
@@ -67,14 +80,16 @@ namespace TramChanh.App.People
             if (_follower == null) { return; }
             _follower.Step(seconds);
             Apply();
-            if (_follower.Arrived)
-            {
-                _follower = null;
-                SetSpeed(0f);
-                Action<PersonView> callback = _onArrived;
-                _onArrived = null;
-                callback?.Invoke(this);
-            }
+            if (_follower.Arrived) { Finish(); }
+        }
+
+        private void Finish()
+        {
+            _follower = null;
+            SetSpeed(0f);
+            Action<PersonView> callback = _onArrived;
+            _onArrived = null;
+            callback?.Invoke(this);
         }
 
         private void Apply()

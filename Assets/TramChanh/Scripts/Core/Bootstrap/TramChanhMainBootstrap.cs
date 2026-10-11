@@ -210,19 +210,20 @@ namespace TramChanh.App
             CustomerDirectorSettings settings = _customerSettings ?? new CustomerDirectorSettings();
             if (_simulatePeople)
             {
-                // Customers walk: the order is requested when they reach their seat (People layer reports arrival).
-                settings = new CustomerDirectorSettings(settings.MaxActiveCustomers, settings.ArrivalIntervalSeconds, settings.TableClearSeconds,
-                    settings.DrinkWeight, settings.CakeWeight, settings.MixedWeight, true, settings.EatSeconds, settings.ArrivalTimeoutSeconds, settings.DepartureTimeoutSeconds);
-            }
-            Customers = new CustomerDirector(customerSeats, settings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
-            Customers.CustomerRequestFailed += OnCustomerRequestFailed;
-            if (_simulatePeople)
-            {
                 var people = new GameObject("People");
                 people.transform.SetParent(_runtime.transform, false);
                 People = people.AddComponent<PeopleController>();
-                People.Initialize(Environment.transform, _tableAnchors, _seatAnchors, Customers, _peopleSettings, _personPrefabs, _bikePrefabs, _customerSeed);
+                People.Prepare(Environment.transform, _tableAnchors, _seatAnchors, _peopleSettings, _personPrefabs, _bikePrefabs, _customerSeed);
+                // Customers walk: the order is requested when they reach their seat (People layer reports arrival).
+                // Safety timeouts must outlast the longest real walk, or customers would sit or vanish mid-street.
+                float walkBudget = People.LongestCustomerWalkSeconds * 1.5f + 5f;
+                settings = new CustomerDirectorSettings(settings.MaxActiveCustomers, settings.ArrivalIntervalSeconds, settings.TableClearSeconds,
+                    settings.DrinkWeight, settings.CakeWeight, settings.MixedWeight, true, settings.EatSeconds,
+                    Mathf.Max(settings.ArrivalTimeoutSeconds, walkBudget), Mathf.Max(settings.DepartureTimeoutSeconds, walkBudget));
             }
+            Customers = new CustomerDirector(customerSeats, settings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
+            Customers.CustomerRequestFailed += OnCustomerRequestFailed;
+            if (People != null) { People.Attach(Customers); }
             else
             {
                 Customers.CustomerSeated += OnCustomerSeated;

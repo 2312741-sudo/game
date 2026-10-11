@@ -57,7 +57,7 @@ namespace TramChanh.Tests.PlayMode.Integration
             Assert.That(seat, Is.GreaterThanOrEqualTo(0));
             Assert.That(_bootstrap.Customers.PhaseAt(seat), Is.EqualTo(CustomerPhase.Arriving));
             Assert.That(_bootstrap.Tables[seat].ActiveOrder.IsValid, Is.False);
-            // Simulate up to 40 s of walking deterministically (routes are at most ~25 m at 1.3 m/s).
+            // Simulate up to 40 s of walking deterministically (fallback routes are at most ~36 m at 1.3 m/s, about 28 s).
             for (int i = 0; i < 160 && _bootstrap.Customers.PhaseAt(seat) == CustomerPhase.Arriving; i++) { _bootstrap.People.Tick(0.25d); }
             Assert.That(_bootstrap.Customers.PhaseAt(seat), Is.EqualTo(CustomerPhase.Seated));
             OrderId order = _bootstrap.Tables[seat].ActiveOrder;
@@ -93,8 +93,8 @@ namespace TramChanh.Tests.PlayMode.Integration
                 maxPedestrians = Mathf.Max(maxPedestrians, _bootstrap.People.ActivePedestrians);
                 maxBikes = Mathf.Max(maxBikes, _bootstrap.People.ActiveBikes);
             }
-            Assert.That(maxPedestrians, Is.GreaterThan(0).And.LessThanOrEqualTo(12));
-            Assert.That(maxBikes, Is.GreaterThan(0).And.LessThanOrEqualTo(6));
+            Assert.That(maxPedestrians, Is.GreaterThan(0).And.LessThanOrEqualTo(_bootstrap.People.Settings.MaxPedestrians));
+            Assert.That(maxBikes, Is.GreaterThan(0).And.LessThanOrEqualTo(_bootstrap.People.Settings.MaxBikes));
             yield return null;
         }
 
@@ -104,6 +104,7 @@ namespace TramChanh.Tests.PlayMode.Integration
             int seat = FirstOccupied();
             PersonView view = _bootstrap.People.CustomerAt(seat);
             Assert.That(view, Is.Not.Null);
+            Assert.That(view.IsWalking, Is.True, "The opening customer is still walking to the table.");
             var clock = _bootstrap.Interactor.Context.Clock;
             clock.Pause();
             Vector3 before = view.transform.position;
@@ -113,6 +114,8 @@ namespace TramChanh.Tests.PlayMode.Integration
             _bootstrap.People.Tick(0d);
             Assert.That(Vector3.Distance(before, view.transform.position), Is.LessThan(0.0001f));
             clock.Resume();
+            _bootstrap.People.Tick(0.5d);
+            Assert.That(Vector3.Distance(before, view.transform.position), Is.GreaterThan(0.1f), "Customers walk again after resume.");
             yield return null;
         }
 
