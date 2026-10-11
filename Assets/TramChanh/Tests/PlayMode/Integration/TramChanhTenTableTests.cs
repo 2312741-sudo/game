@@ -395,23 +395,33 @@ namespace TramChanh.Tests.PlayMode.Integration
         [UnityTest]
         public IEnumerator TABLES_008_DirectorRunsInTheSceneWithVisualsFurnitureAndPlaceholderRules()
         {
-            // Opening state: exactly one seated dine-in customer, and its visual sits under that table's Seat.
+            // Opening state: exactly one dine-in customer. With simulated people (default) it is walking to its table and has
+            // no order yet; the order appears when it arrives (PEOPLE-001). The visual exists for exactly the occupied tables.
             Assert.That(_bootstrap.Customers.ActiveCustomers, Is.EqualTo(1), "The scene opens with one dine-in customer.");
             int seated = -1;
             for (int i = 0; i < TramChanhMainBootstrap.TableCount; i++)
             {
-                Transform visual = _bootstrap.TableAnchors[i].Find("Seat/Customer_" + TramChanhMainBootstrap.TableAnchorName(i + 1));
-                Assert.That(visual != null, Is.EqualTo(_bootstrap.Customers.IsOccupied(i)), TramChanhMainBootstrap.TableAnchorName(i + 1) + " visual must match occupancy.");
+                bool hasVisual = _bootstrap.People != null
+                    ? _bootstrap.People.CustomerAt(i) != null
+                    : _bootstrap.TableAnchors[i].Find("Seat/Customer_" + TramChanhMainBootstrap.TableAnchorName(i + 1)) != null;
+                Assert.That(hasVisual, Is.EqualTo(_bootstrap.Customers.IsOccupied(i)), TramChanhMainBootstrap.TableAnchorName(i + 1) + " visual must match occupancy.");
                 if (_bootstrap.Customers.IsOccupied(i)) { seated = i; }
             }
             Assert.That(seated, Is.GreaterThanOrEqualTo(0));
-            Assert.That(_bootstrap.Tables[seated].ActiveOrder.IsValid, Is.True);
-            Assert.That(_bootstrap.Orders.Get(_bootstrap.Tables[seated].ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+            if (_bootstrap.People != null)
+            {
+                Assert.That(_bootstrap.Customers.PhaseAt(seated), Is.EqualTo(TramChanh.Customers.CustomerPhase.Arriving));
+                Assert.That(_bootstrap.Tables[seated].ActiveOrder.IsValid, Is.False, "No order before the customer reaches the table.");
+            }
+            else
+            {
+                Assert.That(_bootstrap.Orders.Get(_bootstrap.Tables[seated].ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby));
+            }
 
-            // A second arrival creates a second visual on a different, previously free table.
+            // A second arrival reserves a different, previously free table and gets its own visual.
             int next = _bootstrap.Customers.SpawnNow();
             Assert.That(next, Is.Not.EqualTo(seated).And.GreaterThanOrEqualTo(0));
-            Assert.That(_bootstrap.TableAnchors[next].Find("Seat/Customer_" + TramChanhMainBootstrap.TableAnchorName(next + 1)), Is.Not.Null);
+            if (_bootstrap.People != null) { Assert.That(_bootstrap.People.CustomerAt(next), Is.Not.Null); }
             Assert.That(_bootstrap.Customers.ActiveCustomers, Is.EqualTo(2));
 
             // Pause holds the director: no arrivals while the game clock is paused, whatever real time passes.

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TramChanh.Cakes;
 using TramChanh.Content;
+using TramChanh.App.People;
 using TramChanh.Customers;
 using TramChanh.Core;
 using TramChanh.Core.Provisional;
@@ -59,6 +60,13 @@ namespace TramChanh.App
         [SerializeField] private int _customerSeed = 1;
         [Tooltip("Optional seated customer visual (Antigravity). Empty: a primitive placeholder is used.")]
         [SerializeField] private GameObject _customerVisualPrefab;
+        [Tooltip("Simulated people (NPC_AND_MAP_EXPANSION.md): customers walk to their table and away; pedestrians and motorbikes fill the street.")]
+        [SerializeField] private bool _simulatePeople = true;
+        [SerializeField] private PeopleSettings _peopleSettings = new PeopleSettings();
+        [Tooltip("Antigravity PF_Person_xx prefabs (visual only). Empty: development capsules.")]
+        [SerializeField] private GameObject[] _personPrefabs = Array.Empty<GameObject>();
+        [Tooltip("Antigravity PF_Rider_xx prefabs (visual only). Empty: development boxes.")]
+        [SerializeField] private GameObject[] _bikePrefabs = Array.Empty<GameObject>();
         [Tooltip("Environment-root-local positions for TABLE_03..TABLE_10 when the environment has no TABLE_xx anchors.")]
         [SerializeField, Tbd("DEC-010", "Development customer-area layout until Antigravity's customer area prefab provides TABLE_xx anchors.")]
         private Vector3[] _fallbackTablePositions =
@@ -86,6 +94,7 @@ namespace TramChanh.App
         private IIdGenerator _ids;
         private GameObject _runtime;
         private int _nextCustomer = FirstVehicleCustomerId;
+        private bool _peoplePaused;
         private Animator[] _animators = Array.Empty<Animator>();
 
         public bool IsInitialized { get; private set; }
@@ -107,6 +116,8 @@ namespace TramChanh.App
         public IReadOnlyList<Transform> TableAnchors => _tableAnchors;
         public VehicleOrderPoint Vehicle { get; private set; }
         public CustomerDirector Customers { get; private set; }
+        /// <summary>Simulated people layer, or null when _simulatePeople is off.</summary>
+        public PeopleController People { get; private set; }
         /// <summary>All Lobby customer points: the 10 tables followed by the takeaway vehicle.</summary>
         public IReadOnlyList<OrderPoint> CustomerPoints
         {
@@ -196,10 +207,28 @@ namespace TramChanh.App
             }
             var customerSeats = new List<ICustomerSeat>(TableCount);
             for (int i = 0; i < _tables.Count; i++) { customerSeats.Add(new OrderPointSeat(_tables[i], i + 1)); }
-            Customers = new CustomerDirector(customerSeats, _customerSettings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
-            Customers.CustomerSeated += OnCustomerSeated;
-            Customers.CustomerLeft += OnCustomerLeft;
+            CustomerDirectorSettings settings = _customerSettings ?? new CustomerDirectorSettings();
+            if (_simulatePeople)
+            {
+                var people = new GameObject("People");
+                people.transform.SetParent(_runtime.transform, false);
+                People = people.AddComponent<PeopleController>();
+                People.Prepare(Environment.transform, _tableAnchors, _seatAnchors, _peopleSettings, _personPrefabs, _bikePrefabs, _customerSeed);
+                // Customers walk: the order is requested when they reach their seat (People layer reports arrival).
+                // Safety timeouts must outlast the longest real walk, or customers would sit or vanish mid-street.
+                float walkBudget = People.LongestCustomerWalkSeconds * 1.5f + 5f;
+                settings = new CustomerDirectorSettings(settings.MaxActiveCustomers, settings.ArrivalIntervalSeconds, settings.TableClearSeconds,
+                    settings.DrinkWeight, settings.CakeWeight, settings.MixedWeight, true, settings.EatSeconds,
+                    Mathf.Max(settings.ArrivalTimeoutSeconds, walkBudget), Mathf.Max(settings.DepartureTimeoutSeconds, walkBudget));
+            }
+            Customers = new CustomerDirector(customerSeats, settings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
             Customers.CustomerRequestFailed += OnCustomerRequestFailed;
+            if (People != null) { People.Attach(Customers); }
+            else
+            {
+                Customers.CustomerSeated += OnCustomerSeated;
+                Customers.CustomerLeft += OnCustomerLeft;
+            }
 
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
@@ -385,9 +414,12 @@ namespace TramChanh.App
         {
             _clock?.Tick();
             foreach (Animator animator in _animators) { if (animator != null) { animator.speed = _clock.IsPaused ? 0f : 1f; } }
+            if (People != null && _peoplePaused != _clock.IsPaused) { _peoplePaused = _clock.IsPaused; People.SetPaused(_peoplePaused); }
             if (!IsInitialized || _clock.IsPaused) { return; }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
-            Customers.Tick(Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds));
+            double customerDelta = Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds);
+            Customers.Tick(customerDelta);
+            if (People != null) { People.Tick(customerDelta); }
             // Completed orders free their point; a new customer arrives after the provisional pause.
             foreach (CustomerSeat seat in _seats)
             {

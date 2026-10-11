@@ -68,8 +68,9 @@ namespace TramChanh.Tests.PlayMode.Integration
                 waitingTables++;
                 Assert.That(_bootstrap.Orders.Get(point.ActiveOrder).Status, Is.EqualTo(OrderStatus.WaitingForLobby), point.name);
             }
-            Assert.That(waitingTables, Is.EqualTo(_bootstrap.Customers.ActiveCustomers));
-            Assert.That(waitingTables, Is.GreaterThanOrEqualTo(1), "The scene opens with at least one dine-in customer.");
+            // PEOPLE-001: customers walk to their table first and only order on arrival, so a table may be reserved without an order yet.
+            Assert.That(waitingTables, Is.LessThanOrEqualTo(_bootstrap.Customers.ActiveCustomers));
+            Assert.That(_bootstrap.Customers.ActiveCustomers, Is.GreaterThanOrEqualTo(1), "The scene opens with at least one dine-in customer.");
             Assert.That(Object.FindObjectsByType<Camera>(FindObjectsSortMode.None), Has.Exactly(1).Matches<Camera>(camera => camera.isActiveAndEnabled));
             foreach (GameObject root in _scene.GetRootGameObjects())
             {
