@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="7" result="Passed" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.5544977">
+  <test-suite type="TestSuite" id="1095" name="game" fullname="game" runstate="Runnable" testcasecount="63" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.554498" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1074" name="TramChanh.Tests.PlayMode.dll" fullname="/Users/nthtam/Lưu trữ/game/Library/ScriptAssemblies/TramChanh.Tests.PlayMode.dll" runstate="Runnable" testcasecount="61" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.548976" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="32472" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1075" name="TramChanh" fullname="TramChanh" runstate="Runnable" testcasecount="61" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.545456" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1076" name="Tests" fullname="TramChanh.Tests" runstate="Runnable" testcasecount="61" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.544544" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1077" name="PlayMode" fullname="TramChanh.Tests.PlayMode" runstate="Runnable" testcasecount="61" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.543552" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1081" name="People" fullname="TramChanh.Tests.PlayMode.People" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.542499" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1009" name="PeopleCharacterPlayModeTests" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:22Z" duration="5.541797" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1010" name="Test01_AllPrefabs_AreGenericWithNullAvatar" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test01_AllPrefabs_AreGenericWithNullAvatar" methodname="Test01_AllPrefabs_AreGenericWithNullAvatar" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="920562110" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:16Z" duration="0.064472" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1011" name="Test02_AllSixBodies_FeetTouchGroundAtRestAndIdle" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test02_AllSixBodies_FeetTouchGroundAtRestAndIdle" methodname="Test02_AllSixBodies_FeetTouchGroundAtRestAndIdle" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="70664455" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:16Z" duration="0.011455" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1012" name="Test03_PathFollower_PlantedFeetStayStationaryDuringStancePhase" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test03_PathFollower_PlantedFeetStayStationaryDuringStancePhase" methodname="Test03_PathFollower_PlantedFeetStayStationaryDuringStancePhase" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="1705260043" result="Passed" start-time="2026-10-11 18:54:16Z" end-time="2026-10-11 18:54:18Z" duration="1.854688" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[[PeopleQA] PathFollower Locomotion: Distance = 2.080m over 1.60s, Speed = 1.30 m/s
+[PeopleQA] Planted Foot Drift per phase: LeftFoot = 1.7mm (0.0017m), RightFoot = 3.7mm (0.0037m) (Tolerance: <= 10.0mm)
+]]></output>
+                </test-case>
+                <test-case id="1013" name="Test04_AC_Person_DrivesSitting_KneesBendTo85Degrees" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test04_AC_Person_DrivesSitting_KneesBendTo85Degrees" methodname="Test04_AC_Person_DrivesSitting_KneesBendTo85Degrees" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="660280560" result="Passed" start-time="2026-10-11 18:54:18Z" end-time="2026-10-11 18:54:20Z" duration="1.801412" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[[PeopleQA] Sitting Knee Angle: 85.0 deg, Hips Y: 0.301m
+]]></output>
+                </test-case>
+                <test-case id="1014" name="Test05_AC_Person_DrivesEating_InSittingPose" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test05_AC_Person_DrivesEating_InSittingPose" methodname="Test05_AC_Person_DrivesEating_InSittingPose" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="1870911117" result="Passed" start-time="2026-10-11 18:54:20Z" end-time="2026-10-11 18:54:22Z" duration="1.800498" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1015" name="Test06_IdlePhoneClip_DurationIs2Point5Seconds" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test06_IdlePhoneClip_DurationIs2Point5Seconds" methodname="Test06_IdlePhoneClip_DurationIs2Point5Seconds" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="1699904083" result="Passed" start-time="2026-10-11 18:54:22Z" end-time="2026-10-11 18:54:22Z" duration="0.000388" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1016" name="Test07_ClothingB_WiredOntoPersons04To06" fullname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests.Test07_ClothingB_WiredOntoPersons04To06" methodname="Test07_ClothingB_WiredOntoPersons04To06" classname="TramChanh.Tests.PlayMode.People.PeopleCharacterPlayModeTests" runstate="Runnable" seed="1717944950" result="Passed" start-time="2026-10-11 18:54:22Z" end-time="2026-10-11 18:54:22Z" duration="0.000806" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[Saving results to: /Users/nthtam/Library/Application Support/DefaultCompany/game/TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
