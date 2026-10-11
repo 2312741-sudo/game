@@ -12,6 +12,34 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_ToppingStation
       objectReference: {fileID: 0}
+    - target: {fileID: 4156336338589304334, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.x
+      value: 0.32
+      objectReference: {fileID: 0}
+    - target: {fileID: 4156336338589304334, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.y
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4156336338589304334, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.z
+      value: 0.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386220038325873773, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.x
+      value: 0.32
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386220038325873773, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.y
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386220038325873773, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Size.z
+      value: 0.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386220038325873773, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
+      propertyPath: m_Center.y
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 8169312794946313250, guid: b4c0204fe968c4f438bf7f8fd8f4368c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
