@@ -732,7 +732,7 @@ namespace TramChanh.EditorTools
                 idx++;
             }
 
-            // 2. SidewalkSouth (spacing 2.5m, x in [-40, 40], z = 1.8m)
+            // 2. SidewalkSouth (spacing 2.5m, x in [-40, 40], z = 3.1m for x in [-10, 8])
             var swSouth = new GameObject("SidewalkSouth");
             swSouth.layer = TramChanhLayers.EnvironmentIndex;
             swSouth.transform.SetParent(walkways.transform, false);
@@ -742,7 +742,22 @@ namespace TramChanh.EditorTools
                 var wp = new GameObject($"WP_SidewalkSouth_{idx:D2}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(swSouth.transform, false);
-                wp.transform.localPosition = new Vector3(x, 0.0f, 1.8f);
+                float z = 1.8f;
+                if (x >= -10.0f && x <= 8.0f)
+                {
+                    z = 3.1f;
+                }
+                else if (x < -10.0f && x >= -14.0f)
+                {
+                    float t = (-10.0f - x) / 4.0f;
+                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                }
+                else if (x > 8.0f && x <= 12.0f)
+                {
+                    float t = (x - 8.0f) / 4.0f;
+                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                }
+                wp.transform.localPosition = new Vector3(x, 0.0f, z);
                 idx++;
             }
 
@@ -788,17 +803,17 @@ namespace TramChanh.EditorTools
             }
 
             // Direct children of root per Section 5:
-            // StreetEntryWest & StreetEntryEast (hidden behind building edges)
+            // StreetEntryWest & StreetEntryEast (hidden behind building edges, <= 22m walk to any table approach)
             var entryWest = new GameObject("StreetEntryWest");
             entryWest.layer = TramChanhLayers.EnvironmentIndex;
             entryWest.transform.SetParent(root, false);
-            entryWest.transform.localPosition = new Vector3(-41.0f, 0.0f, 1.8f);
+            entryWest.transform.localPosition = new Vector3(-16.0f, 0.0f, 0.5f);
             entryWest.transform.localRotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
 
             var entryEast = new GameObject("StreetEntryEast");
             entryEast.layer = TramChanhLayers.EnvironmentIndex;
             entryEast.transform.SetParent(root, false);
-            entryEast.transform.localPosition = new Vector3(41.0f, 0.0f, 1.8f);
+            entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 0.5f);
             entryEast.transform.localRotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
 
             // TableApproach_01..10 beside each table's open side, facing the table, on the ground (y = 0)
