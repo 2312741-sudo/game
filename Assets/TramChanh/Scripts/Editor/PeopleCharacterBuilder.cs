@@ -149,6 +149,8 @@ namespace TramChanh.EditorTools
             var walkClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Walk.anim");
             var sitClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Sit_Down.anim");
 
+            CalibrateWalkAnimation(1.30f);
+
             if (walkClip != null)
             {
                 // Measure stride displacement by sampling walk clip on Person_01
@@ -162,7 +164,7 @@ namespace TramChanh.EditorTools
                     float maxZ = float.MinValue;
 
                     // Sample over 1 cycle (1.0s)
-                    float step = 0.02f;
+                    float step = 0.01f;
                     for (float t = 0; t <= walkClip.length; t += step)
                     {
                         walkClip.SampleAnimation(go, t);
@@ -216,6 +218,86 @@ namespace TramChanh.EditorTools
                 {
                     Object.DestroyImmediate(go);
                 }
+            }
+        }
+
+        public static float MeasureWalkStride(AnimationClip walkClip, GameObject personInstance)
+        {
+            Transform hips = personInstance.transform.Find("Hips");
+            Transform leftFoot = hips.Find("LeftUpperLeg/LeftLowerLeg/LeftFoot");
+            float minZ = float.MaxValue;
+            float maxZ = float.MinValue;
+            float step = 0.01f;
+            for (float t = 0; t <= walkClip.length; t += step)
+            {
+                walkClip.SampleAnimation(personInstance, t);
+                float z = leftFoot.position.z;
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+            return maxZ - minZ;
+        }
+
+        public static void CalibrateWalkAnimation(float targetFootSpeed = 1.30f)
+        {
+            var walkClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Walk.anim");
+            if (walkClip == null) return;
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PersonPrefabPaths[0]);
+            var go = Object.Instantiate(prefab);
+
+            try
+            {
+                float halfCycle = (walkClip.length / 1.3f) / 2f;
+                float targetStride = targetFootSpeed * halfCycle;
+
+                for (int pass = 0; pass < 4; pass++)
+                {
+                    float currentStride = MeasureWalkStride(walkClip, go);
+                    float currentSpeed = currentStride / halfCycle;
+                    if (Mathf.Abs(currentSpeed - targetFootSpeed) < 0.005f)
+                    {
+                        Debug.Log($"[PeopleQA] Walk Speed Calibrated on pass {pass}: Stride = {currentStride:F4}m, Speed = {currentSpeed:F2} m/s");
+                        break;
+                    }
+
+                    if (currentStride <= 0.001f) break;
+                    float ratio = targetStride / currentStride;
+                    Debug.Log($"[PeopleQA] Calibration Pass {pass + 1}: Current Speed = {currentSpeed:F2} m/s -> applying ratio {ratio:F4}");
+
+                    var bindings = AnimationUtility.GetCurveBindings(walkClip);
+                    foreach (var b in bindings)
+                    {
+                        bool isLegOrArmPitch = (b.path.Contains("UpperLeg") || b.path.Contains("LowerLeg") || b.path.Contains("UpperArm"))
+                                               && b.propertyName.EndsWith(".x");
+                        bool isSpineYaw = b.path == "Hips/Spine" && b.propertyName.EndsWith(".y");
+                        bool isHipsRollYaw = b.path == "Hips" && (b.propertyName.EndsWith(".y") || b.propertyName.EndsWith(".z"));
+
+                        if (isLegOrArmPitch || isSpineYaw || isHipsRollYaw)
+                        {
+                            var curve = AnimationUtility.GetEditorCurve(walkClip, b);
+                            if (curve != null)
+                            {
+                                var keys = curve.keys;
+                                for (int i = 0; i < keys.Length; i++)
+                                {
+                                    keys[i].value *= ratio;
+                                    keys[i].inTangent *= ratio;
+                                    keys[i].outTangent *= ratio;
+                                }
+                                curve.keys = keys;
+                                AnimationUtility.SetEditorCurve(walkClip, b, curve);
+                            }
+                        }
+                    }
+
+                    EditorUtility.SetDirty(walkClip);
+                    AssetDatabase.SaveAssets();
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
             }
         }
 

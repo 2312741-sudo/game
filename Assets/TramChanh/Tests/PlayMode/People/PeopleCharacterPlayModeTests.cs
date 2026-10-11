@@ -142,7 +142,7 @@ namespace TramChanh.Tests.PlayMode.People
             float footSpeed = stride / halfCycleTime;
 
             Debug.Log($"[PeopleQA] Walk Test Passed: Stride = {stride:F3}m, HalfCycle = {halfCycleTime:F3}s, Measured Foot Speed at Speed=1.3 is {footSpeed:F2} m/s");
-            Assert.That(footSpeed, Is.InRange(0.8f, 3.5f), $"Foot speed should be within realistic human walking range, got {footSpeed:F2} m/s");
+            Assert.That(footSpeed, Is.EqualTo(1.30f).Within(0.06f), $"Foot speed at Speed=1.3 must measure 1.30 m/s, got {footSpeed:F2} m/s");
         }
 
         [UnityTest]
