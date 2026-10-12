@@ -134,7 +134,8 @@ namespace TramChanh.EditorTools
             fillLight.color = new Color(0.9f, 0.95f, 1f);
             fillLightGo.transform.rotation = Quaternion.Euler(-30f, 150f, 0f);
 
-            Shader replacementShader = Shader.Find("Standard") ?? Shader.Find("Diffuse");
+            Shader replacementShader = Shader.Find("Standard");
+            if (replacementShader == null) { replacementShader = Shader.Find("Diffuse"); }
 
             // Hide roof temporarily so top-down camera can see counter surface and props
             var hiddenRoofs = new List<GameObject>();
@@ -270,9 +271,9 @@ namespace TramChanh.EditorTools
                 sb.AppendLine("  No interactable props under this root, so there is nothing to overlap. Counter props are placed at runtime (e.g. PF_DrinkStation), not in this prefab.");
             }
 
-            IReadOnlyList<PropOverlap> overlaps = StallCounterLayoutRule.FindPropOverlaps(props, tolerance);
+            IReadOnlyList<PropOverlap> overlaps = StallCounterLayoutRule.FindCrossStationOverlaps(props, tolerance);
             sb.AppendLine();
-            sb.AppendLine("Overlapping pairs: " + overlaps.Count);
+            sb.AppendLine("Overlapping pairs between different stations: " + overlaps.Count);
             foreach (PropOverlap overlap in overlaps)
             {
                 sb.AppendLine("  OVERLAP: " + overlap.First + " <-> " + overlap.Second

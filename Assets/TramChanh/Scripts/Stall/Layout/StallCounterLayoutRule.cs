@@ -111,6 +111,49 @@ namespace TramChanh.Stall.Layout
         }
 
         /// <summary>
+        /// Name of the station a collider belongs to: the nearest path segment that starts with "PF_"
+        /// (for example "PF_DrinkStation/PF_ToppingStation/CoverPivot/Lid" gives "PF_ToppingStation").
+        /// A path with no such segment is its own station, so it never merges with another prop.
+        /// </summary>
+        public static string StationOf(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return string.Empty;
+            }
+
+            string[] parts = path.Split('/');
+            for (int i = parts.Length - 1; i >= 0; i--)
+            {
+                if (parts[i].StartsWith("PF_", StringComparison.Ordinal))
+                {
+                    return parts[i];
+                }
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Like <see cref="FindPropOverlaps"/>, but drops pairs whose two colliders belong to the same station
+        /// (see <see cref="StationOf"/>). Parts of one station, such as a frame around its bins, are meant to overlap.
+        /// </summary>
+        public static IReadOnlyList<PropOverlap> FindCrossStationOverlaps(IReadOnlyList<FootprintRect> props,
+            float tolerance = DefaultToleranceMetres)
+        {
+            var result = new List<PropOverlap>();
+            foreach (PropOverlap overlap in FindPropOverlaps(props, tolerance))
+            {
+                if (StationOf(overlap.First) != StationOf(overlap.Second))
+                {
+                    result.Add(overlap);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Returns the names of props whose footprint is not fully inside the counter footprint.
         /// An excursion no larger than the tolerance is accepted.
         /// </summary>

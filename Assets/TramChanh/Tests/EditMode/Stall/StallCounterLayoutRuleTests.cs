@@ -245,6 +245,45 @@ namespace TramChanh.Tests.EditMode.Stall
             Assert.That(counter.Area, Is.EqualTo(1.44f).Within(Epsilon));
         }
 
+        // ------------------------------------------------------------ stations
+
+        [TestCase("PF_DrinkStation/PF_ToppingStation/CoverPivot/Lid", "PF_ToppingStation")]
+        [TestCase("PF_DrinkStation/PF_IceBin/IceVolume", "PF_IceBin")]
+        [TestCase("PF_DrinkStation/WipeArea", "PF_DrinkStation")]
+        [TestCase("Loose/Thing", "Loose/Thing")]
+        public void StationOf_UsesNearestPrefabSegment(string path, string expected)
+        {
+            Assert.That(StallCounterLayoutRule.StationOf(path), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void CrossStationOverlaps_IgnoresPartsOfTheSameStation()
+        {
+            var props = new List<FootprintRect>
+            {
+                new FootprintRect("PF_DrinkStation/PF_IceBin", -0.22f, -0.27f, 0.02f, 0.01f),
+                new FootprintRect("PF_DrinkStation/PF_IceBin/IceVolume", -0.2f, -0.25f, 0f, -0.01f),
+            };
+
+            Assert.That(StallCounterLayoutRule.FindPropOverlaps(props), Has.Count.EqualTo(1));
+            Assert.That(StallCounterLayoutRule.FindCrossStationOverlaps(props), Has.Count.EqualTo(0));
+        }
+
+        [Test]
+        public void CrossStationOverlaps_StillReportsDifferentStations()
+        {
+            var props = new List<FootprintRect>
+            {
+                new FootprintRect("PF_DrinkStation/PF_IceBin", -0.22f, -0.27f, 0.02f, 0.01f),
+                new FootprintRect("PF_DrinkStation/WipeArea", -0.225f, -0.225f, -0.075f, -0.075f),
+            };
+
+            IReadOnlyList<PropOverlap> overlaps = StallCounterLayoutRule.FindCrossStationOverlaps(props);
+
+            Assert.That(overlaps, Has.Count.EqualTo(1));
+            Assert.That(overlaps[0].OverlapX, Is.EqualTo(0.145f).Within(Epsilon * 10f));
+        }
+
         [Test]
         public void InvertedFootprint_IsRejected()
         {
