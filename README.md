@@ -13,7 +13,7 @@ Unity 6 (URP) project. The Unity project root is this repository root.
 
 ## First open
 
-1. Open the folder with Unity 6 (`ProjectSettings/ProjectVersion.txt`; any 6000.0 LTS patch is fine — Unity Hub can upgrade the pin).
+1. Open the folder with **Unity 6000.6.0f1** exactly (`ProjectSettings/ProjectVersion.txt`). The package versions in `Packages/manifest.json` and `Packages/packages-lock.json` are resolved for that editor.
 2. `TramChanhProjectSetup` runs automatically: physics layers, linear colour space, URP asset (`Assets/TramChanh/Settings/Rendering/`). Re-run via **Tram Chanh ▸ Setup ▸ Apply Project Settings**.
 3. **Tram Chanh ▸ Placeholders ▸ Build Stall + New Sign Placeholder** generates `PF_Stall_TramChanh` and `PF_Sign_TramChanh_New`.
 4. **Window ▸ General ▸ Test Runner**: run EditMode and PlayMode.
