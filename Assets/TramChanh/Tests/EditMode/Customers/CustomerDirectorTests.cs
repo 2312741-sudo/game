@@ -56,7 +56,7 @@ namespace TramChanh.Tests.EditMode.Customers
             // from field initializers (run by the parameterless constructor Unity's serializer uses).
             foreach (var field in typeof(CustomerDirectorSettings).GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic))
             {
-                Assert.That(field.GetCustomAttributes(typeof(UnityEngine.SerializeFieldAttribute), false), Is.Not.Empty, field.Name);
+                Assert.That(field.GetCustomAttributes(typeof(UnityEngine.SerializeField), false), Is.Not.Empty, field.Name);
                 var tbd = (TramChanh.Core.Provisional.TbdAttribute)Attribute.GetCustomAttribute(field, typeof(TramChanh.Core.Provisional.TbdAttribute));
                 Assert.That(tbd?.DecisionId, Is.EqualTo("DEC-010"), field.Name);
             }

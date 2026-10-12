@@ -74,7 +74,7 @@ namespace TramChanh.Tests.EditMode.Customers
             {
                 FieldInfo field = typeof(CustomerDirectorSettings).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
                 Assert.That(field, Is.Not.Null, name);
-                Assert.That(field.GetCustomAttributes(typeof(SerializeFieldAttribute), false), Is.Not.Empty, name);
+                Assert.That(field.GetCustomAttributes(typeof(SerializeField), false), Is.Not.Empty, name);
                 var tbd = (TramChanh.Core.Provisional.TbdAttribute)Attribute.GetCustomAttribute(field, typeof(TramChanh.Core.Provisional.TbdAttribute));
                 Assert.That(tbd?.DecisionId, Is.EqualTo("DEC-010"), name);
             }

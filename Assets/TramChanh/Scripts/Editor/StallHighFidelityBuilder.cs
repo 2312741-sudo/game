@@ -543,7 +543,7 @@ namespace TramChanh.EditorTools
                 Directory.CreateDirectory(ScreenshotsFolder);
             }
 
-            var cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            var cameras = Object.FindObjectsByType<Camera>();
             int width = 1920;
             int height = 1080;
 
