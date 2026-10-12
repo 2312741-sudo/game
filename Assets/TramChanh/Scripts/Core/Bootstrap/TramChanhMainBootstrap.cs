@@ -240,6 +240,9 @@ namespace TramChanh.App
             IsInitialized = true;
         }
 
+        /// <summary>Distance from a TableApproach_xx anchor to its table, along the anchor's forward axis (art contract §5).</summary>
+        private const float TableFromApproachMeters = 0.8f;
+
         private TableOrderPoint PlaceTable(int number)
         {
             string name = TableAnchorName(number);
@@ -247,6 +250,9 @@ namespace TramChanh.App
             Transform source = FindAnchor(name);
             if (source == null && number == 1) { source = FindAnchor(TableAnchor); }
             if (source == null && number == 2) { source = FindAnchor(CakeTableAnchor); }
+            // Extended street: no TABLE_xx anchor, but each table has a TableApproach_xx on the walkway facing it.
+            // The table stands TableFromApproachMeters ahead of that approach, along its forward axis.
+            Transform approach = source == null ? FindAnchor(PeopleLayout.TableApproachPrefix + number.ToString("00")) : null;
             bool environmentShowsFurniture = false;
             if (source != null)
             {
@@ -258,6 +264,10 @@ namespace TramChanh.App
             var root = new GameObject(name).transform;
             root.SetParent(_runtime.transform, false);
             if (source != null) { root.SetPositionAndRotation(source.position, source.rotation); }
+            else if (approach != null)
+            {
+                root.SetPositionAndRotation(approach.TransformPoint(new Vector3(0f, 0f, TableFromApproachMeters)), approach.rotation);
+            }
             else
             {
                 int fallback = number - 3;
