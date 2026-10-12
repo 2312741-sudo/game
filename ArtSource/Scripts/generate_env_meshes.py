@@ -250,10 +250,10 @@ def generate_stainless_tray(out_path):
 # 4. Extended Sidewalk & Multi-lane Road Modules
 # ==============================================================================
 def generate_extended_road_sidewalk(sidewalk_path, road_path):
-    # Deep Sidewalk module: length 36.0m along X (x: -18 to 18), depth along Z (z: -5.2 to 3.6), top walking surface at y: 0.0m, height 0.15m curb
+    # Deep Sidewalk module: length 36.0m along X (x: -18 to 18), depth along Z (z: -10.0 to 3.6), top walking surface at y: 0.0m, height 0.15m curb
     sw = ObjMesh("SM_Sidewalk_Extended")
     # Main walking surface with terrazzo tile texture (top at y: 0.00m)
-    sw.add_box(-18.0, 18.0, -0.15, 0.00, -5.2, 3.45, uv_scale=1.5)
+    sw.add_box(-18.0, 18.0, -0.15, 0.00, -10.0, 3.45, uv_scale=1.5)
     # Granite curb stone along road boundary (z: 3.45 to 3.60, top at y: 0.00m)
     sw.add_box(-18.0, 18.0, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0)
     sw.write_obj(sidewalk_path)
@@ -275,19 +275,18 @@ def generate_shopfront_a(out_path):
     h = 11.5
     d = 4.5
     
+    # Foundation plinth extending down into ground to eliminate any gap
+    mesh.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.00, -0.05, d + 0.05, uv_scale=0.5)
+
     # Main building volumetric shell
     # Building sits with back at +Z (z: 0 to d), front facade facing -Z (toward the street)
     # Side and rear walls
-    mesh.add_box(-w/2, -w/2 + 0.25, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.25, w/2, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(-w/2, w/2, 0.0, h, d - 0.25, d, uv_scale=0.5)
+    mesh.add_box(-w/2, -w/2 + 0.25, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.25, w/2, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(-w/2, w/2, -0.35, h, d - 0.25, d, uv_scale=0.5)
     mesh.add_box(-w/2, w/2, h - 0.3, h, 0.0, d, uv_scale=0.5) # Flat roof slab
 
     # Front Architectural Facade (facing -Z)
-    # Front facing quad with exact un-mirrored UV projection for Unity OBJ import:
-    # v1=(-w/2, y1), v2=(w/2, y1), v3=(w/2, y2), v4=(-w/2, y2)
-    # With Unity x = -x inversion: v1 (x < 0) becomes right, v2 (x > 0) becomes left.
-    # Therefore, uv1=(u_max, v_min), uv2=(u_min, v_min), uv3=(u_min, v_max), uv4=(u_max, v_max).
     def add_front_facade_panel(x1, x2, y1, y2, z, u1_norm, u2_norm, v1_norm, v2_norm):
         va = mesh.add_vertex(x1, y1, z)
         vb = mesh.add_vertex(x2, y1, z)
@@ -298,12 +297,12 @@ def generate_shopfront_a(out_path):
     # Upper facade wall (y: 3.5m to 11.5m) at z = 0.0m
     add_front_facade_panel(-w/2, w/2, 3.5, h, 0.0, 0.0, 1.0, 3.5/h, 1.0)
 
-    # Recessed ground floor entrance (z: 0.6m, y: 0 to 3.5m)
+    # Recessed ground floor entrance (z: 0.6m, y: -0.35m to 3.5m)
     # Roller shutter
-    add_front_facade_panel(-w/2 + 0.3, w/2 - 0.3, 0.0, 3.5, 0.6, 0.08, 0.92, 0.0, 3.5/h)
+    add_front_facade_panel(-w/2 + 0.3, w/2 - 0.3, -0.35, 3.5, 0.6, 0.08, 0.92, 0.0, 3.5/h)
     # Left & Right entrance reveal walls
-    mesh.add_box(-w/2, -w/2 + 0.3, 0.0, 3.5, 0.0, 0.6, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.3, w/2, 0.0, 3.5, 0.0, 0.6, uv_scale=0.5)
+    mesh.add_box(-w/2, -w/2 + 0.3, -0.35, 3.5, 0.0, 0.6, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.3, w/2, -0.35, 3.5, 0.0, 0.6, uv_scale=0.5)
 
     # Projecting Commercial Signboard "TẠP HÓA BÌNH AN" (y: 3.4m to 4.3m, z: -0.15m)
     mesh.add_box(-w/2 + 0.1, w/2 - 0.1, 3.4, 4.3, -0.15, 0.0)
@@ -343,10 +342,13 @@ def generate_shopfront_b(out_path):
     h = 14.0
     d = 4.5
     
+    # Foundation plinth extending down into ground to eliminate any gap
+    mesh.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.00, -0.05, d + 0.05, uv_scale=0.5)
+
     # Side and rear walls
-    mesh.add_box(-w/2, -w/2 + 0.25, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.25, w/2, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(-w/2, w/2, 0.0, h, d - 0.25, d, uv_scale=0.5)
+    mesh.add_box(-w/2, -w/2 + 0.25, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.25, w/2, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(-w/2, w/2, -0.35, h, d - 0.25, d, uv_scale=0.5)
     mesh.add_box(-w/2, w/2, h - 0.3, h, 0.0, d, uv_scale=0.5)
 
     def add_front_facade_panel(x1, x2, y1, y2, z, u1_norm, u2_norm, v1_norm, v2_norm):
@@ -358,10 +360,10 @@ def generate_shopfront_b(out_path):
 
     # Upper facade (y: 3.6m to 14.0m)
     add_front_facade_panel(-w/2, w/2, 3.6, h, 0.0, 0.0, 1.0, 3.6/h, 1.0)
-    # Ground floor green rolling door recessed at z = 0.5m
-    add_front_facade_panel(-w/2 + 0.3, w/2 - 0.3, 0.0, 3.6, 0.5, 0.06, 0.94, 0.0, 3.6/h)
-    mesh.add_box(-w/2, -w/2 + 0.3, 0.0, 3.6, 0.0, 0.5, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.3, w/2, 0.0, 3.6, 0.0, 0.5, uv_scale=0.5)
+    # Ground floor green rolling door recessed at z = 0.5m (extending down to y = -0.35m)
+    add_front_facade_panel(-w/2 + 0.3, w/2 - 0.3, -0.35, 3.6, 0.5, 0.06, 0.94, 0.0, 3.6/h)
+    mesh.add_box(-w/2, -w/2 + 0.3, -0.35, 3.6, 0.0, 0.5, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.3, w/2, -0.35, 3.6, 0.0, 0.5, uv_scale=0.5)
 
     # 3D Projecting Pharmacy Signboard Box (y: 3.5m to 4.6m, projecting -0.2m)
     mesh.add_box(-w/2 + 0.1, w/2 - 0.1, 3.5, 4.6, -0.2, 0.0)
@@ -388,9 +390,12 @@ def generate_shopfront_c(out_path):
     h = 11.0
     d = 4.5
     
-    mesh.add_box(-w/2, -w/2 + 0.25, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.25, w/2, 0.0, h, 0.0, d, uv_scale=0.5)
-    mesh.add_box(-w/2, w/2, 0.0, h, d - 0.25, d, uv_scale=0.5)
+    # Foundation plinth extending down into ground to eliminate any gap
+    mesh.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.00, -0.05, d + 0.05, uv_scale=0.5)
+
+    mesh.add_box(-w/2, -w/2 + 0.25, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.25, w/2, -0.35, h, 0.0, d, uv_scale=0.5)
+    mesh.add_box(-w/2, w/2, -0.35, h, d - 0.25, d, uv_scale=0.5)
     mesh.add_box(-w/2, w/2, h - 0.3, h, 0.0, d, uv_scale=0.5)
 
     def add_front_facade_panel(x1, x2, y1, y2, z, u1_norm, u2_norm, v1_norm, v2_norm):
@@ -402,10 +407,10 @@ def generate_shopfront_c(out_path):
 
     # Upper facade (y: 3.3m to 11.0m)
     add_front_facade_panel(-w/2, w/2, 3.3, h, 0.0, 0.0, 1.0, 3.3/h, 1.0)
-    # Ground floor recessed workshop with iron scissor gate (cửa kéo sắt) at z = 0.7m
-    add_front_facade_panel(-w/2 + 0.25, w/2 - 0.25, 0.0, 3.3, 0.7, 0.06, 0.94, 0.0, 3.3/h)
-    mesh.add_box(-w/2, -w/2 + 0.25, 0.0, 3.3, 0.0, 0.7, uv_scale=0.5)
-    mesh.add_box(w/2 - 0.25, w/2, 0.0, 3.3, 0.0, 0.7, uv_scale=0.5)
+    # Ground floor recessed workshop with iron scissor gate (cửa kéo sắt) at z = 0.7m (extending down to y = -0.35m)
+    add_front_facade_panel(-w/2 + 0.25, w/2 - 0.25, -0.35, 3.3, 0.7, 0.06, 0.94, 0.0, 3.3/h)
+    mesh.add_box(-w/2, -w/2 + 0.25, -0.35, 3.3, 0.0, 0.7, uv_scale=0.5)
+    mesh.add_box(w/2 - 0.25, w/2, -0.35, 3.3, 0.0, 0.7, uv_scale=0.5)
 
     # Weathered sign board "SỬA XE MÁY VĨNH PHÁT" at y: 3.2m to 4.1m
     mesh.add_box(-w/2 + 0.1, w/2 - 0.1, 3.2, 4.1, -0.15, 0.0)

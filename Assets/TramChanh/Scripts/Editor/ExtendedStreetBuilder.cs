@@ -151,8 +151,8 @@ namespace TramChanh.EditorTools
                 sidewalk.AddComponent<MeshRenderer>().sharedMaterial = swMat;
             }
             var swCol = sidewalk.AddComponent<BoxCollider>();
-            swCol.center = new Vector3(0.0f, -0.075f, -0.8f);
-            swCol.size = new Vector3(36.0f, 0.15f, 8.8f);
+            swCol.center = new Vector3(0.0f, -0.075f, -3.2f);
+            swCol.size = new Vector3(36.0f, 0.15f, 13.6f);
 
             var street = new GameObject("Street");
             street.layer = TramChanhLayers.EnvironmentIndex;
@@ -263,21 +263,21 @@ namespace TramChanh.EditorTools
                 // BoxColliders covering the walkable south sidewalk surface (top at y = 0.0m)
                 // West segment
                 var colW = s80.AddComponent<BoxCollider>();
-                colW.center = new Vector3(-11.75f, -0.075f, -0.1f);
-                colW.size = new Vector3(56.5f, 0.15f, 7.4f);
+                colW.center = new Vector3(-11.75f, -0.075f, -3.2f);
+                colW.size = new Vector3(56.5f, 0.15f, 13.6f);
 
                 // Alley threshold
                 var colThresh = s80.AddComponent<BoxCollider>();
-                colThresh.center = new Vector3(18.5f, -0.075f, -0.1f);
-                colThresh.size = new Vector3(4.0f, 0.15f, 7.4f);
+                colThresh.center = new Vector3(18.5f, -0.075f, -3.2f);
+                colThresh.size = new Vector3(4.0f, 0.15f, 13.6f);
 
                 // East segment
                 var colE = s80.AddComponent<BoxCollider>();
-                colE.center = new Vector3(30.25f, -0.075f, -0.1f);
-                colE.size = new Vector3(19.5f, 0.15f, 7.4f);
+                colE.center = new Vector3(30.25f, -0.075f, -3.2f);
+                colE.size = new Vector3(19.5f, 0.15f, 13.6f);
             }
 
-            // North Sidewalk (x in [-40, 40], z in [12.6, 16.6])
+            // North Sidewalk (x in [-40, 40], z in [12.6, 22.0])
             if (nsw80Mesh != null)
             {
                 var n80 = new GameObject("NorthSidewalk_80m");
@@ -287,8 +287,8 @@ namespace TramChanh.EditorTools
                 n80.AddComponent<MeshRenderer>().sharedMaterial = swMat;
 
                 var colN = n80.AddComponent<BoxCollider>();
-                colN.center = new Vector3(0.0f, -0.075f, 14.6f);
-                colN.size = new Vector3(80.0f, 0.15f, 4.0f);
+                colN.center = new Vector3(0.0f, -0.075f, 17.3f);
+                colN.size = new Vector3(80.0f, 0.15f, 9.4f);
             }
 
             // 2-lane Roadway (x in [-40, 40], z in [3.6, 12.6], y = -0.15m)
