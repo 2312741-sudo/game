@@ -196,7 +196,7 @@ namespace TramChanh.EditorTools
             fillLight.transform.rotation = Quaternion.Euler(55f, -140f, 0f);
             fillLight.type = LightType.Directional;
             fillLight.color = new Color(0.35f, 0.45f, 0.70f);
-            fillLight.intensity = 0.45f;
+            fillLight.intensity = 1.5f;
             fillLight.shadows = LightShadows.None;
 
             PrefabUtility.SaveAsPrefabAsset(root, BaseStreetPrefabPath);
@@ -482,7 +482,6 @@ namespace TramChanh.EditorTools
             menuBoard.layer = TramChanhLayers.EnvironmentIndex;
             menuBoard.transform.SetParent(root, false);
             menuBoard.transform.localPosition = new Vector3(1.15f, 1.10f, 0.25f);
-            menuBoard.transform.localRotation = Quaternion.Euler(0f, -15f, 0f);
             var menuQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             menuQuad.name = "BoardVisual";
             menuQuad.layer = TramChanhLayers.EnvironmentIndex;
@@ -697,7 +696,7 @@ namespace TramChanh.EditorTools
             skyFill.transform.rotation = Quaternion.Euler(55f, -140f, 0f);
             skyFill.type = LightType.Directional;
             skyFill.color = new Color(0.35f, 0.45f, 0.70f);
-            skyFill.intensity = 0.45f;
+            skyFill.intensity = 1.5f;
             skyFill.shadows = LightShadows.None;
 
             var alleyLight = new GameObject("Alley_FillLight").AddComponent<Light>();
