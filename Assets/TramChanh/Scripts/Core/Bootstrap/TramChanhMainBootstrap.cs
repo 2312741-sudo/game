@@ -58,6 +58,13 @@ namespace TramChanh.App
         [Tooltip("Dine-in customer arrivals for TABLE_01..TABLE_10 (max active customers, pacing, menu weights).")]
         [SerializeField] private CustomerDirectorSettings _customerSettings = new CustomerDirectorSettings();
         [SerializeField] private int _customerSeed = 1;
+        [Header("Day cycle")]
+        [Tooltip("Real seconds in one game day (1440 = one game hour per minute).")]
+        [SerializeField] private float _secondsPerGameDay = (float)DayCycle.DefaultSecondsPerGameDay;
+        [Tooltip("Game hour at which the scene starts. 18 = the stall is open at once.")]
+        [SerializeField, Range(0f, 24f)] private float _startHour = 18f;
+        [Tooltip("Tilt the sun and scale light and ambient with the game hour. Off keeps the lighting authored in the scene.")]
+        [SerializeField] private bool _driveDaylight = true;
         [Tooltip("Optional seated customer visual (Antigravity). Empty: a primitive placeholder is used.")]
         [SerializeField] private GameObject _customerVisualPrefab;
         [Tooltip("Simulated people (NPC_AND_MAP_EXPANSION.md): customers walk to their table and away; pedestrians and motorbikes fill the street.")]
@@ -95,6 +102,10 @@ namespace TramChanh.App
         private GameObject _runtime;
         private int _nextCustomer = FirstVehicleCustomerId;
         private bool _peoplePaused;
+        private Light _sun;
+        private float _sunBaseIntensity;
+        private float _ambientBaseIntensity;
+        private Vector3 _sunBaseEuler;
         private Animator[] _animators = Array.Empty<Animator>();
 
         public bool IsInitialized { get; private set; }
@@ -116,6 +127,10 @@ namespace TramChanh.App
         public IReadOnlyList<Transform> TableAnchors => _tableAnchors;
         public VehicleOrderPoint Vehicle { get; private set; }
         public CustomerDirector Customers { get; private set; }
+        /// <summary>Current game hour in [0, 24).</summary>
+        public double HourOfDay => DayCycle.HourOfDay(_clock == null ? 0d : _clock.Now, _secondsPerGameDay, _startHour);
+        /// <summary>True during the stall opening hours (18:00 to 24:00).</summary>
+        public bool IsStallOpen => OpeningHours.Stall.IsOpen(HourOfDay);
         /// <summary>Simulated people layer, or null when _simulatePeople is off.</summary>
         public PeopleController People { get; private set; }
         /// <summary>All Lobby customer points: the 10 tables followed by the takeaway vehicle.</summary>
@@ -230,6 +245,7 @@ namespace TramChanh.App
                 Customers.CustomerLeft += OnCustomerLeft;
             }
 
+            CaptureSun();
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
@@ -426,6 +442,10 @@ namespace TramChanh.App
             foreach (Animator animator in _animators) { if (animator != null) { animator.speed = _clock.IsPaused ? 0f : 1f; } }
             if (People != null && _peoplePaused != _clock.IsPaused) { _peoplePaused = _clock.IsPaused; People.SetPaused(_peoplePaused); }
             if (!IsInitialized || _clock.IsPaused) { return; }
+            double hour = HourOfDay;
+            bool open = OpeningHours.Stall.IsOpen(hour);
+            Customers.ArrivalsEnabled = open;
+            if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
             double customerDelta = Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds);
             Customers.Tick(customerDelta);
@@ -433,10 +453,34 @@ namespace TramChanh.App
             // Completed orders free their point; a new customer arrives after the provisional pause.
             foreach (CustomerSeat seat in _seats)
             {
+                if (!open) { seat.WaitingSeconds = 0f; continue; }
                 if (seat.Point.ActiveOrder.IsValid) { continue; }
                 seat.WaitingSeconds += (float)_clock.DeltaTime;
                 if (seat.WaitingSeconds >= _customerReturnSeconds) { RequestService(seat); }
             }
+        }
+
+        private void CaptureSun()
+        {
+            _ambientBaseIntensity = RenderSettings.ambientIntensity;
+            foreach (Light candidate in FindObjectsByType<Light>())
+            {
+                if (candidate.type != LightType.Directional) { continue; }
+                _sun = candidate;
+                _sunBaseIntensity = candidate.intensity;
+                _sunBaseEuler = candidate.transform.eulerAngles;
+                return;
+            }
+        }
+
+        private void ApplyDaylight(DayLighting lighting)
+        {
+            RenderSettings.ambientIntensity = _ambientBaseIntensity * Mathf.Lerp(0.35f, 1f, (float)lighting.AmbientFactor);
+            if (_sun == null) { return; }
+            // Moonlight keeps a floor so the street never goes fully black; the sun never points up from below.
+            _sun.intensity = _sunBaseIntensity * Mathf.Lerp(0.2f, 1f, (float)lighting.LightIntensity);
+            float pitch = Mathf.Clamp((float)lighting.SunAngleDegrees, 15f, 90f);
+            _sun.transform.rotation = Quaternion.Euler(pitch, _sunBaseEuler.y, 0f);
         }
 
         private void OnEntryShown()

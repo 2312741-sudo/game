@@ -282,6 +282,40 @@ namespace TramChanh.Tests.EditMode.Customers
             Assert.That(a, Is.Not.EqualTo(Enumerable.Range(0, 10).ToArray()), "Seats are not filled in index order.");
         }
 
+        [Test]
+        public void Tick_SchedulesNoArrivals_WhileArrivalsAreDisabled()
+        {
+            CustomerDirector director = Director(FakeCustomerSeat.Tables());
+            Assert.That(director.ArrivalsEnabled, Is.True);
+
+            director.ArrivalsEnabled = false;
+            for (int i = 0; i < 20; i++) { director.Tick(1000d); }
+
+            Assert.That(director.ActiveCustomers, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Tick_ResumesArrivals_WhenReEnabled_WithoutABurst()
+        {
+            CustomerDirector director = Director(FakeCustomerSeat.Tables());
+            director.ArrivalsEnabled = false;
+            director.Tick(1000d);
+
+            director.ArrivalsEnabled = true;
+            director.Tick(1000d);
+
+            Assert.That(director.ActiveCustomers, Is.EqualTo(1), "At most one arrival per tick.");
+        }
+
+        [Test]
+        public void SpawnNow_IsNotBlocked_WhenArrivalsAreDisabled()
+        {
+            CustomerDirector director = Director(FakeCustomerSeat.Tables());
+            director.ArrivalsEnabled = false;
+
+            Assert.That(director.SpawnNow(), Is.GreaterThanOrEqualTo(0));
+        }
+
         private static int Spawned(CustomerDirector director)
         {
             int count = 0;

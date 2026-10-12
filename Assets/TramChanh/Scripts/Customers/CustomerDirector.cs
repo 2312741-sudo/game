@@ -94,6 +94,9 @@ namespace TramChanh.Customers
         public int SeatCount => _seats.Length;
         public int ActiveCustomers { get; private set; }
         /// <summary>Settings value clamped to 0..seat count.</summary>
+        /// <summary>False while the stall is closed: <see cref="Tick"/> keeps existing customers going but schedules no new arrival.
+        /// <see cref="SpawnNow"/> is not affected.</summary>
+        public bool ArrivalsEnabled { get; set; } = true;
         public int MaxActiveCustomers => Math.Min(_settings.MaxActiveCustomers, _seats.Length);
         public ICustomerSeat SeatAt(int seatIndex) => InRange(seatIndex) ? _seats[seatIndex] : null;
         public bool IsOccupied(int seatIndex) => InRange(seatIndex) && _customers[seatIndex].IsValid;
@@ -108,6 +111,13 @@ namespace TramChanh.Customers
             if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds <= 0d) { return; }
             double delta = seconds;
             if (_walking) { UpdateWalking(delta); } else { UpdateOccupancy(delta); }
+
+            if (!ArrivalsEnabled)
+            {
+                // Closed: customers already in the street finish normally, but no new arrival is scheduled.
+                _sinceArrival = 0d;
+                return;
+            }
 
             double interval = _settings.ArrivalIntervalSeconds;
             _sinceArrival += delta;
