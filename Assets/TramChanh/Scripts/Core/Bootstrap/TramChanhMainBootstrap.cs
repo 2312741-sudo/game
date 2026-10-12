@@ -63,6 +63,8 @@ namespace TramChanh.App
         [SerializeField] private float _secondsPerGameDay = (float)DayCycle.DefaultSecondsPerGameDay;
         [Tooltip("Game hour at which the scene starts. 18 = the stall is open at once.")]
         [SerializeField, Range(0f, 24f)] private float _startHour = 18f;
+        [Tooltip("How many times faster the game clock runs while the stall is closed (skips the night after 24:00).")]
+        [SerializeField, Min(1f)] private float _closedTimeScale = 18f;
         [Tooltip("Tilt the sun and scale light and ambient with the game hour. Off keeps the lighting authored in the scene.")]
         [SerializeField] private bool _driveDaylight = true;
         [Tooltip("Optional seated customer visual (Antigravity). Empty: a primitive placeholder is used.")]
@@ -102,6 +104,7 @@ namespace TramChanh.App
         private GameObject _runtime;
         private int _nextCustomer = FirstVehicleCustomerId;
         private bool _peoplePaused;
+        private DayClock _dayClock;
         private Light _sun;
         private float _sunBaseIntensity;
         private float _ambientBaseIntensity;
@@ -128,9 +131,9 @@ namespace TramChanh.App
         public VehicleOrderPoint Vehicle { get; private set; }
         public CustomerDirector Customers { get; private set; }
         /// <summary>Current game hour in [0, 24).</summary>
-        public double HourOfDay => DayCycle.HourOfDay(_clock == null ? 0d : _clock.Now, _secondsPerGameDay, _startHour);
-        /// <summary>True during the stall opening hours (18:00 to 24:00).</summary>
-        public bool IsStallOpen => OpeningHours.Stall.IsOpen(HourOfDay);
+        public double HourOfDay => _dayClock == null ? _startHour : _dayClock.HourOfDay;
+        /// <summary>True during the stall opening hours (18:00 to 24:00); the clock skips ahead while it is closed.</summary>
+        public bool IsStallOpen => _dayClock == null || _dayClock.IsOpen;
         /// <summary>Simulated people layer, or null when _simulatePeople is off.</summary>
         public PeopleController People { get; private set; }
         /// <summary>All Lobby customer points: the 10 tables followed by the takeaway vehicle.</summary>
@@ -245,6 +248,7 @@ namespace TramChanh.App
                 Customers.CustomerLeft += OnCustomerLeft;
             }
 
+            _dayClock = new DayClock(_secondsPerGameDay, _startHour, OpeningHours.Stall, _closedTimeScale);
             CaptureSun();
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
@@ -442,8 +446,9 @@ namespace TramChanh.App
             foreach (Animator animator in _animators) { if (animator != null) { animator.speed = _clock.IsPaused ? 0f : 1f; } }
             if (People != null && _peoplePaused != _clock.IsPaused) { _peoplePaused = _clock.IsPaused; People.SetPaused(_peoplePaused); }
             if (!IsInitialized || _clock.IsPaused) { return; }
-            double hour = HourOfDay;
-            bool open = OpeningHours.Stall.IsOpen(hour);
+            _dayClock.Advance(_clock.DeltaTime);
+            double hour = _dayClock.HourOfDay;
+            bool open = _dayClock.IsOpen;
             Customers.ArrivalsEnabled = open;
             if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
