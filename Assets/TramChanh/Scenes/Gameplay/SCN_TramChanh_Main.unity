@@ -222,7 +222,18 @@ MonoBehaviour:
   _drinkDefinition: {fileID: 11400000, guid: c15445a3a935c47609b18851bdc141df, type: 2}
   _cakeRecipes:
   - {fileID: 11400000, guid: e53a431935bd54b44b8e79d0f2702e88, type: 2}
-  _environmentPrefab: {fileID: 2827548439090754665, guid: 9eedca5e1dcff4417a634e51ad5e84fa, type: 3}
+  _environmentPrefab: {fileID: 939729105815630348, guid: 3c650c60614824a488a7e78eb9267eb1, type: 3}
+  _simulatePeople: 1
+  _personPrefabs:
+  - {fileID: 100100000, guid: 9b34fecbc6a924cc5a8ce57159aa6103, type: 3}
+  - {fileID: 100100000, guid: 25797851e4ffc44999e4b32e588c29c6, type: 3}
+  - {fileID: 100100000, guid: f4a2ead62f664468590c05b5de69c9ce, type: 3}
+  - {fileID: 100100000, guid: c8463570f802a489daf490d7c4e52809, type: 3}
+  - {fileID: 100100000, guid: 297e99ddb660b4cdf83d0dfe3cd69cc2, type: 3}
+  - {fileID: 100100000, guid: 43fe2c1843e834b0a930d3ca2d44b02a, type: 3}
+  _bikePrefabs:
+  - {fileID: 100100000, guid: fe91c5d693d5844fd95348c1cd5f7ea5, type: 3}
+  - {fileID: 100100000, guid: 81d1c1523690d40909269908f1308022, type: 3}
   _drinkStationPrefab: {fileID: 6505927981593460591, guid: 96acb90e76ac543cda093f50680d1a4b, type: 3}
   _cakeStationPrefab: {fileID: 8943831326368599622, guid: 3f49b381ad9d14e119ebdf6813e6313d, type: 3}
   _tablePointPrefab: {fileID: 3363350997845005691, guid: b3ce8d04b0a404d43b9091c2b1336e22, type: 3}
