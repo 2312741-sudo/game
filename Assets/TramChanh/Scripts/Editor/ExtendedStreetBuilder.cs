@@ -481,8 +481,8 @@ namespace TramChanh.EditorTools
             var menuBoard = new GameObject("MenuBoard");
             menuBoard.layer = TramChanhLayers.EnvironmentIndex;
             menuBoard.transform.SetParent(root, false);
-            menuBoard.transform.localPosition = new Vector3(1.05f, 1.15f, 0.38f);
-            menuBoard.transform.localRotation = Quaternion.identity;
+            menuBoard.transform.localPosition = new Vector3(1.05f, 1.15f, 0.44f);
+            menuBoard.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             var menuQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             menuQuad.name = "BoardVisual";
             menuQuad.layer = TramChanhLayers.EnvironmentIndex;
