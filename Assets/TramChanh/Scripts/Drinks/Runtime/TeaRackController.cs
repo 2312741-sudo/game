@@ -82,11 +82,24 @@ namespace TramChanh.Drinks.Runtime
 
         private void SpawnBag(int index)
         {
+            RemoveShelfLeftover(index);
             // Only initially stocked slots are ever restocked, and their anchors were validated at initialization.
             TeaBagItem bag = Instantiate(_bagPrefab, _bagSlots[index], false);
             bag.transform.localPosition = -bag.PlacementPoint.localPosition;
             bag.Initialize(_inventory.BagAt(index), _recipe, _events);
             _bags[index] = bag;
+        }
+
+        /// <summary>
+        /// A spent bag still resting on its slot would stay visible under the fresh bag. Remove it, but only while it is
+        /// still parented to the slot: a bag that was picked up, served, or moved is not ours to destroy.
+        /// </summary>
+        private void RemoveShelfLeftover(int index)
+        {
+            TeaBagItem old = _bags[index];
+            if (old == null || old.transform.parent != _bagSlots[index]) { return; }
+            _bags[index] = null;
+            Destroy(old.gameObject);
         }
 
         /// <summary>
