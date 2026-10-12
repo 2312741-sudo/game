@@ -481,12 +481,13 @@ namespace TramChanh.EditorTools
             var menuBoard = new GameObject("MenuBoard");
             menuBoard.layer = TramChanhLayers.EnvironmentIndex;
             menuBoard.transform.SetParent(root, false);
-            menuBoard.transform.localPosition = new Vector3(1.15f, 1.10f, 0.25f);
+            menuBoard.transform.localPosition = new Vector3(1.05f, 1.15f, 0.38f);
+            menuBoard.transform.localRotation = Quaternion.identity;
             var menuQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             menuQuad.name = "BoardVisual";
             menuQuad.layer = TramChanhLayers.EnvironmentIndex;
             menuQuad.transform.SetParent(menuBoard.transform, false);
-            menuQuad.transform.localScale = new Vector3(0.60f, 0.85f, 1.0f);
+            menuQuad.transform.localScale = new Vector3(0.70f, 0.70f, 1.0f);
             Material menuMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Menu_Board.mat");
             if (menuMat != null) menuQuad.GetComponent<MeshRenderer>().sharedMaterial = menuMat;
             Object.DestroyImmediate(menuQuad.GetComponent<Collider>());
