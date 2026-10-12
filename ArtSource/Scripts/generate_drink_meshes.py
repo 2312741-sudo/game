@@ -143,34 +143,34 @@ def generate_teabag_pouch(out_path, is_open=False):
     h = 0.22
     d_base = 0.06
     
-    # 6 vertical height stations:
-    # 0: bottom base rim (y = 0.000m)
-    # 1: lower fluid bulge (y = 0.050m)
-    # 2: mid waist (y = 0.120m)
-    # 3: zip lock track (y = 0.170m)
-    # 4: handle opening bottom (y = 0.185m)
-    # 5: header top seal (y = 0.220m)
+    # 7 vertical height stations:
+    # 0: bottom stand-up gusset rim (y = 0.000m)
+    # 1: lower fluid bulge (y = 0.045m)
+    # 2: mid fluid waist (y = 0.110m)
+    # 3: upper transition (y = 0.155m)
+    # 4: zip lock track (y = 0.170m)
+    # 5: hanging punch hole band (y = 0.198m)
+    # 6: top heat-sealed crimp edge (y = 0.220m)
     
     num_x = 12
     x_vals = np.linspace(-w/2, w/2, num_x)
+    
+    y_levels = [0.000, 0.045, 0.110, 0.155, 0.170, 0.198, 0.220]
+    depths = [
+        d_base * 0.45,
+        d_base * 0.52,
+        d_base * 0.38,
+        d_base * 0.20,
+        0.028 if is_open else 0.005, # Open pouch mouth spreads wide
+        0.038 if is_open else 0.003, # Header top
+        0.042 if is_open else 0.002
+    ]
     
     # Front and rear surfaces
     for surface_sign in [-1.0, 1.0]:
         is_front_surf = (surface_sign < 0)
         z_mult = surface_sign
         normal_z = surface_sign
-        
-        y_levels = [0.000, 0.050, 0.120, 0.170, 0.185, 0.220]
-        # Depth profile at each level:
-        # Base expands to d_base/2 at center, 0 at side weld
-        depths = [
-            d_base * 0.45,
-            d_base * 0.50,
-            d_base * 0.35,
-            0.025 if is_open else 0.006, # Open pouch spreads at top!
-            0.035 if is_open else 0.004,
-            0.040 if is_open else 0.002
-        ]
         
         grid_v = []
         for l_idx, (y_val, max_d) in enumerate(zip(y_levels, depths)):
@@ -193,25 +193,50 @@ def generate_teabag_pouch(out_path, is_open=False):
                 v_coord1 = y_levels[j] / h
                 v_coord2 = y_levels[j+1] / h
                 
-                n = (0.0, 0.1 if j > 2 else -0.1, normal_z)
+                n = (0.0, 0.1 if j > 3 else -0.1, normal_z)
                 norm_len = math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)
                 normal = (n[0]/norm_len, n[1]/norm_len, n[2]/norm_len)
                 
                 if is_front_surf:
-                    # Front face: facing -Z (towards viewer/camera), U in [0.0, 0.5] with authentic brand sticker
-                    # Note: Unity OBJ importer inverts X; flipping U ensures un-mirrored front display in Unity
+                    # Front face: facing -Z, U in [0.0, 0.5] with authentic brand sticker
                     u1 = 0.5 - ((x_vals[i] + w/2) / w) * 0.5
                     u2 = 0.5 - ((x_vals[i+1] + w/2) / w) * 0.5
                     mesh.add_quad(v1, v4, v3, v2, (u1, v_coord1), (u1, v_coord2), (u2, v_coord2), (u2, v_coord1), normal)
                 else:
-                    # Rear face: facing +Z, U in [0.5, 1.0] with clean frosted film
+                    # Rear face: facing +Z, U in [0.5, 1.0] with frosted film
                     u1 = 1.0 - ((x_vals[i] + w/2) / w) * 0.5
                     u2 = 1.0 - ((x_vals[i+1] + w/2) / w) * 0.5
                     mesh.add_quad(v1, v2, v3, v4, (u1, v_coord1), (u2, v_coord1), (u2, v_coord2), (u1, v_coord2), normal)
 
-    # Bottom gusset sealing panel (oval base)
+    # Top hanging punch hole (round euro-hole cutout collar)
+    hole_r = 0.007
+    hole_cy = 0.198
+    hole_segs = 8
+    f_hole_v = []
+    r_hole_v = []
+    for s in range(hole_segs):
+        ang = 2.0 * math.pi * s / hole_segs
+        hx = math.cos(ang) * hole_r
+        hy = hole_cy + math.sin(ang) * hole_r
+        hz_f = -0.003 if not is_open else -0.015
+        hz_r = 0.003 if not is_open else 0.015
+        f_hole_v.append(mesh.add_vertex(hx, hy, hz_f))
+        r_hole_v.append(mesh.add_vertex(hx, hy, hz_r))
+        
+    for s in range(hole_segs):
+        next_s = (s + 1) % hole_segs
+        # Collar tube bridging front and rear around punch hole
+        uv1 = (0.25, 0.90)
+        uv2 = (0.25, 0.90)
+        uv3 = (0.75, 0.90)
+        uv4 = (0.75, 0.90)
+        ang = 2.0 * math.pi * s / hole_segs
+        n_out = (-math.cos(ang), -math.sin(ang), 0.0)
+        mesh.add_quad(f_hole_v[s], f_hole_v[next_s], r_hole_v[next_s], r_hole_v[s], uv1, uv2, uv3, uv4, n_out)
+
+    # Bottom gusset sealing panel (oval base with stable stand-up ring)
     gusset_segs = 16
-    gusset_center = mesh.add_vertex(0.0, 0.008, 0.0)
+    gusset_center = mesh.add_vertex(0.0, 0.006, 0.0)
     uv_c = mesh.add_uv(0.75, 0.15)
     n_down = mesh.add_normal(0.0, -1.0, 0.0)
     

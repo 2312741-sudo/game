@@ -872,50 +872,54 @@ Ready
 
 ## Required meshes
 
-Tốt nhất dùng:
-
 ```text
-Bag_Closed
-Bag_Open
+Bag_Closed (SM_TeaBag_Pouch_Closed.obj)
+Bag_Open   (SM_TeaBag_Pouch_Open.obj)
+SM_TeaBag_Liquid.obj
 ```
 
-hoặc blendshape/animation.
+- Dạng túi zip trong suốt, đứng được (stand-up pouch), có lỗ treo (punch hole) ở đỉnh.
+- Miệng túi có seal ở trên, đường dập nhiệt và rãnh zip khóa.
+- Thân túi mềm, nhựa trong suốt, mặt trước dán tem tròn thương hiệu Trạm.
+- Hai mesh: `Bag_Closed` (miệng đóng kín) và `Bag_Open` (miệng xòe bầu mở để rót topping/đá).
 
 ## Polycount
 
 ```text
-300 – 1,500 tris
+300 – 1,500 tris (Hiện tại ~592 tris)
 ```
 
 ## Material
 
 ```text
-transparent flexible plastic
-tea liquid
+transparent flexible plastic (MAT_TeaBag_Pouch.mat)
+7 fruit tea liquid materials:
+  - MAT_TeaLiquid_RedBerry.mat    (#9B232A - Đỏ hồng trái đỏ / IMG_5206)
+  - MAT_TeaLiquid_PassionFruit.mat (#EDA417 - Vàng chanh dây / IMG_5213)
+  - MAT_TeaLiquid_AmberLime.mat   (#E79D32 - Cam hổ phách chanh / IMG_5214)
+  - MAT_TeaLiquid_Strawberry.mat  (#C34E26 - Đỏ tươi dâu / IMG_5215)
+  - MAT_TeaLiquid_Kumquat.mat     (#F3C033 - Cam đậm tắc / IMG_5216)
+  - MAT_TeaLiquid_Kiwi.mat        (#4A7F71 - Xanh lá kiwi / IMG_5217)
+  - MAT_TeaLiquid_Traditional.mat (#C74D38 - Nâu đỏ trà truyền thống / IMG_5218)
 ```
 
 ## Prompt
 
 ```text
-Create a clear flexible plastic drink bag used for Vietnamese takeaway tea.
+Create a clear flexible plastic drink bag used for Vietnamese takeaway tea (stand-up pouch).
 
-The bag contains a pre-portioned amount of amber tea liquid.
-Soft transparent plastic,
+The bag contains a pre-portioned amount of tea liquid.
+Soft transparent plastic stand-up pouch,
 slightly wrinkled,
+heat-sealed top header with round hanging hole,
+horizontal ziplock track,
 openable top seam,
-realistic gravity shape,
+realistic gravity shape with bottom gusset,
+authentic round Tram brand sticker on front,
 suitable for handheld gameplay.
 
-No straw.
-No toppings.
-No ice.
-No printed text.
-
-Game-ready,
-low-poly,
-clean UV,
-transparent material,
-isolated object.
+Two states: Bag_Closed and Bag_Open.
+Game-ready, low-poly (300-1500 tris), clean UV, transparent material, isolated object.
 ```
 
 ---
