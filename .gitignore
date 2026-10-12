@@ -46,3 +46,6 @@ sysinfo.txt
 # QA scratch output (reports in QA/Reports are committed)
 /QA/Output/
 /Automation/__pycache__/
+
+# Claude Code agent worktrees (local, not project content)
+.claude/worktrees/
