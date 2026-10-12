@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using TramChanh.Core.GroundTruth;
+using TramChanh.Stall.Anchors;
 using TramChanh.Stall.Layout;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TramChanh.EditorTools
 {
@@ -28,6 +32,179 @@ namespace TramChanh.EditorTools
             string text = CheckPrefab(StallPrefabPath, StallCounterLayoutRule.DefaultToleranceMetres, out int problems);
             if (problems == 0) { Debug.Log(text); }
             else { Debug.LogWarning(text); }
+        }
+
+        public const string DrinkStationPrefabPath = "Assets/TramChanh/Prefabs/Workstations/DrinkWave/PF_DrinkStation.prefab";
+        public const string GrillPrefabPath = "Assets/TramChanh/Prefabs/Workstations/PF_Grill_Elmich.prefab";
+        public const string ScreenshotsDirectory = "QA/Screenshots/Stall_Assembled";
+
+        /// <summary>
+        /// Menu entry for the fully assembled stall: stall prefab plus its station props in a temporary scene.
+        /// Does not save changes to prefabs or scenes.
+        /// </summary>
+        [MenuItem(TramChanhValidationMenu.MenuRoot + "Check Assembled Stall Overlaps", false, 26)]
+        public static void CheckAssembledStallMenu()
+        {
+            string text = CheckAssembled(StallPrefabPath, StallCounterLayoutRule.DefaultToleranceMetres, out int problems, true);
+            if (problems == 0) { Debug.Log(text); }
+            else { Debug.LogWarning(text); }
+        }
+
+        /// <summary>
+        /// Creates a temporary in-memory scene, instantiates the stall prefab and attaches the runtime drink station
+        /// (PF_DrinkStation containing PF_RedTeaRack, PF_ToppingStation, PF_IceBin, PF_ReadyCounterPoint, and WipeArea)
+        /// to the canonical anchors matching runtime behavior. Runs Analyze and captures screenshots without saving.
+        /// </summary>
+        public static string CheckAssembled(string assetPath, float tolerance, out int problems, bool captureScreenshots = true)
+        {
+            Scene tempScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            try
+            {
+                GameObject stallPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (stallPrefab == null)
+                {
+                    problems = 1;
+                    return "[StallPropOverlap] ERROR: could not load stall prefab at " + assetPath;
+                }
+
+                GameObject stall = (GameObject)PrefabUtility.InstantiatePrefab(stallPrefab, tempScene);
+                stall.transform.position = Vector3.zero;
+                stall.transform.rotation = Quaternion.identity;
+
+                var anchors = stall.GetComponentInChildren<StallAnchorSet>(true);
+                if (anchors == null)
+                {
+                    problems = 1;
+                    return "[StallPropOverlap] ERROR: no StallAnchorSet on " + assetPath;
+                }
+
+                var missing = new List<string>();
+
+                // 1. Attach PF_DrinkStation (compound station holding PF_RedTeaRack, PF_ToppingStation, PF_IceBin, PF_ReadyCounterPoint, WipeArea)
+                GameObject drinkStationPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DrinkStationPrefabPath);
+                if (drinkStationPrefab != null)
+                {
+                    GameObject drinkStation = (GameObject)PrefabUtility.InstantiatePrefab(drinkStationPrefab, tempScene);
+                    drinkStation.transform.SetParent(stall.transform, false);
+                    drinkStation.transform.SetPositionAndRotation(anchors.transform.position, anchors.transform.rotation);
+                }
+                else
+                {
+                    missing.Add("DrinkStation prefab at " + DrinkStationPrefabPath);
+                }
+
+                string text = Analyze(stall, assetPath + " (assembled)", tolerance, out problems);
+
+                if (missing.Count > 0)
+                {
+                    text += "\nMISSING:\n" + string.Join("\n", missing);
+                    problems += missing.Count;
+                }
+
+                if (captureScreenshots)
+                {
+                    CaptureStallScreenshots(tempScene, stall);
+                }
+
+                return text;
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(tempScene, true);
+            }
+        }
+
+        private static void CaptureStallScreenshots(Scene scene, GameObject stall)
+        {
+            // Set up lighting
+            var lightGo = new GameObject("QA_FillLight");
+            SceneManager.MoveGameObjectToScene(lightGo, scene);
+            var light = lightGo.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.intensity = 1.2f;
+            light.color = Color.white;
+            lightGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+            var fillLightGo = new GameObject("QA_AmbientLight");
+            SceneManager.MoveGameObjectToScene(fillLightGo, scene);
+            var fillLight = fillLightGo.AddComponent<Light>();
+            fillLight.type = LightType.Directional;
+            fillLight.intensity = 0.6f;
+            fillLight.color = new Color(0.9f, 0.95f, 1f);
+            fillLightGo.transform.rotation = Quaternion.Euler(-30f, 150f, 0f);
+
+            Shader replacementShader = Shader.Find("Standard") ?? Shader.Find("Diffuse");
+
+            // Hide roof temporarily so top-down camera can see counter surface and props
+            var hiddenRoofs = new List<GameObject>();
+            foreach (Transform child in stall.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name.IndexOf("Roof", System.StringComparison.OrdinalIgnoreCase) >= 0 && child.gameObject.activeSelf)
+                {
+                    hiddenRoofs.Add(child.gameObject);
+                    child.gameObject.SetActive(false);
+                }
+            }
+
+            // 1. Top-Down Camera (directly above counter surface, below frame beams)
+            var topDownGo = new GameObject("QA_Cam_TopDown");
+            SceneManager.MoveGameObjectToScene(topDownGo, scene);
+            var topDownCam = topDownGo.AddComponent<Camera>();
+            topDownCam.clearFlags = CameraClearFlags.SolidColor;
+            topDownCam.backgroundColor = new Color(0.12f, 0.13f, 0.15f);
+            topDownCam.transform.position = stall.transform.position + new Vector3(0f, 1.90f, 0f);
+            topDownCam.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            topDownCam.fieldOfView = 62f;
+            topDownCam.nearClipPlane = 0.05f;
+            if (replacementShader != null) { topDownCam.SetReplacementShader(replacementShader, ""); }
+            RenderCameraToFile(topDownCam, Path.Combine(ScreenshotsDirectory, "Stall_Assembled_TopDown.png"), 1920, 1080);
+
+            // Restore roof for customer view
+            foreach (GameObject roof in hiddenRoofs)
+            {
+                roof.SetActive(true);
+            }
+
+            // 2. Customer-Side Camera (facing stall from +Z customer side)
+            var customerGo = new GameObject("QA_Cam_CustomerView");
+            SceneManager.MoveGameObjectToScene(customerGo, scene);
+            var custCam = customerGo.AddComponent<Camera>();
+            custCam.clearFlags = CameraClearFlags.SolidColor;
+            custCam.backgroundColor = new Color(0.12f, 0.13f, 0.15f);
+            custCam.transform.position = stall.transform.position + new Vector3(0f, 1.45f, 1.8f);
+            custCam.transform.LookAt(stall.transform.position + new Vector3(0f, 0.95f, 0f));
+            custCam.fieldOfView = 50f;
+            if (replacementShader != null) { custCam.SetReplacementShader(replacementShader, ""); }
+            RenderCameraToFile(custCam, Path.Combine(ScreenshotsDirectory, "Stall_Assembled_CustomerView.png"), 1920, 1080);
+        }
+
+        private static void RenderCameraToFile(Camera cam, string outputPath, int width, int height)
+        {
+            string dir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            var rt = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+            RenderTexture prevRT = RenderTexture.active;
+            cam.targetTexture = rt;
+            cam.Render();
+
+            RenderTexture.active = rt;
+            var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            tex.Apply();
+
+            cam.targetTexture = null;
+            RenderTexture.active = prevRT;
+            RenderTexture.ReleaseTemporary(rt);
+
+            byte[] bytes = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+
+            File.WriteAllBytes(outputPath, bytes);
         }
 
         /// <summary>
