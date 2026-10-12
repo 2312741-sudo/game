@@ -11,6 +11,7 @@
     "TramChanh.Cakes",
     "TramChanh.Lobby",
     "TramChanh.Customers",
+    "TramChanh.People",
     "TramChanh.UI"
   ],
   "includePlatforms": [],

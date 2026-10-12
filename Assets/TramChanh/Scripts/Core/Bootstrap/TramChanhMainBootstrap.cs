@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using TramChanh.Cakes;
 using TramChanh.Content;
+using TramChanh.App.People;
+using TramChanh.Customers;
 using TramChanh.Core;
 using TramChanh.Core.Provisional;
 using TramChanh.Drinks.Runtime;
@@ -31,11 +33,21 @@ namespace TramChanh.App
         public const string TableAnchor = "TablePoint";
         public const string CakeTableAnchor = "CakeTablePoint";
         public const string VehicleAnchor = "VehiclePoint";
+        public const int TableCount = 10;
+        public const int FirstTableInteractableId = 31;
+        public const string SeatAnchor = "Seat";
+        private const double MaxCustomerTickSeconds = 0.25d;
+        // Vehicle customers use their own id range so they never share an id with director-seated customers (100+).
+        private const int FirstVehicleCustomerId = 1000000;
+        /// <summary>Environment anchor name for table n (1-based): TABLE_01..TABLE_10.</summary>
+        public static string TableAnchorName(int tableNumber) => "TABLE_" + tableNumber.ToString("00");
 
         [SerializeField] private BalanceConfig _balance;
         [SerializeField] private ItemDefinition _drinkDefinition;
         [SerializeField] private CakeRecipe[] _cakeRecipes = Array.Empty<CakeRecipe>();
         [SerializeField] private GameObject _environmentPrefab;
+        [Tooltip("Optional modular art prefabs (customer area, buildings, trees, street lights...). They are instantiated under the environment root, so anchors inside them (e.g. TABLE_01..TABLE_10) are found like environment anchors. Visual-only: they must not carry gameplay components.")]
+        [SerializeField] private GameObject[] _additionalEnvironmentPrefabs = Array.Empty<GameObject>();
         [SerializeField] private GameObject _drinkStationPrefab;
         [SerializeField] private GameObject _cakeStationPrefab;
         [SerializeField] private GameObject _tablePointPrefab;
@@ -43,6 +55,27 @@ namespace TramChanh.App
         [Tooltip("Cake station origin in stall-local space; aligns the station grill with the stall Grill anchor.")]
         [SerializeField] private Vector3 _cakeStationLocalPosition = new Vector3(0.39f, 1f, -0.08f);
         [SerializeField, Tbd("DEC-010", "Customer pacing is a development placeholder.")] private float _customerReturnSeconds = 4f;
+        [Tooltip("Dine-in customer arrivals for TABLE_01..TABLE_10 (max active customers, pacing, menu weights).")]
+        [SerializeField] private CustomerDirectorSettings _customerSettings = new CustomerDirectorSettings();
+        [SerializeField] private int _customerSeed = 1;
+        [Tooltip("Optional seated customer visual (Antigravity). Empty: a primitive placeholder is used.")]
+        [SerializeField] private GameObject _customerVisualPrefab;
+        [Tooltip("Simulated people (NPC_AND_MAP_EXPANSION.md): customers walk to their table and away; pedestrians and motorbikes fill the street.")]
+        [SerializeField] private bool _simulatePeople = true;
+        [SerializeField] private PeopleSettings _peopleSettings = new PeopleSettings();
+        [Tooltip("Antigravity PF_Person_xx prefabs (visual only). Empty: development capsules.")]
+        [SerializeField] private GameObject[] _personPrefabs = Array.Empty<GameObject>();
+        [Tooltip("Antigravity PF_Rider_xx prefabs (visual only). Empty: development boxes.")]
+        [SerializeField] private GameObject[] _bikePrefabs = Array.Empty<GameObject>();
+        [Tooltip("Environment-root-local positions for TABLE_03..TABLE_10 when the environment has no TABLE_xx anchors.")]
+        [SerializeField, Tbd("DEC-010", "Development customer-area layout until Antigravity's customer area prefab provides TABLE_xx anchors.")]
+        private Vector3[] _fallbackTablePositions =
+        {
+            new Vector3(-4.6f, 0f, 1.7f), new Vector3(-5.85f, 0f, 0.2f), new Vector3(-7.1f, 0f, 1.7f), new Vector3(-3.35f, 0f, -1.8f),
+            new Vector3(-5.85f, 0f, -1.8f), new Vector3(4.2f, 0f, 0.6f), new Vector3(5.6f, 0f, -0.9f), new Vector3(4.2f, 0f, -2.2f),
+        };
+        [Tooltip("Seat offset in table-local space when a table anchor has no Seat child.")]
+        [SerializeField] private Vector3 _defaultSeatOffset = new Vector3(-0.7f, 0f, 0f);
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private FirstPersonController _player;
         [SerializeField] private PlayerInteractor _interactor;
@@ -52,11 +85,16 @@ namespace TramChanh.App
         [SerializeField] private LobbyOrderController _lobby;
 
         private readonly List<CustomerSeat> _seats = new List<CustomerSeat>();
+        private readonly List<TableOrderPoint> _tables = new List<TableOrderPoint>();
+        private readonly List<Transform> _tableAnchors = new List<Transform>();
+        private readonly List<Transform> _seatAnchors = new List<Transform>();
+        private readonly Dictionary<int, GameObject> _customerVisuals = new Dictionary<int, GameObject>();
         private UnityGameClock _clock;
         private EventBus _events;
         private IIdGenerator _ids;
         private GameObject _runtime;
-        private int _nextCustomer = 1;
+        private int _nextCustomer = FirstVehicleCustomerId;
+        private bool _peoplePaused;
         private Animator[] _animators = Array.Empty<Animator>();
 
         public bool IsInitialized { get; private set; }
@@ -68,10 +106,28 @@ namespace TramChanh.App
         public GameObject Environment { get; private set; }
         public GameObject DrinkStation { get; private set; }
         public CakeStation CakeStation { get; private set; }
-        public TableOrderPoint DrinkTable { get; private set; }
-        public TableOrderPoint CakeTable { get; private set; }
+        /// <summary>TABLE_01 (kept for the earlier two-table tests).</summary>
+        public TableOrderPoint DrinkTable => _tables.Count > 0 ? _tables[0] : null;
+        /// <summary>TABLE_02 (kept for the earlier two-table tests).</summary>
+        public TableOrderPoint CakeTable => _tables.Count > 1 ? _tables[1] : null;
+        /// <summary>Index i is TABLE_{i+1}: TableId i+1, interactable id 31+i.</summary>
+        public IReadOnlyList<TableOrderPoint> Tables => _tables;
+        /// <summary>Runtime table anchor roots named TABLE_01..TABLE_10; each has a Seat child.</summary>
+        public IReadOnlyList<Transform> TableAnchors => _tableAnchors;
         public VehicleOrderPoint Vehicle { get; private set; }
-        public IReadOnlyList<OrderPoint> CustomerPoints => _seats.ConvertAll(seat => seat.Point);
+        public CustomerDirector Customers { get; private set; }
+        /// <summary>Simulated people layer, or null when _simulatePeople is off.</summary>
+        public PeopleController People { get; private set; }
+        /// <summary>All Lobby customer points: the 10 tables followed by the takeaway vehicle.</summary>
+        public IReadOnlyList<OrderPoint> CustomerPoints
+        {
+            get
+            {
+                var points = new List<OrderPoint>(_tables);
+                if (Vehicle != null) { points.Add(Vehicle); }
+                return points;
+            }
+        }
 
         private void Awake()
         {
@@ -108,6 +164,15 @@ namespace TramChanh.App
 
             Environment = Instantiate(_environmentPrefab, _runtime.transform);
             Environment.name = _environmentPrefab.name;
+            if (_additionalEnvironmentPrefabs != null)
+            {
+                foreach (GameObject module in _additionalEnvironmentPrefabs)
+                {
+                    if (module == null) { continue; }
+                    GameObject instance = Instantiate(module, Environment.transform, false);
+                    instance.name = module.name;
+                }
+            }
             // The environment is view-only; the player camera is the only camera and listener.
             foreach (Camera camera in Environment.GetComponentsInChildren<Camera>(true)) { camera.enabled = false; }
             foreach (AudioListener listener in Environment.GetComponentsInChildren<AudioListener>(true)) { listener.enabled = false; }
@@ -130,30 +195,147 @@ namespace TramChanh.App
             foreach (ReadyOrderPickupPoint pickup in DrinkStation.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
             CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes), Shelf);
 
-            var drink = new[] { new ItemRequest(_drinkDefinition.Id, 1) };
-            var cakeOnly = new[] { new ItemRequest(_cakeRecipes[0].ItemDefinition.Id, 1) };
             var mixed = new[] { new ItemRequest(_drinkDefinition.Id, 1), new ItemRequest(_cakeRecipes[0].ItemDefinition.Id, 1) };
-            DrinkTable = PlaceTable(TableAnchor, 21, new TableId(1));
-            CakeTable = PlaceTable(CakeTableAnchor, 23, new TableId(2));
+            for (int number = 1; number <= TableCount; number++) { _tables.Add(PlaceTable(number)); }
             Vehicle = PlaceVehicle(VehicleAnchor, 22, new VehicleId(1));
-            _seats.Add(new CustomerSeat(DrinkTable, drink));
-            _seats.Add(new CustomerSeat(CakeTable, cakeOnly));
+            // The takeaway vehicle keeps its own always-present customer; tables are driven by the customer director.
             _seats.Add(new CustomerSeat(Vehicle, mixed));
+            // Dynamic dine-in customers replace the environment's static seated placeholders.
+            foreach (Transform child in Environment.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == "DineInCustomer" || child.name == "CakeDineInCustomer") { child.gameObject.SetActive(false); }
+            }
+            var customerSeats = new List<ICustomerSeat>(TableCount);
+            for (int i = 0; i < _tables.Count; i++) { customerSeats.Add(new OrderPointSeat(_tables[i], i + 1)); }
+            CustomerDirectorSettings settings = _customerSettings ?? new CustomerDirectorSettings();
+            if (_simulatePeople)
+            {
+                var people = new GameObject("People");
+                people.transform.SetParent(_runtime.transform, false);
+                People = people.AddComponent<PeopleController>();
+                People.Prepare(Environment.transform, _tableAnchors, _seatAnchors, _peopleSettings, _personPrefabs, _bikePrefabs, _customerSeed);
+                // Customers walk: the order is requested when they reach their seat (People layer reports arrival).
+                // Safety timeouts must outlast the longest real walk, or customers would sit or vanish mid-street.
+                float walkBudget = People.LongestCustomerWalkSeconds * 1.5f + 5f;
+                settings = new CustomerDirectorSettings(settings.MaxActiveCustomers, settings.ArrivalIntervalSeconds, settings.TableClearSeconds,
+                    settings.DrinkWeight, settings.CakeWeight, settings.MixedWeight, true, settings.EatSeconds,
+                    Mathf.Max(settings.ArrivalTimeoutSeconds, walkBudget), Mathf.Max(settings.DepartureTimeoutSeconds, walkBudget));
+            }
+            Customers = new CustomerDirector(customerSeats, settings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
+            Customers.CustomerRequestFailed += OnCustomerRequestFailed;
+            if (People != null) { People.Attach(Customers); }
+            else
+            {
+                Customers.CustomerSeated += OnCustomerSeated;
+                Customers.CustomerLeft += OnCustomerLeft;
+            }
 
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
             _runtime.SetActive(true);
             foreach (CustomerSeat seat in _seats) { RequestService(seat); }
+            // Open with one dine-in customer; further arrivals follow the director's pacing and max-active limit.
+            Customers.SpawnNow();
             IsInitialized = true;
         }
 
-        private TableOrderPoint PlaceTable(string anchorName, int interactableId, TableId tableId)
+        private TableOrderPoint PlaceTable(int number)
         {
-            GameObject table = PlacePoint(_tablePointPrefab, anchorName);
+            string name = TableAnchorName(number);
+            // Prefer the art's TABLE_xx anchor; otherwise the two original environment tables, then the fallback layout.
+            Transform source = FindAnchor(name);
+            if (source == null && number == 1) { source = FindAnchor(TableAnchor); }
+            if (source == null && number == 2) { source = FindAnchor(CakeTableAnchor); }
+            bool environmentShowsFurniture = false;
+            if (source != null)
+            {
+                foreach (Renderer renderer in source.GetComponentsInChildren<Renderer>(false))
+                {
+                    if (renderer.enabled) { environmentShowsFurniture = true; break; }
+                }
+            }
+            var root = new GameObject(name).transform;
+            root.SetParent(_runtime.transform, false);
+            if (source != null) { root.SetPositionAndRotation(source.position, source.rotation); }
+            else
+            {
+                int fallback = number - 3;
+                if (_fallbackTablePositions == null || fallback < 0 || fallback >= _fallbackTablePositions.Length)
+                { throw new InvalidOperationException("No anchor or fallback position for " + name + "."); }
+                root.SetPositionAndRotation(Environment.transform.TransformPoint(_fallbackTablePositions[fallback]), Environment.transform.rotation);
+            }
+            Transform artSeat = source != null ? source.Find(SeatAnchor) : null;
+            var seat = new GameObject(SeatAnchor).transform;
+            seat.SetParent(root, false);
+            if (artSeat != null) { seat.SetPositionAndRotation(artSeat.position, artSeat.rotation); }
+            else
+            {
+                seat.localPosition = _defaultSeatOffset;
+                Vector3 facing = new Vector3(-_defaultSeatOffset.x, 0f, -_defaultSeatOffset.z);
+                seat.localRotation = facing.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(facing.normalized) : Quaternion.identity;
+            }
+
+            GameObject table = Instantiate(_tablePointPrefab, root, false);
+            table.name = _tablePointPrefab.name + "_" + name;
+            // Where the environment already draws furniture, keep only the gameplay seam; fallback tables stay visible.
+            if (environmentShowsFurniture) { foreach (Renderer renderer in table.GetComponentsInChildren<Renderer>(true)) { renderer.enabled = false; } }
             TableOrderPoint point = table.GetComponent<TableOrderPoint>();
-            point.Initialize(interactableId, table.transform.Find("InteractionPoint"), Orders, _lobby, tableId);
+            point.Initialize(FirstTableInteractableId + number - 1, table.transform.Find("InteractionPoint"), Orders, _lobby, new TableId(number));
+            _tableAnchors.Add(root);
+            _seatAnchors.Add(seat);
             return point;
+        }
+
+        private void OnCustomerSeated(CustomerSeatedEvent seated)
+        {
+            // Presentation only: a faulty visual must never abort composition or the director's tick (§6.4 spirit).
+            try { ShowCustomer(seated); }
+            catch (Exception error) { UnityEngine.Debug.LogException(error, this); }
+        }
+
+        private void ShowCustomer(CustomerSeatedEvent seated)
+        {
+            if (seated.SeatIndex < 0 || seated.SeatIndex >= _seatAnchors.Count) { return; }
+            OnCustomerLeft(seated.SeatIndex);
+            Transform seat = _seatAnchors[seated.SeatIndex];
+            GameObject visual;
+            if (_customerVisualPrefab != null)
+            {
+                visual = Instantiate(_customerVisualPrefab, seat, false);
+                // Contract: customer visuals never block movement or the interaction ray.
+                foreach (Collider collider in visual.GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
+            }
+            else
+            {
+                // Development placeholder only (DEC-010): no collider so it never blocks movement or the interaction ray.
+                visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                Destroy(visual.GetComponent<Collider>());
+                visual.transform.SetParent(seat, false);
+                visual.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+                visual.transform.localScale = new Vector3(0.38f, 0.6f, 0.38f);
+            }
+            visual.name = "Customer_" + TableAnchorName(seated.SeatIndex + 1);
+            _customerVisuals[seated.SeatIndex] = visual;
+        }
+
+        private void OnCustomerLeft(int seatIndex)
+        {
+            try
+            {
+                if (_customerVisuals.TryGetValue(seatIndex, out GameObject visual))
+                {
+                    _customerVisuals.Remove(seatIndex);
+                    if (visual != null) { Destroy(visual); }
+                }
+            }
+            catch (Exception error) { UnityEngine.Debug.LogException(error, this); }
+        }
+
+        private void OnCustomerRequestFailed(CustomerRequestFailedEvent failed)
+        {
+            string table = failed.SeatIndex >= 0 && failed.SeatIndex < _tables.Count ? _tables[failed.SeatIndex].name : "seat " + failed.SeatIndex;
+            UnityEngine.Debug.LogWarning("Customer could not be seated at " + table + ": " + failed.ReasonKey, this);
         }
 
         private VehicleOrderPoint PlaceVehicle(string anchorName, int interactableId, VehicleId vehicleId)
@@ -173,6 +355,25 @@ namespace TramChanh.App
             // The environment already shows the furniture/vehicle at this anchor; keep only the gameplay seam.
             foreach (Renderer renderer in point.GetComponentsInChildren<Renderer>(true)) { renderer.enabled = false; }
             return point;
+        }
+
+        private Transform FindAnchor(string anchorName)
+        {
+            Transform found = null;
+            int count = 0;
+            foreach (Transform child in Environment.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name != anchorName) { continue; }
+                count++;
+                // A direct child of the environment root wins, as in RequireAnchor.
+                if (found == null || (child.parent == Environment.transform && found.parent != Environment.transform)) { found = child; }
+            }
+            if (count > 1)
+            {
+                // Environment + modular prefabs must name each anchor once (TABLE_ANCHOR_CONTRACT).
+                UnityEngine.Debug.LogError("Duplicate environment anchor '" + anchorName + "' (" + count + "); using " + found.parent.name + "/" + found.name + ".", this);
+            }
+            return found;
         }
 
         private Transform RequireAnchor(string anchorName)
@@ -213,7 +414,12 @@ namespace TramChanh.App
         {
             _clock?.Tick();
             foreach (Animator animator in _animators) { if (animator != null) { animator.speed = _clock.IsPaused ? 0f : 1f; } }
+            if (People != null && _peoplePaused != _clock.IsPaused) { _peoplePaused = _clock.IsPaused; People.SetPaused(_peoplePaused); }
             if (!IsInitialized || _clock.IsPaused) { return; }
+            // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
+            double customerDelta = Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds);
+            Customers.Tick(customerDelta);
+            if (People != null) { People.Tick(customerDelta); }
             // Completed orders free their point; a new customer arrives after the provisional pause.
             foreach (CustomerSeat seat in _seats)
             {
@@ -243,6 +449,12 @@ namespace TramChanh.App
 
         private void OnDestroy()
         {
+            if (Customers != null)
+            {
+                Customers.CustomerSeated -= OnCustomerSeated;
+                Customers.CustomerLeft -= OnCustomerLeft;
+                Customers.CustomerRequestFailed -= OnCustomerRequestFailed;
+            }
             if (_entryUI != null)
             {
                 _entryUI.Shown -= OnEntryShown;

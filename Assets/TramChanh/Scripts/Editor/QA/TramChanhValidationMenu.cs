@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using TramChanh.App;
 using TramChanh.Core.GroundTruth;
 using TramChanh.Interaction;
@@ -30,6 +31,16 @@ namespace TramChanh.EditorTools
         public const string MainScenePath = TramChanhSceneMenu.Main;
         public const string ReportRelativePath = "Temp/TramChanhQA/report.txt";
         public const int ExpectedStallAnchorCount = 10;
+        /// <summary>TABLES-10 dine-in tables: optional environment anchors TABLE_01..TABLE_10 (Docs/Coordination/TABLE_ANCHOR_CONTRACT.md).</summary>
+        public const int ExpectedTableCount = 10;
+        public const string TableSeatAnchor = "Seat";
+        public const string CustomerAreaName = "CustomerArea";
+        private static readonly Regex ExactTableName = new Regex("^TABLE_(0[1-9]|10)$");
+        // Anything that looks like a table id but is not exact, e.g. "TABLE_1", "Table_01", "TABLE-03", "TABLE_11", "table 4".
+        private static readonly Regex TableLikeName = new Regex(
+            "^table[ _-]?\\d+$", RegexOptions.IgnoreCase);
+
+        public static string TableAnchorName(int tableNumber) => "TABLE_" + tableNumber.ToString("00");
 
         public static readonly string[] RequiredEnvironmentAnchors =
         {
@@ -344,6 +355,7 @@ namespace TramChanh.EditorTools
                 if (direct == null) { report.Warning(section, assetPath + " anchor " + name + " is not a direct child (found at " + HierarchyPath(found) + ")."); }
                 if (name == TramChanhMainBootstrap.StallRootAnchor) { stallRoot = found; }
             }
+            ValidateTableAnchors(report, section, assetPath, environment);
             if (stallRoot == null) { return; }
             StallAnchorSet set = stallRoot.GetComponentInChildren<StallAnchorSet>(true);
             if (set == null) { report.Error(section, assetPath + " :: StallRoot contains no StallAnchorSet."); return; }
@@ -360,6 +372,68 @@ namespace TramChanh.EditorTools
             }
             if (ids.Count != anchors.Length) { report.Error(section, "StallAnchorSet has duplicate anchor ids."); }
             report.Info(section, "Environment " + assetPath + ": anchors " + string.Join(", ", RequiredEnvironmentAnchors) + "; StallAnchorSet with " + anchors.Length + " anchors.");
+        }
+
+        /// <summary>
+        /// TABLES-03: TABLE_01..TABLE_10 are optional (the bootstrap falls back to TablePoint/CakeTablePoint and its
+        /// fallback layout). When present they must be exact, unique, placed under the root or one CustomerArea child,
+        /// carry a Seat child and stay visual-only (the bootstrap adds the gameplay point).
+        /// </summary>
+        private static void ValidateTableAnchors(QaReport report, string section, string assetPath, GameObject environment)
+        {
+            Transform root = environment.transform;
+            var byName = new Dictionary<string, List<Transform>>();
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t == root) { continue; }
+                if (ExactTableName.IsMatch(t.name))
+                {
+                    if (!byName.TryGetValue(t.name, out List<Transform> list)) { byName[t.name] = list = new List<Transform>(); }
+                    list.Add(t);
+                }
+                else if (TableLikeName.IsMatch(t.name))
+                {
+                    report.Error(section, assetPath + " :: " + HierarchyPath(t) + " looks like a table anchor but is misnamed; use TABLE_01..TABLE_" + ExpectedTableCount.ToString("00") + " (two digits, upper case).");
+                }
+            }
+            Transform[] areas = root.Cast<Transform>().Where(c => c.name == CustomerAreaName).ToArray();
+            if (areas.Length > 1) { report.Error(section, assetPath + " has " + areas.Length + " direct '" + CustomerAreaName + "' children; table anchors need a single CustomerArea."); }
+            var missing = new List<string>();
+            for (int number = 1; number <= ExpectedTableCount; number++)
+            {
+                string name = TableAnchorName(number);
+                if (!byName.TryGetValue(name, out List<Transform> found)) { missing.Add(name); continue; }
+                if (found.Count > 1)
+                {
+                    report.Error(section, assetPath + " has " + found.Count + " '" + name + "' anchors (" + string.Join(", ", found.Select(HierarchyPath)) + "); table ids must be unique.");
+                    continue;
+                }
+                Transform anchor = found[0];
+                bool placed = anchor.parent == root || (areas.Length == 1 && anchor.parent == areas[0]);
+                if (!placed) { report.Warning(section, assetPath + " :: " + HierarchyPath(anchor) + " should be a direct child of the environment root or of its single " + CustomerAreaName + " child."); }
+                if (anchor.Find(TableSeatAnchor) == null) { report.Warning(section, assetPath + " :: " + HierarchyPath(anchor) + " has no '" + TableSeatAnchor + "' child; the bootstrap uses its default seat offset."); }
+                foreach (InteractableRef reference in anchor.GetComponentsInChildren<InteractableRef>(true))
+                {
+                    report.Error(section, assetPath + " :: " + HierarchyPath(reference.transform) + " carries an InteractableRef; table furniture must be visual-only (the bootstrap adds the gameplay point).");
+                }
+                foreach (Collider collider in anchor.GetComponentsInChildren<Collider>(true))
+                {
+                    if (!collider.isTrigger && collider.gameObject.layer != TramChanhLayers.EnvironmentIndex)
+                    { report.Warning(section, assetPath + " :: " + HierarchyPath(collider.transform) + " collider is on layer " + collider.gameObject.layer + "; furniture colliders belong on Environment (" + TramChanhLayers.EnvironmentIndex + ")."); }
+                }
+            }
+            if (missing.Count == ExpectedTableCount)
+            {
+                report.Info(section, assetPath + " has no TABLE_xx anchors: the bootstrap uses TablePoint (TABLE_01), CakeTablePoint (TABLE_02) and its fallback layout for TABLE_03..TABLE_10.");
+            }
+            else if (missing.Count > 0)
+            {
+                report.Warning(section, assetPath + " is missing table anchors " + string.Join(", ", missing) + "; those tables use the bootstrap fallback layout.");
+            }
+            else
+            {
+                report.Info(section, assetPath + ": TABLE_01..TABLE_" + ExpectedTableCount.ToString("00") + " anchors present.");
+            }
         }
 
         // ---------------------------------------------------------------- 4. interaction anchors
