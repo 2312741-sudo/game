@@ -31,6 +31,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Commuter Motorcycle Cub** (`Motorcycle`) | Poly by Google | https://poly.pizza/m/5_MTCnqfUTr | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Motorcycle_Cub.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorcycle_Cub_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab` |
 | **Small Delivery Truck** (`Truck`) | Quaternius | https://poly.pizza/m/cXw6oiFtZ8 | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Truck_Small.obj`<br>`Assets/TramChanh/Art/Textures/T_Truck_Small_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab` |
 | **Compact Urban SUV** (`SUV`) | Quaternius | https://poly.pizza/m/xsMtZhBkxL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Car_SUV.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab` |
+| **Male Pedestrian (Casual)** (`Man`) | Quaternius | https://poly.pizza/m/HMnuH5geEG | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_07.prefab` |
+| **Female Pedestrian (Tank Top)** (`Woman in Tank Top`) | Quaternius | https://poly.pizza/m/XqzeZGB7iU | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_08.prefab` |
 
 ---
 
@@ -59,6 +61,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Motorcycle Cub** | $\le 8,000$ tris | Underbone Motorcycle Cub | 3,294 tris | $\le 2048 \times 2048$ | $2048 \times 2048$ PNG | **PASS** |
 | **Delivery Truck** | $\le 8,000$ tris | Small Urban Delivery Truck | 7,474 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
 | **Compact SUV** | $\le 8,000$ tris | Low-Poly Compact SUV | 3,294 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Male Pedestrian (Casual)** | $\le 8,000$ tris | Male Casual Rigged Pedestrian | 1,850 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Female Pedestrian (Tank Top)** | $\le 8,000$ tris | Female Tank Top Rigged Pedestrian | 1,984 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 
 ---
 

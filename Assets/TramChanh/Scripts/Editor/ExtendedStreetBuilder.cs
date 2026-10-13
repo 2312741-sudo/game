@@ -47,6 +47,8 @@ namespace TramChanh.EditorTools
         public const string MotorcycleCubPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab";
         public const string TruckSmallPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab";
         public const string CarSUVPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab";
+        public const string Person07PrefabPath = "Assets/TramChanh/Prefabs/People/PF_Person_07.prefab";
+        public const string Person08PrefabPath = "Assets/TramChanh/Prefabs/People/PF_Person_08.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -856,6 +858,32 @@ namespace TramChanh.EditorTools
                 cr2.name = "PF_PlasticCrate_Street_EastSide";
                 cr2.transform.position = new Vector3(1.7f, 0.0f, -0.6f);
                 cr2.transform.rotation = Quaternion.Euler(0f, -8f, 0f);
+            }
+
+            // Ambient Pedestrians on Sidewalk (PF_Person_07 & PF_Person_08)
+            GameObject person07Pf = AssetDatabase.LoadAssetAtPath<GameObject>(Person07PrefabPath);
+            GameObject person08Pf = AssetDatabase.LoadAssetAtPath<GameObject>(Person08PrefabPath);
+            if (person07Pf != null || person08Pf != null)
+            {
+                var pedsNode = new GameObject("AmbientPedestrians");
+                pedsNode.layer = LayerMask.NameToLayer("Characters") >= 0 ? LayerMask.NameToLayer("Characters") : 0;
+                pedsNode.transform.SetParent(parent, false);
+
+                if (person07Pf != null)
+                {
+                    var ped1 = (GameObject)PrefabUtility.InstantiatePrefab(person07Pf, pedsNode.transform);
+                    ped1.name = "PF_Person_07_AmbientEast";
+                    ped1.transform.position = new Vector3(23.5f, 0.0f, 1.2f);
+                    ped1.transform.rotation = Quaternion.Euler(0f, -40f, 0f);
+                }
+
+                if (person08Pf != null)
+                {
+                    var ped2 = (GameObject)PrefabUtility.InstantiatePrefab(person08Pf, pedsNode.transform);
+                    ped2.name = "PF_Person_08_AmbientWest";
+                    ped2.transform.position = new Vector3(-13.2f, 0.0f, 1.2f);
+                    ped2.transform.rotation = Quaternion.Euler(0f, 60f, 0f);
+                }
             }
         }
 
