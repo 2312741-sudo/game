@@ -151,8 +151,8 @@ namespace TramChanh.EditorTools
                 sidewalk.AddComponent<MeshRenderer>().sharedMaterial = swMat;
             }
             var swCol = sidewalk.AddComponent<BoxCollider>();
-            swCol.center = new Vector3(0.0f, -0.075f, -0.8f);
-            swCol.size = new Vector3(36.0f, 0.15f, 8.8f);
+            swCol.center = new Vector3(0.0f, -0.075f, -3.2f);
+            swCol.size = new Vector3(36.0f, 0.15f, 13.6f);
 
             var street = new GameObject("Street");
             street.layer = TramChanhLayers.EnvironmentIndex;
@@ -196,7 +196,7 @@ namespace TramChanh.EditorTools
             fillLight.transform.rotation = Quaternion.Euler(55f, -140f, 0f);
             fillLight.type = LightType.Directional;
             fillLight.color = new Color(0.35f, 0.45f, 0.70f);
-            fillLight.intensity = 0.45f;
+            fillLight.intensity = 1.5f;
             fillLight.shadows = LightShadows.None;
 
             PrefabUtility.SaveAsPrefabAsset(root, BaseStreetPrefabPath);
@@ -263,21 +263,21 @@ namespace TramChanh.EditorTools
                 // BoxColliders covering the walkable south sidewalk surface (top at y = 0.0m)
                 // West segment
                 var colW = s80.AddComponent<BoxCollider>();
-                colW.center = new Vector3(-11.75f, -0.075f, -0.1f);
-                colW.size = new Vector3(56.5f, 0.15f, 7.4f);
+                colW.center = new Vector3(-11.75f, -0.075f, -3.2f);
+                colW.size = new Vector3(56.5f, 0.15f, 13.6f);
 
                 // Alley threshold
                 var colThresh = s80.AddComponent<BoxCollider>();
-                colThresh.center = new Vector3(18.5f, -0.075f, -0.1f);
-                colThresh.size = new Vector3(4.0f, 0.15f, 7.4f);
+                colThresh.center = new Vector3(18.5f, -0.075f, -3.2f);
+                colThresh.size = new Vector3(4.0f, 0.15f, 13.6f);
 
                 // East segment
                 var colE = s80.AddComponent<BoxCollider>();
-                colE.center = new Vector3(30.25f, -0.075f, -0.1f);
-                colE.size = new Vector3(19.5f, 0.15f, 7.4f);
+                colE.center = new Vector3(30.25f, -0.075f, -3.2f);
+                colE.size = new Vector3(19.5f, 0.15f, 13.6f);
             }
 
-            // North Sidewalk (x in [-40, 40], z in [12.6, 16.6])
+            // North Sidewalk (x in [-40, 40], z in [12.6, 22.0])
             if (nsw80Mesh != null)
             {
                 var n80 = new GameObject("NorthSidewalk_80m");
@@ -287,8 +287,8 @@ namespace TramChanh.EditorTools
                 n80.AddComponent<MeshRenderer>().sharedMaterial = swMat;
 
                 var colN = n80.AddComponent<BoxCollider>();
-                colN.center = new Vector3(0.0f, -0.075f, 14.6f);
-                colN.size = new Vector3(80.0f, 0.15f, 4.0f);
+                colN.center = new Vector3(0.0f, -0.075f, 17.3f);
+                colN.size = new Vector3(80.0f, 0.15f, 9.4f);
             }
 
             // 2-lane Roadway (x in [-40, 40], z in [3.6, 12.6], y = -0.15m)
@@ -481,13 +481,13 @@ namespace TramChanh.EditorTools
             var menuBoard = new GameObject("MenuBoard");
             menuBoard.layer = TramChanhLayers.EnvironmentIndex;
             menuBoard.transform.SetParent(root, false);
-            menuBoard.transform.localPosition = new Vector3(1.15f, 1.10f, 0.25f);
-            menuBoard.transform.localRotation = Quaternion.Euler(0f, -15f, 0f);
+            menuBoard.transform.localPosition = new Vector3(1.05f, 1.15f, 0.44f);
+            menuBoard.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             var menuQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             menuQuad.name = "BoardVisual";
             menuQuad.layer = TramChanhLayers.EnvironmentIndex;
             menuQuad.transform.SetParent(menuBoard.transform, false);
-            menuQuad.transform.localScale = new Vector3(0.60f, 0.85f, 1.0f);
+            menuQuad.transform.localScale = new Vector3(0.70f, 0.70f, 1.0f);
             Material menuMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Menu_Board.mat");
             if (menuMat != null) menuQuad.GetComponent<MeshRenderer>().sharedMaterial = menuMat;
             Object.DestroyImmediate(menuQuad.GetComponent<Collider>());
@@ -697,7 +697,7 @@ namespace TramChanh.EditorTools
             skyFill.transform.rotation = Quaternion.Euler(55f, -140f, 0f);
             skyFill.type = LightType.Directional;
             skyFill.color = new Color(0.35f, 0.45f, 0.70f);
-            skyFill.intensity = 0.45f;
+            skyFill.intensity = 1.5f;
             skyFill.shadows = LightShadows.None;
 
             var alleyLight = new GameObject("Alley_FillLight").AddComponent<Light>();
@@ -732,30 +732,30 @@ namespace TramChanh.EditorTools
                 idx++;
             }
 
-            // 2. SidewalkSouth (spacing 2.5m, x in [-40, 40], z = 3.1m for x in [-10, 8])
+            // 2. SidewalkSouth (spacing 2.0m, x in [-40, 40], z = 3.1m for x in [-10, 8], transition step <= 0.5m)
             var swSouth = new GameObject("SidewalkSouth");
             swSouth.layer = TramChanhLayers.EnvironmentIndex;
             swSouth.transform.SetParent(walkways.transform, false);
             idx = 1;
-            for (float x = -40f; x <= 40.1f; x += 2.5f)
+            for (float x = -40f; x <= 40.1f; x += 2.0f)
             {
                 var wp = new GameObject($"WP_SidewalkSouth_{idx:D2}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(swSouth.transform, false);
-                float z = 1.8f;
+                float z = 2.0f;
                 if (x >= -10.0f && x <= 8.0f)
                 {
                     z = 3.1f;
                 }
-                else if (x < -10.0f && x >= -14.0f)
+                else if (x < -10.0f && x >= -16.0f)
                 {
-                    float t = (-10.0f - x) / 4.0f;
-                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                    float t = (-10.0f - x) / 6.0f;
+                    z = Mathf.Lerp(3.1f, 2.0f, t);
                 }
-                else if (x > 8.0f && x <= 12.0f)
+                else if (x > 8.0f && x <= 14.0f)
                 {
-                    float t = (x - 8.0f) / 4.0f;
-                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                    float t = (x - 8.0f) / 6.0f;
+                    z = Mathf.Lerp(3.1f, 2.0f, t);
                 }
                 wp.transform.localPosition = new Vector3(x, 0.0f, z);
                 idx++;
@@ -807,27 +807,27 @@ namespace TramChanh.EditorTools
             var entryWest = new GameObject("StreetEntryWest");
             entryWest.layer = TramChanhLayers.EnvironmentIndex;
             entryWest.transform.SetParent(root, false);
-            entryWest.transform.localPosition = new Vector3(-16.0f, 0.0f, 0.5f);
+            entryWest.transform.localPosition = new Vector3(-16.0f, 0.0f, 2.0f);
             entryWest.transform.localRotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
 
             var entryEast = new GameObject("StreetEntryEast");
             entryEast.layer = TramChanhLayers.EnvironmentIndex;
             entryEast.transform.SetParent(root, false);
-            entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 0.5f);
+            entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 2.0f);
             entryEast.transform.localRotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
 
             // TableApproach_01..10 beside each table's open side, facing the table, on the ground (y = 0)
             var approachSpecs = new TableApproachSpec[]
             {
-                new TableApproachSpec { name = "TableApproach_01", pos = new Vector3(-2.10f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_02", pos = new Vector3(-3.35f, 0f, -0.60f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_03", pos = new Vector3(-4.60f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_04", pos = new Vector3(-5.85f, 0f, -0.60f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_05", pos = new Vector3(-7.10f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_01", pos = new Vector3(-2.10f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_02", pos = new Vector3(-3.35f, 0f,  1.00f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_03", pos = new Vector3(-4.60f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_04", pos = new Vector3(-5.85f, 0f,  1.00f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_05", pos = new Vector3(-7.10f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
                 new TableApproachSpec { name = "TableApproach_06", pos = new Vector3(-3.35f, 0f, -1.00f), lookDir = new Vector3( 0f, 0f, -1f) },
                 new TableApproachSpec { name = "TableApproach_07", pos = new Vector3(-5.85f, 0f, -1.00f), lookDir = new Vector3( 0f, 0f, -1f) },
-                new TableApproachSpec { name = "TableApproach_08", pos = new Vector3( 3.40f, 0f,  0.60f), lookDir = new Vector3( 1f, 0f,  0f) },
-                new TableApproachSpec { name = "TableApproach_09", pos = new Vector3( 4.80f, 0f, -0.90f), lookDir = new Vector3( 1f, 0f,  0f) },
+                new TableApproachSpec { name = "TableApproach_08", pos = new Vector3( 4.20f, 0f,  1.40f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_09", pos = new Vector3( 5.60f, 0f, -0.10f), lookDir = new Vector3( 0f, 0f,  1f) },
                 new TableApproachSpec { name = "TableApproach_10", pos = new Vector3( 4.20f, 0f, -1.40f), lookDir = new Vector3( 0f, 0f, -1f) },
             };
 

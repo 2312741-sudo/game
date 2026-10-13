@@ -24,9 +24,9 @@ RenderSettings:
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0.8
-  m_AmbientMode: 3
+  m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 6630ef51280fd4fa387fed24ce16bdf1, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -223,23 +223,54 @@ MonoBehaviour:
   _cakeRecipes:
   - {fileID: 11400000, guid: e53a431935bd54b44b8e79d0f2702e88, type: 2}
   _environmentPrefab: {fileID: 939729105815630348, guid: 3c650c60614824a488a7e78eb9267eb1, type: 3}
-  _simulatePeople: 1
-  _personPrefabs:
-  - {fileID: 100100000, guid: 9b34fecbc6a924cc5a8ce57159aa6103, type: 3}
-  - {fileID: 100100000, guid: 25797851e4ffc44999e4b32e588c29c6, type: 3}
-  - {fileID: 100100000, guid: f4a2ead62f664468590c05b5de69c9ce, type: 3}
-  - {fileID: 100100000, guid: c8463570f802a489daf490d7c4e52809, type: 3}
-  - {fileID: 100100000, guid: 297e99ddb660b4cdf83d0dfe3cd69cc2, type: 3}
-  - {fileID: 100100000, guid: 43fe2c1843e834b0a930d3ca2d44b02a, type: 3}
-  _bikePrefabs:
-  - {fileID: 100100000, guid: fe91c5d693d5844fd95348c1cd5f7ea5, type: 3}
-  - {fileID: 100100000, guid: 81d1c1523690d40909269908f1308022, type: 3}
+  _additionalEnvironmentPrefabs: []
   _drinkStationPrefab: {fileID: 6505927981593460591, guid: 96acb90e76ac543cda093f50680d1a4b, type: 3}
   _cakeStationPrefab: {fileID: 8943831326368599622, guid: 3f49b381ad9d14e119ebdf6813e6313d, type: 3}
   _tablePointPrefab: {fileID: 3363350997845005691, guid: b3ce8d04b0a404d43b9091c2b1336e22, type: 3}
   _vehiclePointPrefab: {fileID: 8660045410336674729, guid: 6652ef7685e4f4047b9c17367c78fec4, type: 3}
   _cakeStationLocalPosition: {x: 0.39, y: 1, z: -0.08}
   _customerReturnSeconds: 4
+  _customerSettings:
+    _maxActiveCustomers: 3
+    _arrivalIntervalSeconds: 6
+    _tableClearSeconds: 2
+    _drinkWeight: 1
+    _cakeWeight: 1
+    _mixedWeight: 1
+    _customersWalk: 0
+    _eatSeconds: 4
+    _arrivalTimeoutSeconds: 30
+    _departureTimeoutSeconds: 20
+  _customerSeed: 1
+  _customerVisualPrefab: {fileID: 0}
+  _simulatePeople: 1
+  _peopleSettings:
+    _walkSpeed: 1.3
+    _maxPedestrians: 12
+    _pedestrianIntervalSeconds: 3
+    _maxBikes: 6
+    _bikeIntervalSeconds: 2.5
+    _bikeSpeed: 6
+  _personPrefabs:
+  - {fileID: 1310783555758317037, guid: 9b34fecbc6a924cc5a8ce57159aa6103, type: 3}
+  - {fileID: 7073791044622858260, guid: 25797851e4ffc44999e4b32e588c29c6, type: 3}
+  - {fileID: 2071183411252138851, guid: f4a2ead62f664468590c05b5de69c9ce, type: 3}
+  - {fileID: 5242672663569071914, guid: c8463570f802a489daf490d7c4e52809, type: 3}
+  - {fileID: 1756485417510797237, guid: 297e99ddb660b4cdf83d0dfe3cd69cc2, type: 3}
+  - {fileID: 4645705783588263865, guid: 43fe2c1843e834b0a930d3ca2d44b02a, type: 3}
+  _bikePrefabs:
+  - {fileID: 3886195835551508535, guid: fe91c5d693d5844fd95348c1cd5f7ea5, type: 3}
+  - {fileID: 6084990692839527156, guid: 81d1c1523690d40909269908f1308022, type: 3}
+  _fallbackTablePositions:
+  - {x: -4.6, y: 0, z: 1.7}
+  - {x: -5.85, y: 0, z: 0.2}
+  - {x: -7.1, y: 0, z: 1.7}
+  - {x: -3.35, y: 0, z: -1.8}
+  - {x: -5.85, y: 0, z: -1.8}
+  - {x: 4.2, y: 0, z: 0.6}
+  - {x: 5.6, y: 0, z: -0.9}
+  - {x: 4.2, y: 0, z: -2.2}
+  _defaultSeatOffset: {x: -0.7, y: 0, z: 0}
   _input: {fileID: 2055904075}
   _player: {fileID: 2055904074}
   _interactor: {fileID: 2055904073}
@@ -347,23 +378,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
       propertyPath: m_ClearFlags
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
-      propertyPath: m_BackGroundColor.r
-      value: 0.016
-      objectReference: {fileID: 0}
-    - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
-      propertyPath: m_BackGroundColor.g
-      value: 0.029
+      propertyPath: m_BackGroundColor.a
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
       propertyPath: m_BackGroundColor.b
       value: 0.063
       objectReference: {fileID: 0}
     - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
-      propertyPath: m_BackGroundColor.a
-      value: 1
+      propertyPath: m_BackGroundColor.g
+      value: 0.029
+      objectReference: {fileID: 0}
+    - target: {fileID: 6906358807371487939, guid: 33e9e5d33c59f4d15a56560219567986, type: 3}
+      propertyPath: m_BackGroundColor.r
+      value: 0.016
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
