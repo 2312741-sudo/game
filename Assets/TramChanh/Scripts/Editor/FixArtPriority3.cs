@@ -30,7 +30,7 @@ namespace TramChanh.EditorTools
             if (mat != null)
             {
                 mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", new Color(1.8f, 1.8f, 1.8f, 1.0f));
+                mat.SetColor("_EmissionColor", new Color(0.5f, 0.5f, 0.5f, 1.0f));
                 EditorUtility.SetDirty(mat);
                 AssetDatabase.SaveAssets();
             }
