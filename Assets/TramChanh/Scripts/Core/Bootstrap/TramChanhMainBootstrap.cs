@@ -105,6 +105,8 @@ namespace TramChanh.App
         private int _nextCustomer = FirstVehicleCustomerId;
         private bool _peoplePaused;
         private DayClock _dayClock;
+        private int _shownClockMinute = -1;
+        private bool _shownClockOpen;
         private Light _sun;
         private float _sunBaseIntensity;
         private float _ambientBaseIntensity;
@@ -449,6 +451,13 @@ namespace TramChanh.App
             _dayClock.Advance(_clock.DeltaTime);
             double hour = _dayClock.HourOfDay;
             bool open = _dayClock.IsOpen;
+            int clockMinute = GameClockText.MinuteOfDay(hour);
+            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen))
+            {
+                _shownClockMinute = clockMinute;
+                _shownClockOpen = open;
+                _prompt.SetStatus(GameClockText.Format(hour, open));
+            }
             Customers.ArrivalsEnabled = open;
             if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.

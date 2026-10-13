@@ -35,6 +35,8 @@ namespace TramChanh.UI.Prompt
         private PlayerHudPresenter _hud;
         private Label _hint;
         private Label _heldHint;
+        private Label _status;
+        private string _statusText = string.Empty;
         public PromptLocalizationTable Table => _table;
         public string Language => _language;
         public bool IsPromptVisible => _panel != null && _panel.style.display.value == DisplayStyle.Flex;
@@ -46,6 +48,13 @@ namespace TramChanh.UI.Prompt
         public string HeldItemText => _hud != null ? _hud.HeldText : string.Empty;
         public string OrderListText => _hud != null ? _hud.OrdersText : string.Empty;
         public string ToastText => _hud != null ? _hud.ToastText : string.Empty;
+
+        /// <summary>Text shown top centre (the game clock). Safe to call every frame; the label only changes when the text does.</summary>
+        public void SetStatus(string text)
+        {
+            _statusText = text ?? string.Empty;
+            if (_status != null && _status.text != _statusText) { _status.text = _statusText; }
+        }
 
         public void Initialize(IEventBus events, PlayerInteractor source)
         {
@@ -89,6 +98,18 @@ namespace TramChanh.UI.Prompt
             instructions.style.fontSize = 16f;
             instructions.style.color = Color.white;
             root.Add(instructions);
+            _status = new Label(_statusText);
+            _status.pickingMode = PickingMode.Ignore;
+            _status.style.position = Position.Absolute;
+            _status.style.top = 14f;
+            _status.style.left = Length.Percent(50f);
+            _status.style.width = 360f;
+            _status.style.marginLeft = -180f;
+            _status.style.fontSize = 22f;
+            _status.style.color = Color.white;
+            _status.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _status.style.backgroundColor = new Color(0f, 0f, 0f, 0.45f);
+            root.Add(_status);
             var crosshair = new Label("+");
             crosshair.style.position = Position.Absolute;
             crosshair.style.left = Length.Percent(50f);
