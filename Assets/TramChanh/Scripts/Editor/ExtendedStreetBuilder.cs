@@ -33,6 +33,11 @@ namespace TramChanh.EditorTools
         public const string UtilityPolePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_UtilityPole.prefab";
         public const string MotorbikePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab";
         public const string SedanPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab";
+        public const string PlasticTableChairsPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_PlasticTableChairs_VN.prefab";
+        public const string PlasticCratePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_PlasticCrate_Street.prefab";
+        public const string HondaCubPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike_HondaCub.prefab";
+        public const string CasualPedestrianPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Pedestrian_CasualGreen.prefab";
+        public const string StreetDogPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Dog.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -658,6 +663,92 @@ namespace TramChanh.EditorTools
                 car2.transform.position = new Vector3(-18.0f, -0.15f, 12.0f);
                 car2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
             }
+
+            // ART-FIX-011 Ambient Street Scenery Props:
+            // 1. Street Plastic Crates (beside stall cart and in alley)
+            GameObject cratePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticCratePrefabPath);
+            if (cratePf != null)
+            {
+                var c1 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                c1.name = "PF_PlasticCrate_Stall_01";
+                c1.transform.position = new Vector3(1.45f, 0.0f, -0.40f);
+                c1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+
+                var c2 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                c2.name = "PF_PlasticCrate_Stall_02";
+                c2.transform.position = new Vector3(1.45f, 0.0f, 0.10f);
+                c2.transform.rotation = Quaternion.Euler(0f, -5f, 0f);
+
+                var c3 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                c3.name = "PF_PlasticCrate_Stall_03_Stacked";
+                c3.transform.position = new Vector3(1.45f, 0.32f, -0.40f);
+                c3.transform.rotation = Quaternion.Euler(0f, 10f, 0f);
+
+                var ca1 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                ca1.name = "PF_PlasticCrate_Alley_01";
+                ca1.transform.position = new Vector3(17.2f, 0.0f, -5.5f);
+                ca1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+                var ca2 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                ca2.name = "PF_PlasticCrate_Alley_02_Stacked";
+                ca2.transform.position = new Vector3(17.2f, 0.32f, -5.5f);
+                ca2.transform.rotation = Quaternion.Euler(0f, 85f, 0f);
+            }
+
+            // 2. Vietnamese Street Plastic Table & Chairs sets
+            GameObject vnTablePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticTableChairsPrefabPath);
+            if (vnTablePf != null)
+            {
+                var t1 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablePf, parent);
+                t1.name = "PF_Street_PlasticTableChairs_VN_01";
+                t1.transform.position = new Vector3(-12.0f, 0.0f, 0.5f);
+                t1.transform.rotation = Quaternion.Euler(0f, 25f, 0f);
+
+                var t2 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablePf, parent);
+                t2.name = "PF_Street_PlasticTableChairs_VN_02";
+                t2.transform.position = new Vector3(14.0f, 0.0f, 14.8f);
+                t2.transform.rotation = Quaternion.Euler(0f, -15f, 0f);
+            }
+
+            // 3. Iconic Honda Super Cub motorbikes
+            GameObject cubPf = AssetDatabase.LoadAssetAtPath<GameObject>(HondaCubPrefabPath);
+            if (cubPf != null)
+            {
+                var cub1 = (GameObject)PrefabUtility.InstantiatePrefab(cubPf, parent);
+                cub1.name = "PF_Motorbike_HondaCub_Curb_01";
+                cub1.transform.position = new Vector3(8.8f, 0.0f, 2.6f);
+                cub1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+
+                var cub2 = (GameObject)PrefabUtility.InstantiatePrefab(cubPf, parent);
+                cub2.name = "PF_Motorbike_HondaCub_Alley";
+                cub2.transform.position = new Vector3(19.8f, 0.0f, -8.0f);
+                cub2.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+                var cub3 = (GameObject)PrefabUtility.InstantiatePrefab(cubPf, parent);
+                cub3.name = "PF_Motorbike_HondaCub_Curb_02";
+                cub3.transform.position = new Vector3(-28.0f, 0.0f, 2.6f);
+                cub3.transform.rotation = Quaternion.Euler(0f, -10f, 0f);
+            }
+
+            // 4. Ambient Street Pedestrian (Casual patron in green t-shirt)
+            GameObject pedPf = AssetDatabase.LoadAssetAtPath<GameObject>(CasualPedestrianPrefabPath);
+            if (pedPf != null)
+            {
+                var ped = (GameObject)PrefabUtility.InstantiatePrefab(pedPf, parent);
+                ped.name = "PF_Pedestrian_CasualGreen_01";
+                ped.transform.position = new Vector3(2.8f, 0.0f, 1.2f);
+                ped.transform.rotation = Quaternion.Euler(0f, -60f, 0f);
+            }
+
+            // 5. Ambient Street Dog
+            GameObject dogPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetDogPrefabPath);
+            if (dogPf != null)
+            {
+                var dog = (GameObject)PrefabUtility.InstantiatePrefab(dogPf, parent);
+                dog.name = "PF_Street_Dog_01";
+                dog.transform.position = new Vector3(3.6f, 0.0f, -2.6f);
+                dog.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            }
         }
 
         private static void PopulateNightLighting(Transform parent)
@@ -957,6 +1048,41 @@ namespace TramChanh.EditorTools
                     pos = new Vector3(18.5f, 1.6f, 2.5f), // Eye level at alley mouth looking South into alley
                     target = new Vector3(18.5f, 1.2f, -12.0f),
                     fov = 65f
+                },
+                new CameraShot
+                {
+                    filename = "06_Stall_Corrugated_Roof_And_Base.png",
+                    pos = new Vector3(0.0f, 1.4f, 2.5f), // Eye level in front of stall looking south
+                    target = new Vector3(0.0f, 1.1f, 0.0f),
+                    fov = 65f
+                },
+                new CameraShot
+                {
+                    filename = "07_Street_PlasticTableChairs_VN.png",
+                    pos = new Vector3(-9.5f, 1.4f, 2.2f), // Eye level looking at Vietnamese table/chairs
+                    target = new Vector3(-12.0f, 0.45f, 0.5f),
+                    fov = 60f
+                },
+                new CameraShot
+                {
+                    filename = "08_Motorbike_HondaCub.png",
+                    pos = new Vector3(6.5f, 1.3f, 3.8f), // Eye level looking at Honda Super Cub
+                    target = new Vector3(8.8f, 0.6f, 2.6f),
+                    fov = 55f
+                },
+                new CameraShot
+                {
+                    filename = "09_Pedestrian_CasualGreen.png",
+                    pos = new Vector3(1.2f, 1.5f, 2.6f), // Eye level looking at casual patron in green t-shirt
+                    target = new Vector3(2.8f, 1.1f, 1.2f),
+                    fov = 55f
+                },
+                new CameraShot
+                {
+                    filename = "10_Street_Dog.png",
+                    pos = new Vector3(3.6f, 1.2f, -0.8f), // Eye level looking at street dog
+                    target = new Vector3(3.6f, 0.35f, -2.6f),
+                    fov = 60f
                 }
             };
 
