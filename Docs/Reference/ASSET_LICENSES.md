@@ -10,6 +10,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 
 | Asset Name | Author / Creator | Source URL | License | Download Date | Project File Path |
 |---|---|---|---|---|---|
+| **Metal Sheet Roof "New" & "Old" \| Part-1** | CHEESE ARG 3D | https://sketchfab.com/3d-models/metal-sheet-roof-new-old-part-1-c7c46bf23a7e41068ab302cbc8152046 | CC-BY 4.0 | 2026-10-14 | `Assets/TramChanh/Art/Textures/T_CorrugatedMetal_BaseColor.png`<br>`Assets/TramChanh/Art/Textures/T_CorrugatedMetal_Normal.png`<br>`Assets/TramChanh/Art/Textures/T_CorrugatedMetal_MaskMap.png` |
 | **Urban Commuter Scooter** (`CUPIC_SCOOTER`) | Poly by Google | https://poly.pizza/m/9RqkkBOPNtd | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_Motorbike.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorbike_BaseColor.png` |
 | **Plastic Stool** (`Stool`) | Poly by Google | https://poly.pizza/m/2UeLZTX5nHr | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj` |
 | **Tropical Planter Plant** (`Birds of paradise potted plant`) | Poly by Google | https://poly.pizza/m/folDA1yLeEF | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_PottedPlant.obj`<br>`Assets/TramChanh/Art/Textures/T_Plant_BirdsOfParadise_BaseColor.png` |
