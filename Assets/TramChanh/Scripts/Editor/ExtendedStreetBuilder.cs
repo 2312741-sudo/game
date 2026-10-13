@@ -37,6 +37,12 @@ namespace TramChanh.EditorTools
         public const string StreetCatPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab";
         public const string StreetChickenPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab";
         public const string StreetPigeonPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Pigeon.prefab";
+        public const string StreetVendorCartPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_StreetVendor_Cart.prefab";
+        public const string SidewalkUmbrellaPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Sidewalk_Umbrella.prefab";
+        public const string ShopfrontCanopyPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Shopfront_Canopy.prefab";
+        public const string StreetPostLanternPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_PostLantern.prefab";
+        public const string PlasticTableChairsVNPrefabPath = "Assets/TramChanh/Prefabs/Furniture/PF_PlasticTableChairs_VN.prefab";
+        public const string PlasticCrateStreetPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_PlasticCrate_Street.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -728,6 +734,91 @@ namespace TramChanh.EditorTools
                 p3.name = "PF_Street_Pigeon_WestCurbside";
                 p3.transform.position = new Vector3(-21.5f, 0.0f, 2.2f);
                 p3.transform.rotation = Quaternion.Euler(0f, 75f, 0f);
+            }
+
+            // Street Furniture and Vendor Props (authentic Vietnamese sidewalk elements)
+            var vendorPropsNode = new GameObject("VendorAndSidewalkDecor");
+            vendorPropsNode.layer = TramChanhLayers.EnvironmentIndex;
+            vendorPropsNode.transform.SetParent(parent, false);
+
+            GameObject cartPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetVendorCartPrefabPath);
+            GameObject umbPf = AssetDatabase.LoadAssetAtPath<GameObject>(SidewalkUmbrellaPrefabPath);
+            GameObject canopyPf = AssetDatabase.LoadAssetAtPath<GameObject>(ShopfrontCanopyPrefabPath);
+            GameObject lanternPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetPostLanternPrefabPath);
+            GameObject vnTablesPf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticTableChairsVNPrefabPath);
+            GameObject crateStreetPf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticCrateStreetPrefabPath);
+
+            if (cartPf != null)
+            {
+                var cart = (GameObject)PrefabUtility.InstantiatePrefab(cartPf, vendorPropsNode.transform);
+                cart.name = "PF_StreetVendor_Cart_East";
+                cart.transform.position = new Vector3(25.0f, 0.0f, 1.8f);
+                cart.transform.rotation = Quaternion.Euler(0f, -100f, 0f);
+            }
+
+            if (umbPf != null)
+            {
+                var u1 = (GameObject)PrefabUtility.InstantiatePrefab(umbPf, vendorPropsNode.transform);
+                u1.name = "PF_Sidewalk_Umbrella_East";
+                u1.transform.position = new Vector3(25.0f, 0.0f, 0.7f);
+                u1.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+
+                var u2 = (GameObject)PrefabUtility.InstantiatePrefab(umbPf, vendorPropsNode.transform);
+                u2.name = "PF_Sidewalk_Umbrella_West";
+                u2.transform.position = new Vector3(-14.0f, 0.0f, 1.5f);
+                u2.transform.rotation = Quaternion.Euler(0f, -30f, 0f);
+            }
+
+            if (canopyPf != null)
+            {
+                var cp1 = (GameObject)PrefabUtility.InstantiatePrefab(canopyPf, vendorPropsNode.transform);
+                cp1.name = "PF_Shopfront_Canopy_West";
+                cp1.transform.position = new Vector3(-24.0f, 2.4f, -3.8f);
+                cp1.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+
+                var cp2 = (GameObject)PrefabUtility.InstantiatePrefab(canopyPf, vendorPropsNode.transform);
+                cp2.name = "PF_Shopfront_Canopy_East";
+                cp2.transform.position = new Vector3(28.0f, 2.4f, -3.8f);
+                cp2.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            }
+
+            if (lanternPf != null)
+            {
+                var l1 = (GameObject)PrefabUtility.InstantiatePrefab(lanternPf, vendorPropsNode.transform);
+                l1.name = "PF_Street_PostLantern_AlleyWest";
+                l1.transform.position = new Vector3(16.3f, 0.0f, -3.6f);
+                l1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+                var l2 = (GameObject)PrefabUtility.InstantiatePrefab(lanternPf, vendorPropsNode.transform);
+                l2.name = "PF_Street_PostLantern_AlleyEast";
+                l2.transform.position = new Vector3(20.7f, 0.0f, -3.6f);
+                l2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            }
+
+            if (vnTablesPf != null)
+            {
+                var vn1 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablesPf, vendorPropsNode.transform);
+                vn1.name = "PF_PlasticTableChairs_VN_West";
+                vn1.transform.position = new Vector3(-10.2f, 0.0f, 1.6f);
+                vn1.transform.rotation = Quaternion.Euler(0f, -10f, 0f);
+
+                var vn2 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablesPf, vendorPropsNode.transform);
+                vn2.name = "PF_PlasticTableChairs_VN_East";
+                vn2.transform.position = new Vector3(8.5f, 0.0f, 1.6f);
+                vn2.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+            }
+
+            if (crateStreetPf != null)
+            {
+                var cr1 = (GameObject)PrefabUtility.InstantiatePrefab(crateStreetPf, vendorPropsNode.transform);
+                cr1.name = "PF_PlasticCrate_Street_WestSide";
+                cr1.transform.position = new Vector3(-1.6f, 0.0f, -0.6f);
+                cr1.transform.rotation = Quaternion.Euler(0f, 12f, 0f);
+
+                var cr2 = (GameObject)PrefabUtility.InstantiatePrefab(crateStreetPf, vendorPropsNode.transform);
+                cr2.name = "PF_PlasticCrate_Street_EastSide";
+                cr2.transform.position = new Vector3(1.7f, 0.0f, -0.6f);
+                cr2.transform.rotation = Quaternion.Euler(0f, -8f, 0f);
             }
         }
 
