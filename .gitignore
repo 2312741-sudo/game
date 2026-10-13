@@ -52,6 +52,7 @@ sysinfo.txt
 
 # Private reference photographs (safety for public repo)
 ArtSource/References/
+ArtSource/Pending/
 ArtSource/**/__pycache__/
 
 # Visual validation scratch outputs (named files only; no global *.xml/*.log)

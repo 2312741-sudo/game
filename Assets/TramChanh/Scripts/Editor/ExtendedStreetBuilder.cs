@@ -33,6 +33,10 @@ namespace TramChanh.EditorTools
         public const string UtilityPolePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_UtilityPole.prefab";
         public const string MotorbikePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab";
         public const string SedanPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab";
+        public const string StreetDogPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Dog.prefab";
+        public const string StreetCatPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab";
+        public const string StreetChickenPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab";
+        public const string StreetPigeonPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_Pigeon.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -657,6 +661,73 @@ namespace TramChanh.EditorTools
                 car2.name = "PF_Car_Sedan_NorthCurb_02";
                 car2.transform.position = new Vector3(-18.0f, -0.15f, 12.0f);
                 car2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            }
+
+            // Street Animals (fixed on sidewalks and porches, never blocking table paths or roads)
+            var animalsNode = new GameObject("Animals");
+            animalsNode.layer = TramChanhLayers.EnvironmentIndex;
+            animalsNode.transform.SetParent(parent, false);
+
+            GameObject dogPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetDogPrefabPath);
+            GameObject catPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetCatPrefabPath);
+            GameObject chickPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetChickenPrefabPath);
+            GameObject pigPf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetPigeonPrefabPath);
+
+            if (dogPf != null)
+            {
+                var d1 = (GameObject)PrefabUtility.InstantiatePrefab(dogPf, animalsNode.transform);
+                d1.name = "PF_Street_Dog_WestPorch";
+                d1.transform.position = new Vector3(-12.5f, 0.0f, -3.2f);
+                d1.transform.rotation = Quaternion.Euler(0f, 25f, 0f);
+
+                var d2 = (GameObject)PrefabUtility.InstantiatePrefab(dogPf, animalsNode.transform);
+                d2.name = "PF_Street_Dog_EastCorner";
+                d2.transform.position = new Vector3(22.0f, 0.0f, -3.4f);
+                d2.transform.rotation = Quaternion.Euler(0f, -40f, 0f);
+            }
+
+            if (catPf != null)
+            {
+                var c1 = (GameObject)PrefabUtility.InstantiatePrefab(catPf, animalsNode.transform);
+                c1.name = "PF_Street_Cat_WestStoop";
+                c1.transform.position = new Vector3(-15.5f, 0.0f, -3.3f);
+                c1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+
+                var c2 = (GameObject)PrefabUtility.InstantiatePrefab(catPf, animalsNode.transform);
+                c2.name = "PF_Street_Cat_AlleyMouth";
+                c2.transform.position = new Vector3(17.2f, 0.0f, -4.8f);
+                c2.transform.rotation = Quaternion.Euler(0f, 85f, 0f);
+            }
+
+            if (chickPf != null)
+            {
+                var ch1 = (GameObject)PrefabUtility.InstantiatePrefab(chickPf, animalsNode.transform);
+                ch1.name = "PF_Street_Chicken_EastCurbside";
+                ch1.transform.position = new Vector3(25.5f, 0.0f, 2.4f);
+                ch1.transform.rotation = Quaternion.Euler(0f, -60f, 0f);
+
+                var ch2 = (GameObject)PrefabUtility.InstantiatePrefab(chickPf, animalsNode.transform);
+                ch2.name = "PF_Street_Chicken_AlleyBack";
+                ch2.transform.position = new Vector3(19.2f, 0.0f, -12.0f);
+                ch2.transform.rotation = Quaternion.Euler(0f, 120f, 0f);
+            }
+
+            if (pigPf != null)
+            {
+                var p1 = (GameObject)PrefabUtility.InstantiatePrefab(pigPf, animalsNode.transform);
+                p1.name = "PF_Street_Pigeon_North_01";
+                p1.transform.position = new Vector3(6.0f, 0.0f, 14.2f);
+                p1.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+
+                var p2 = (GameObject)PrefabUtility.InstantiatePrefab(pigPf, animalsNode.transform);
+                p2.name = "PF_Street_Pigeon_North_02";
+                p2.transform.position = new Vector3(7.2f, 0.0f, 14.6f);
+                p2.transform.rotation = Quaternion.Euler(0f, -110f, 0f);
+
+                var p3 = (GameObject)PrefabUtility.InstantiatePrefab(pigPf, animalsNode.transform);
+                p3.name = "PF_Street_Pigeon_WestCurbside";
+                p3.transform.position = new Vector3(-21.5f, 0.0f, 2.2f);
+                p3.transform.rotation = Quaternion.Euler(0f, 75f, 0f);
             }
         }
 
