@@ -45,13 +45,14 @@ def generate_sign_textures(output_dir="Assets/TramChanh/Art/Textures"):
     draw.line([(0, height - 36), (width, height - 36)], fill=(25, 90, 105, 255), width=2)
     draw.line([(0, height - 1), (width, height - 1)], fill=(130, 70, 12, 255), width=2)
 
-    # 4. Circular Logo Badges for Left & Right End-Caps (UV [0, 0.15] and [0.85, 1.0])
-    # Left cap center X = 154, Right cap center X = 1894, Y = 256
+    # 4. Circular Logo Badges flanking the main brand name on the front face (UV [0.15, 0.85])
+    # Front banner region runs from X = 308 to X = 1740.
+    # Badges are positioned on the front face at X = 466 and X = 1582 so they are 100% visible and NEVER clipped.
     logo_path = "ArtSource/References/IMG_5205.JPG"
     if not os.path.exists(logo_path):
         logo_path = "/Users/nthtam/.gemini/antigravity/brain/7ea37817-86db-4ce9-8ff5-37bad71fb2d1/scratch/Luu_tru_3/IMG_5205.JPG"
         
-    badge_size = 230
+    badge_size = 190
     if os.path.exists(logo_path):
         raw_logo = Image.open(logo_path).convert("RGBA")
         lw, lh = raw_logo.size
@@ -73,10 +74,10 @@ def generate_sign_textures(output_dir="Assets/TramChanh/Art/Textures"):
         fd.ellipse([(4, 4), (badge_size + 11, badge_size + 11)], fill=(255, 255, 255, 255))
         frame.paste(logo_badge, (8, 8), logo_badge)
         
-        # Paste left & right
+        # Paste left & right on front visible panel (never clipped)
         bw, bh = frame.size
-        base_img.paste(frame, (154 - bw//2, 256 - bh//2), frame)
-        base_img.paste(frame, (1894 - bw//2, 256 - bh//2), frame)
+        base_img.paste(frame, (466 - bw//2, 256 - bh//2), frame)
+        base_img.paste(frame, (1582 - bw//2, 256 - bh//2), frame)
 
     # 5. Flat Straight-On Typography Layout (Between X = 308 and X = 1740, Center = 1024)
     # Available width = 1432 px
@@ -152,8 +153,8 @@ def generate_sign_textures(output_dir="Assets/TramChanh/Art/Textures"):
     t_draw.text((x_subd, y_sub), sub_dot, fill=(229, 138, 31, 255), font=font_sub)
     t_draw.text((x_sub2, y_sub), sub_text2, fill=(35, 35, 38, 255), font=font_sub)
     
-    # Footer line: Fictitious address and hotline
-    foot_text = "ĐC: 124 VĨNH KHÁNH, P.9, Q.4, TP.HCM   •   HOTLINE: 0903 123 456"
+    # Footer line: Updated address "9 Hải Thượng" and hotline "0941 668 405" per ART-FIX-010c
+    foot_text = "ĐC: 9 HẢI THƯỢNG   •   HOTLINE: 0941 668 405"
     bb_foot = md.textbbox((0, 0), foot_text, font=font_foot)
     w_foot = bb_foot[2] - bb_foot[0]
     x_foot = 1024 - w_foot // 2
@@ -163,21 +164,17 @@ def generate_sign_textures(output_dir="Assets/TramChanh/Art/Textures"):
     # Composite text over base lightbox
     base_img.alpha_composite(text_layer)
     
-    # 6. Fine vertical seam groove lines separating end-caps for UV clarity
+    # 6. Subtle curved end-cap accent lines
     draw = ImageDraw.Draw(base_img)
-    draw.line([(307, 36), (307, height - 36)], fill=(215, 220, 225, 255), width=2)
-    draw.line([(1741, 36), (1741, height - 36)], fill=(215, 220, 225, 255), width=2)
+    draw.line([(307, 36), (307, height - 36)], fill=(225, 228, 232, 255), width=1)
+    draw.line([(1741, 36), (1741, height - 36)], fill=(225, 228, 232, 255), width=1)
     
     # Save BaseColor texture
     base_color_path = os.path.join(output_dir, "T_Sign_TramChanh_New_BaseColor.png")
     base_img.convert("RGB").save(base_color_path, "PNG")
     print(f"Generated BaseColor: {base_color_path}")
     
-    # 7. Physical Emissive Map Generation
-    # - Glowing warm acrylic diffuser background (236, 240, 248)
-    # - Glowing citrus orange "Chanh" (245, 145, 20)
-    # - Light-blocking opaque dark vinyl "Trạm" and text (8, 8, 10)
-    # - Illuminated end-cap circular badges and architectural trims
+    # 7. Physical Emissive Map Generation (anti-blowout calibrated for URP bloom)
     em_data = np.zeros((height, width, 3), dtype=np.uint8)
     base_arr = np.array(base_img.convert("RGB"))
     r = base_arr[:, :, 0].astype(float)
@@ -185,38 +182,37 @@ def generate_sign_textures(output_dir="Assets/TramChanh/Art/Textures"):
     b = base_arr[:, :, 2].astype(float)
     luminance = 0.299 * r + 0.587 * g + 0.114 * b
     
-    # Neutral/warm white acrylic diffuser emission
+    # Balanced white acrylic diffuser emission (reduced to prevent burn out)
     diffuser_mask = (luminance > 220)
-    em_data[diffuser_mask] = [236, 240, 248]
+    em_data[diffuser_mask] = [175, 180, 190]
     
     # Mustard top & bottom trims emission
     mustard_mask = (r > 190) & (g > 110) & (b < 60)
-    em_data[mustard_mask] = [185, 115, 25]
+    em_data[mustard_mask] = [140, 85, 20]
     
     # Cyan bottom trim emission
     cyan_mask = (r < 60) & (g > 120) & (b > 140)
-    em_data[cyan_mask] = [22, 108, 128]
+    em_data[cyan_mask] = [18, 85, 105]
     
     # Citrus Orange "Chanh" lettering backlight emission
     orange_text_mask = (r > 180) & (g > 110) & (g < 175) & (b < 50)
-    em_data[orange_text_mask] = [245, 145, 20]
+    em_data[orange_text_mask] = [190, 115, 15]
     
-    # End-cap logo graphics illumination (within circular badge radius)
-    for cx in [154, 1894]:
+    # Front circular logo badges illumination
+    for cx in [466, 1582]:
         cy = 256
         y_grid, x_grid = np.ogrid[:height, :width]
         dist_sq = (x_grid - cx)**2 + (y_grid - cy)**2
-        badge_mask = (dist_sq <= (badge_size // 2)**2)
-        # Badges emit translucent glow where luminance is moderate to high
+        badge_mask = (dist_sq <= ((badge_size + 16) // 2)**2)
         badge_glow = badge_mask & (luminance > 140)
-        em_data[badge_glow] = [225, 225, 235]
+        em_data[badge_glow] = [170, 170, 180]
     
-    # Dark text "Trạm", subtitle, footer, and deep shadows block the backlight
+    # Dark text "Trạm", subtitle, footer, and shadows block backlight
     dark_mask = (luminance < 110)
     em_data[dark_mask] = [8, 8, 10]
     
     emissive_img = Image.fromarray(em_data)
-    emissive_img = emissive_img.filter(ImageFilter.GaussianBlur(radius=1.2))
+    emissive_img = emissive_img.filter(ImageFilter.GaussianBlur(radius=1.0))
     
     emissive_path = os.path.join(output_dir, "T_Sign_TramChanh_New_Emission.png")
     emissive_img.save(emissive_path, "PNG")

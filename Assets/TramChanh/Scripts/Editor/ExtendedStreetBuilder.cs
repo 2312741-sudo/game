@@ -32,6 +32,7 @@ namespace TramChanh.EditorTools
         public const string StreetLampPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_StreetLamp.prefab";
         public const string UtilityPolePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_UtilityPole.prefab";
         public const string MotorbikePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab";
+        public const string SedanPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -641,6 +642,21 @@ namespace TramChanh.EditorTools
                     mb.transform.position = new Vector3(bp.x, 0.0f, bp.z);
                     mb.transform.rotation = Quaternion.Euler(0f, bp.rotY, 0f);
                 }
+            }
+
+            // Parked Sedan Cars (parallel parked along North curb, completely clear of RoadWest/RoadEast motorbike lanes)
+            GameObject sedanPf = AssetDatabase.LoadAssetAtPath<GameObject>(SedanPrefabPath);
+            if (sedanPf != null)
+            {
+                var car1 = (GameObject)PrefabUtility.InstantiatePrefab(sedanPf, parent);
+                car1.name = "PF_Car_Sedan_NorthCurb_01";
+                car1.transform.position = new Vector3(8.0f, -0.15f, 12.0f);
+                car1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+                var car2 = (GameObject)PrefabUtility.InstantiatePrefab(sedanPf, parent);
+                car2.name = "PF_Car_Sedan_NorthCurb_02";
+                car2.transform.position = new Vector3(-18.0f, -0.15f, 12.0f);
+                car2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
             }
         }
 
