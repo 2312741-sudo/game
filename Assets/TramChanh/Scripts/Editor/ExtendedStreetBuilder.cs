@@ -334,7 +334,8 @@ namespace TramChanh.EditorTools
             limits.layer = TramChanhLayers.EnvironmentIndex;
             limits.transform.SetParent(root.transform, false);
 
-            AddLimitBox(limits.transform, "Boundary_RoadCurb", new Vector3(0.0f, 1.25f, 3.65f), new Vector3(80.0f, 2.5f, 0.1f));
+            // A low curb, not a wall: the player (step offset 0.25 m) can walk from the sidewalk onto the road.
+            AddLimitBox(limits.transform, "Boundary_RoadCurb", new Vector3(0.0f, 0.06f, 3.65f), new Vector3(80.0f, 0.12f, 0.1f));
             AddLimitBox(limits.transform, "Boundary_SouthBuildings_West", new Vector3(-11.75f, 1.5f, -3.85f), new Vector3(56.5f, 3.0f, 0.1f));
             AddLimitBox(limits.transform, "Boundary_SouthBuildings_East", new Vector3(30.25f, 1.5f, -3.85f), new Vector3(19.5f, 3.0f, 0.1f));
             AddLimitBox(limits.transform, "Boundary_Alley_West", new Vector3(16.45f, 1.5f, -9.4f), new Vector3(0.1f, 3.0f, 11.2f));
