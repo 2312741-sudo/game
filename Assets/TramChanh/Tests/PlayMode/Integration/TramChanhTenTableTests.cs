@@ -379,6 +379,38 @@ namespace TramChanh.Tests.PlayMode.Integration
                 if (Blockers(waypoint).Count > 0) { continue; }
                 if (TrySegment(from, waypoint, out _) && TrySegment(waypoint, to, out _)) { return true; }
             }
+            return TryThreeSegmentDetour(from, to, waypoints);
+        }
+
+        /// <summary>
+        /// Walking around the stall takes a third segment when tables, stools and crates stand on both sides of it. Candidate
+        /// waypoints are the single-detour set plus the four corners of the stall pushed out by 0.6 m; every segment is
+        /// still a full capsule cast, so this only accepts routes the player body can really walk.
+        /// </summary>
+        private bool TryThreeSegmentDetour(Vector3 from, Vector3 to, List<Vector3> waypoints)
+        {
+            Transform stall = FindDeep(_bootstrap.Environment.transform, TramChanhMainBootstrap.StallRootAnchor);
+            if (stall != null)
+            {
+                Vector3 center = Ground(stall.position);
+                float cornerX = StallHalfX + 0.6f;
+                float cornerZ = StallHalfZ + 0.6f;
+                foreach (float sx in new[] { -1f, 1f })
+                {
+                    foreach (float sz in new[] { -1f, 1f }) { waypoints.Add(center + new Vector3(sx * cornerX, 0f, sz * cornerZ)); }
+                }
+            }
+            var free = new List<Vector3>();
+            foreach (Vector3 waypoint in waypoints) { if (Blockers(waypoint).Count == 0) { free.Add(waypoint); } }
+            foreach (Vector3 first in free)
+            {
+                if (!TrySegment(from, first, out _)) { continue; }
+                foreach (Vector3 second in free)
+                {
+                    if (first == second) { continue; }
+                    if (TrySegment(first, second, out _) && TrySegment(second, to, out _)) { return true; }
+                }
+            }
             return false;
         }
 
