@@ -19,6 +19,8 @@ namespace TramChanh.App.People
         [SerializeField, Tbd("DEC-010")] private int _maxBikes = 6;
         [SerializeField, Tbd("DEC-010")] private float _bikeIntervalSeconds = 2.5f;
         [SerializeField, Tbd("DEC-010")] private float _bikeSpeed = 6f;
+        [Tooltip("Ambient pedestrians and bikes only use the part of a lane within this many metres of the environment origin (the stall). 0 = the whole lane. Use about 60 on a 500 m street.")]
+        [SerializeField, Tbd("DEC-010", "Keeps crowd density near the stall on a long street.")] private float _ambientWindowMeters = 0f;
 
         // Inspector values are clamped so a bad value can never stop the scene from composing.
         public float WalkSpeed => Positive(_walkSpeed, MinSpeed);
@@ -27,6 +29,7 @@ namespace TramChanh.App.People
         public int MaxBikes => Math.Max(0, _maxBikes);
         public float BikeIntervalSeconds => Positive(_bikeIntervalSeconds, MinInterval);
         public float BikeSpeed => Positive(_bikeSpeed, MinSpeed);
+        public float AmbientWindowMeters => float.IsNaN(_ambientWindowMeters) || float.IsInfinity(_ambientWindowMeters) || _ambientWindowMeters < 0f ? 0f : _ambientWindowMeters;
 
         private static float Positive(float value, float minimum) => float.IsNaN(value) || float.IsInfinity(value) || value < minimum ? minimum : value;
     }
@@ -61,6 +64,8 @@ namespace TramChanh.App.People
         private CrowdScheduler _bikeScheduler;
         private System.Random _random;
         private int _entryWest = -1, _entryEast = -1;
+        private Vector3 _windowCenter;
+        private readonly List<Vector3> _lanePoints = new List<Vector3>();
         private int _nextLeaverId;
         private bool _paused;
 
@@ -84,6 +89,7 @@ namespace TramChanh.App.People
             _personPrefabs = personPrefabs ?? Array.Empty<GameObject>();
             _bikePrefabs = bikePrefabs ?? Array.Empty<GameObject>();
             _random = new System.Random(seed);
+            _windowCenter = environmentRoot != null ? environmentRoot.position : Vector3.zero;
 
             Dictionary<string, Vector3> anchors = PeopleLayout.Collect(environmentRoot, tableAnchors, out bool fallback);
             UsedFallbackLayout = fallback;
@@ -316,8 +322,11 @@ namespace TramChanh.App.People
         {
             path.Clear();
             if (!Graph.TryGetLane(lane, out IReadOnlyList<int> nodes, out _) || nodes.Count < 2) { return false; }
-            for (int i = 0; i < nodes.Count; i++) { path.Add(Graph.PositionOf(nodes[reverse ? nodes.Count - 1 - i : i])); }
-            return true;
+            _lanePoints.Clear();
+            for (int i = 0; i < nodes.Count; i++) { _lanePoints.Add(Graph.PositionOf(nodes[i])); }
+            if (!LaneWindow.TryGetRange(_lanePoints, _windowCenter, _settings.AmbientWindowMeters, out int first, out int last)) { return false; }
+            for (int i = first; i <= last; i++) { path.Add(_lanePoints[reverse ? last - (i - first) : i]); }
+            return path.Count >= 2;
         }
 
         private PersonView Acquire(GameObject[] prefabs, string name, PrimitiveType placeholder, Color color, Vector3? scale = null)
