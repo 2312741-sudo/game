@@ -27,6 +27,10 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Street Post Lantern** (`Post Lantern`) | Kay Lousberg | https://poly.pizza/m/ZSQ65S4lEu | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_PostLantern.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_PostLantern.prefab` |
 | **VN Sidewalk Plastic Table & Chairs** | Project Original | N/A (Internal Custom Asset) | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Furniture/SM_PlasticTableChairs_VN.obj`<br>`Assets/TramChanh/Prefabs/Furniture/PF_PlasticTableChairs_VN.prefab` |
 | **Street Plastic Crate** | Project Original | N/A (Internal Custom Asset) | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj`<br>`Assets/TramChanh/Art/Textures/T_PlasticCrate_Street_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_PlasticCrate_Street.prefab` |
+| **Urban Bicycle** (`Bicycle`) | Poly by Google | https://poly.pizza/m/b6USSQA731J | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Bicycle.obj`<br>`Assets/TramChanh/Art/Textures/T_Bicycle_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Bicycle.prefab` |
+| **Commuter Motorcycle Cub** (`Motorcycle`) | Poly by Google | https://poly.pizza/m/5_MTCnqfUTr | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Motorcycle_Cub.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorcycle_Cub_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab` |
+| **Small Delivery Truck** (`Truck`) | Quaternius | https://poly.pizza/m/cXw6oiFtZ8 | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Truck_Small.obj`<br>`Assets/TramChanh/Art/Textures/T_Truck_Small_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab` |
+| **Compact Urban SUV** (`SUV`) | Quaternius | https://poly.pizza/m/xsMtZhBkxL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Car_SUV.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab` |
 
 ---
 
@@ -51,6 +55,10 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Street Post Lantern** | $\le 3,000$ tris | Urban Post Lantern | 96 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **VN Table & Chairs** | $\le 3,000$ tris | Vietnamese Plastic Table & 2 Chairs | 2,025 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Plastic Crate** | $\le 3,000$ tris | Red Plastic Bottle Crate | 68 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
+| **Urban Bicycle** | $\le 8,000$ tris | Poly Urban Bicycle | 3,712 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
+| **Motorcycle Cub** | $\le 8,000$ tris | Underbone Motorcycle Cub | 3,294 tris | $\le 2048 \times 2048$ | $2048 \times 2048$ PNG | **PASS** |
+| **Delivery Truck** | $\le 8,000$ tris | Small Urban Delivery Truck | 7,474 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
+| **Compact SUV** | $\le 8,000$ tris | Low-Poly Compact SUV | 3,294 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 
 ---
 
@@ -58,7 +66,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 
 > [!IMPORTANT]
 > **Quy định bản quyền thương mại và phân phối:**
-> Các tài sản mang giấy phép **Creative Commons Attribution (CC-BY 3.0 / CC-BY 4.0)** liệt kê ở trên (bao gồm các mô hình do **Poly by Google** sáng tác: *Xe máy tay ga CUPIC_SCOOTER, Ghế nhựa Stool, Chậu cây Birds of Paradise, Xe đẩy hàng Dining car, Mái che Canopy*; do **S. Paul Michael** sáng tác: *Dù che ngoài trời Blue/White Beach Umbrella*; do **CHEESE ARG 3D** sáng tác: *Mái tôn Metal Sheet Roof*) **bắt buộc phải được hiển thị rõ ràng trong màn hình Credits / Ghi nhận tác giả** của game (hoặc tài liệu kèm theo khi phát hành) với đầy đủ thông tin: tên tác phẩm, tên tác giả, giấy phép CC-BY tương ứng và liên kết nguồn.
+> Các tài sản mang giấy phép **Creative Commons Attribution (CC-BY 3.0 / CC-BY 4.0)** liệt kê ở trên (bao gồm các mô hình do **Poly by Google** sáng tác: *Xe máy tay ga CUPIC_SCOOTER, Ghế nhựa Stool, Chậu cây Birds of Paradise, Xe đẩy hàng Dining car, Mái che Canopy, Xe đạp Bicycle, Xe máy số Motorcycle*; do **S. Paul Michael** sáng tác: *Dù che ngoài trời Blue/White Beach Umbrella*; do **CHEESE ARG 3D** sáng tác: *Mái tôn Metal Sheet Roof*) **bắt buộc phải được hiển thị rõ ràng trong màn hình Credits / Ghi nhận tác giả** của game (hoặc tài liệu kèm theo khi phát hành) với đầy đủ thông tin: tên tác phẩm, tên tác giả, giấy phép CC-BY tương ứng và liên kết nguồn.
 
 
 > **Ghi chú (lead):** mô hình cây "Small Trees" của Poly by Google đã được thử trong ART-FIX-010 nhưng bị trả về bản cũ của dự án vì hình dạng bị méo; chưa dùng trong game, nên không có trong danh sách trên. Khi dùng lại phải thêm vào.

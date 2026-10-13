@@ -43,6 +43,10 @@ namespace TramChanh.EditorTools
         public const string StreetPostLanternPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_PostLantern.prefab";
         public const string PlasticTableChairsVNPrefabPath = "Assets/TramChanh/Prefabs/Furniture/PF_PlasticTableChairs_VN.prefab";
         public const string PlasticCrateStreetPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_PlasticCrate_Street.prefab";
+        public const string BicyclePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Bicycle.prefab";
+        public const string MotorcycleCubPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab";
+        public const string TruckSmallPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab";
+        public const string CarSUVPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -630,42 +634,75 @@ namespace TramChanh.EditorTools
                 }
             }
 
-            // Parked Motorbikes
+            // Parked Two-Wheelers (Bicycles, Cub Motorcycles, Scooters)
+            GameObject bicyclePf = AssetDatabase.LoadAssetAtPath<GameObject>(BicyclePrefabPath);
+            GameObject motorcycleCubPf = AssetDatabase.LoadAssetAtPath<GameObject>(MotorcycleCubPrefabPath);
+
             BikeSlot[] bikePositions = new BikeSlot[]
             {
-                new BikeSlot { x = -24.0f, z = 2.6f, rotY = 15f },
-                new BikeSlot { x = -15.0f, z = 2.6f, rotY = -10f },
-                new BikeSlot { x = -12.5f, z = 2.6f, rotY = 5f },
-                new BikeSlot { x = -6.5f,  z = 2.7f, rotY = 20f },
-                new BikeSlot { x = 5.2f,   z = 2.6f, rotY = -15f },
-                new BikeSlot { x = 13.0f,  z = 2.6f, rotY = 10f },
-                new BikeSlot { x = 22.5f,  z = 2.6f, rotY = 5f },
-                new BikeSlot { x = 31.0f,  z = 2.6f, rotY = -20f },
-                new BikeSlot { x = 17.5f,  z = -7.0f, rotY = 85f }, // Inside alley
+                new BikeSlot { x = -24.0f, z = 2.6f, rotY = 15f },  // Bicycle
+                new BikeSlot { x = -15.0f, z = 2.6f, rotY = -10f }, // Cub
+                new BikeSlot { x = -12.5f, z = 2.6f, rotY = 5f },   // Scooter
+                new BikeSlot { x = -6.5f,  z = 2.7f, rotY = 20f },  // Scooter
+                new BikeSlot { x = 5.2f,   z = 2.6f, rotY = -15f }, // Scooter
+                new BikeSlot { x = 13.0f,  z = 2.6f, rotY = 10f },  // Cub
+                new BikeSlot { x = 22.5f,  z = 2.6f, rotY = 5f },   // Scooter
+                new BikeSlot { x = 31.0f,  z = 2.6f, rotY = -20f }, // Bicycle
+                new BikeSlot { x = 17.5f,  z = -7.0f, rotY = 85f }, // Inside alley (Cub)
             };
 
-            if (bikePf != null)
+            for (int i = 0; i < bikePositions.Length; i++)
             {
-                foreach (var bp in bikePositions)
+                var bp = bikePositions[i];
+                GameObject pfToUse = bikePf;
+                if ((i == 0 || i == 7) && bicyclePf != null)
                 {
-                    var mb = (GameObject)PrefabUtility.InstantiatePrefab(bikePf, parent);
+                    pfToUse = bicyclePf;
+                }
+                else if ((i == 1 || i == 5 || i == 8) && motorcycleCubPf != null)
+                {
+                    pfToUse = motorcycleCubPf;
+                }
+
+                if (pfToUse != null)
+                {
+                    var mb = (GameObject)PrefabUtility.InstantiatePrefab(pfToUse, parent);
                     mb.transform.position = new Vector3(bp.x, 0.0f, bp.z);
                     mb.transform.rotation = Quaternion.Euler(0f, bp.rotY, 0f);
                 }
             }
 
-            // Parked Sedan Cars (parallel parked along North curb, completely clear of RoadWest/RoadEast motorbike lanes)
+            // Parked Four-Wheelers along North curb (clear of RoadWest/RoadEast lanes): Sedans, SUV, Delivery Truck
             GameObject sedanPf = AssetDatabase.LoadAssetAtPath<GameObject>(SedanPrefabPath);
+            GameObject truckPf = AssetDatabase.LoadAssetAtPath<GameObject>(TruckSmallPrefabPath);
+            GameObject suvPf = AssetDatabase.LoadAssetAtPath<GameObject>(CarSUVPrefabPath);
+
+            if (suvPf != null)
+            {
+                var suv = (GameObject)PrefabUtility.InstantiatePrefab(suvPf, parent);
+                suv.name = "PF_Car_SUV_NorthCurb";
+                suv.transform.position = new Vector3(-26.0f, 0.0f, 12.0f);
+                suv.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            }
+
+            if (truckPf != null)
+            {
+                var truck = (GameObject)PrefabUtility.InstantiatePrefab(truckPf, parent);
+                truck.name = "PF_Truck_Small_NorthCurb";
+                truck.transform.position = new Vector3(20.0f, 0.0f, 12.0f);
+                truck.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            }
+
             if (sedanPf != null)
             {
                 var car1 = (GameObject)PrefabUtility.InstantiatePrefab(sedanPf, parent);
                 car1.name = "PF_Car_Sedan_NorthCurb_01";
-                car1.transform.position = new Vector3(8.0f, -0.15f, 12.0f);
+                car1.transform.position = new Vector3(6.0f, -0.15f, 12.0f);
                 car1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
 
                 var car2 = (GameObject)PrefabUtility.InstantiatePrefab(sedanPf, parent);
                 car2.name = "PF_Car_Sedan_NorthCurb_02";
-                car2.transform.position = new Vector3(-18.0f, -0.15f, 12.0f);
+                car2.transform.position = new Vector3(-12.0f, -0.15f, 12.0f);
                 car2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
             }
 
