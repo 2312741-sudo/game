@@ -33,6 +33,10 @@ namespace TramChanh.EditorTools
         public const string UtilityPolePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_UtilityPole.prefab";
         public const string MotorbikePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab";
         public const string SedanPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab";
+        public const string PlasticCratePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_PlasticCrate_Street.prefab";
+        public const string PlasticTableChairsPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Street_PlasticTableChairs_VN.prefab";
+        public const string PlasticStoolPrefabPath = "Assets/TramChanh/Prefabs/CustomerArea/PF_PlasticStool.prefab";
+        public const string TeaBagPrefabPath = "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -73,10 +77,69 @@ namespace TramChanh.EditorTools
             Debug.Log("[TramChanh] Starting Extended Street Construction (ART-MAP-002)...");
             ConfigureProjectAndBuildSettings();
             EnsureModelsImported();
+            EnsurePlasticPropsPrefabs();
             BuildBaseStreetPrefab();
             BuildExtendedStreetPrefab();
             CreatePreviewSceneAndCapture();
             Debug.Log("[TramChanh] Extended Street Construction (ART-MAP-002) Complete!");
+        }
+
+        public static void EnsurePlasticPropsPrefabs()
+        {
+            // 1. Table & Chairs Prefab
+            var tableModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Art/Models/Furniture/SM_PlasticTableChairs_VN.obj");
+            var tableMatRed = AssetDatabase.LoadAssetAtPath<Material>("Assets/TramChanh/Art/Materials/MAT_Plastic_Red.mat");
+            var tableMatBlue = AssetDatabase.LoadAssetAtPath<Material>("Assets/TramChanh/Art/Materials/MAT_Plastic_Blue.mat");
+            var tablePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticTableChairsPrefabPath);
+
+            if (tableModel != null && tablePf != null)
+            {
+                AssetDatabase.ImportAsset("Assets/TramChanh/Art/Models/Furniture/SM_PlasticTableChairs_VN.obj", ImportAssetOptions.ForceUpdate);
+                var allMfs = tableModel.GetComponentsInChildren<MeshFilter>();
+                Debug.Log($"[TramChanh] tableModel MeshFilters found: {allMfs.Length}, childCount={tableModel.transform.childCount}");
+                foreach (var mf in allMfs)
+                {
+                    Debug.Log($"[TramChanh] MF '{mf.gameObject.name}': subMeshCount={mf.sharedMesh?.subMeshCount}, verts={mf.sharedMesh?.vertexCount}");
+                }
+
+                var mfSource = tableModel.GetComponentInChildren<MeshFilter>();
+                var mfTarget = tablePf.GetComponent<MeshFilter>();
+                var mrTarget = tablePf.GetComponent<MeshRenderer>();
+
+                if (mfSource != null && mfTarget != null)
+                {
+                    mfTarget.sharedMesh = mfSource.sharedMesh;
+                }
+                if (mrTarget != null && tableMatRed != null && tableMatBlue != null)
+                {
+                    mrTarget.sharedMaterials = new Material[] { tableMatRed, tableMatBlue };
+                }
+                EditorUtility.SetDirty(tablePf);
+            }
+
+            // 2. Plastic Crate Prefab
+            var crateModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj");
+            var crateMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/TramChanh/Art/Materials/MAT_PlasticCrate_Street.mat");
+            var cratePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticCratePrefabPath);
+
+            if (crateModel != null && cratePf != null)
+            {
+                var mfSource = crateModel.GetComponentInChildren<MeshFilter>();
+                var mfTarget = cratePf.GetComponent<MeshFilter>();
+                var mrTarget = cratePf.GetComponent<MeshRenderer>();
+
+                if (mfSource != null && mfTarget != null)
+                {
+                    mfTarget.sharedMesh = mfSource.sharedMesh;
+                }
+                if (mrTarget != null && crateMat != null)
+                {
+                    mrTarget.sharedMaterial = crateMat;
+                }
+                EditorUtility.SetDirty(cratePf);
+            }
+
+            AssetDatabase.SaveAssets();
         }
 
         public static void ConfigureProjectAndBuildSettings()
@@ -658,6 +721,92 @@ namespace TramChanh.EditorTools
                 car2.transform.position = new Vector3(-18.0f, -0.15f, 12.0f);
                 car2.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
             }
+
+            // ART-FIX-011b Ambient Street Scenery Props:
+            // 1. Street Plastic Crates on Stools for tea storage (user: "mấy cái này đặt nằm xuống kê lên ghế để bỏ trà vào")
+            GameObject cratePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticCratePrefabPath);
+            GameObject stoolPf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticStoolPrefabPath);
+            GameObject teaBagPf = AssetDatabase.LoadAssetAtPath<GameObject>(TeaBagPrefabPath);
+
+            if (cratePf != null)
+            {
+                // Crate 1 placed horizontally on Stool 1 (next to stall cart)
+                if (stoolPf != null)
+                {
+                    var s1 = (GameObject)PrefabUtility.InstantiatePrefab(stoolPf, parent);
+                    s1.name = "PF_PlasticStool_UnderCrate_01";
+                    s1.transform.position = new Vector3(1.50f, 0.0f, -0.40f);
+                    s1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+                }
+
+                var c1 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                c1.name = "PF_PlasticCrate_Stall_TeaBox_01";
+                // Lying horizontally on stool (stool height = 0.30m)
+                c1.transform.position = new Vector3(1.50f, 0.30f, -0.40f);
+                c1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
+
+                // Tea packets inside Crate 1
+                if (teaBagPf != null)
+                {
+                    var tb1 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, c1.transform);
+                    tb1.name = "TeaBag_01";
+                    tb1.transform.localPosition = new Vector3(0.0f, 0.05f, -0.10f);
+                    tb1.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+
+                    var tb2 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, c1.transform);
+                    tb2.name = "TeaBag_02";
+                    tb2.transform.localPosition = new Vector3(0.0f, 0.05f, 0.10f);
+                    tb2.transform.localRotation = Quaternion.Euler(90f, 15f, 0f);
+                }
+
+                // Crate 2 placed horizontally on Stool 2
+                if (stoolPf != null)
+                {
+                    var s2 = (GameObject)PrefabUtility.InstantiatePrefab(stoolPf, parent);
+                    s2.name = "PF_PlasticStool_UnderCrate_02";
+                    s2.transform.position = new Vector3(1.50f, 0.0f, 0.20f);
+                    s2.transform.rotation = Quaternion.Euler(0f, -5f, 0f);
+                }
+
+                var c2 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                c2.name = "PF_PlasticCrate_Stall_TeaBox_02";
+                c2.transform.position = new Vector3(1.50f, 0.30f, 0.20f);
+                c2.transform.rotation = Quaternion.Euler(0f, -5f, 0f);
+
+                if (teaBagPf != null)
+                {
+                    var tb3 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, c2.transform);
+                    tb3.name = "TeaBag_03";
+                    tb3.transform.localPosition = new Vector3(0.0f, 0.05f, 0.0f);
+                    tb3.transform.localRotation = Quaternion.Euler(90f, 25f, 0f);
+                }
+
+                // Alley crates (stacked horizontally against alley wall)
+                var ca1 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                ca1.name = "PF_PlasticCrate_Alley_01";
+                ca1.transform.position = new Vector3(17.2f, 0.0f, -5.5f);
+                ca1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+                var ca2 = (GameObject)PrefabUtility.InstantiatePrefab(cratePf, parent);
+                ca2.name = "PF_PlasticCrate_Alley_02_Stacked";
+                ca2.transform.position = new Vector3(17.2f, 0.235f, -5.5f);
+                ca2.transform.rotation = Quaternion.Euler(0f, 85f, 0f);
+            }
+
+            // 2. Vietnamese Street Plastic Table & Chairs sets
+            GameObject vnTablePf = AssetDatabase.LoadAssetAtPath<GameObject>(PlasticTableChairsPrefabPath);
+            if (vnTablePf != null)
+            {
+                var t1 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablePf, parent);
+                t1.name = "PF_Street_PlasticTableChairs_VN_01";
+                t1.transform.position = new Vector3(-12.0f, 0.0f, 0.5f);
+                t1.transform.rotation = Quaternion.Euler(0f, 25f, 0f);
+
+                var t2 = (GameObject)PrefabUtility.InstantiatePrefab(vnTablePf, parent);
+                t2.name = "PF_Street_PlasticTableChairs_VN_02";
+                t2.transform.position = new Vector3(14.0f, 0.0f, 14.8f);
+                t2.transform.rotation = Quaternion.Euler(0f, -15f, 0f);
+            }
         }
 
         private static void PopulateNightLighting(Transform parent)
@@ -957,6 +1106,27 @@ namespace TramChanh.EditorTools
                     pos = new Vector3(18.5f, 1.6f, 2.5f), // Eye level at alley mouth looking South into alley
                     target = new Vector3(18.5f, 1.2f, -12.0f),
                     fov = 65f
+                },
+                new CameraShot
+                {
+                    filename = "06_Stall_Corrugated_Roof_And_Base.png",
+                    pos = new Vector3(0.0f, 1.4f, 2.5f), // Eye level in front of stall looking south at corrugated roof, base, and fixed side
+                    target = new Vector3(0.0f, 1.1f, 0.0f),
+                    fov = 65f
+                },
+                new CameraShot
+                {
+                    filename = "07_Street_PlasticTableChairs_VN.png",
+                    pos = new Vector3(-10.2f, 0.95f, 1.6f), // Eye level close-up of Vietnamese table and chairs (<= 3000 tris)
+                    target = new Vector3(-12.0f, 0.38f, 0.5f),
+                    fov = 48f
+                },
+                new CameraShot
+                {
+                    filename = "08_PlasticCrates_Stall.png",
+                    pos = new Vector3(0.7f, 1.05f, 0.7f), // Close-up looking at horizontal red plastic crates on stools with tea
+                    target = new Vector3(1.50f, 0.42f, -0.10f),
+                    fov = 50f
                 }
             };
 
