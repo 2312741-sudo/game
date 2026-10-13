@@ -33,6 +33,7 @@ namespace TramChanh.EditorTools
         public const string UtilityPolePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_UtilityPole.prefab";
         public const string MotorbikePrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab";
         public const string RoadsidePropsPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_RoadsideProps.prefab";
+        public const string CarSedanPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab";
 
         public const string PreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Environment_HighFidelity";
@@ -62,6 +63,16 @@ namespace TramChanh.EditorTools
             Debug.Log("[TramChanh] Environment & 10-Table Wave Reconstruction Complete!");
         }
 
+        [MenuItem("Tram Chanh/Art/Build and Capture ART-FIX-010")]
+        public static void BuildAndCaptureFix010()
+        {
+            Debug.Log("[TramChanh] Starting ART-FIX-010 Environment and Scene Update...");
+            CreateEnvironmentPrefabs();
+            CreatePreviewScene();
+            CaptureArtFix010Screenshots();
+            Debug.Log("[TramChanh] ART-FIX-010 Environment and Scene Update Complete!");
+        }
+
         public static void ConfigureTextureImporters()
         {
             SetTextureType($"{TexturesFolder}/T_Asphalt_Night_MaskMap.png", TextureImporterType.Default, false, false);
@@ -76,6 +87,7 @@ namespace TramChanh.EditorTools
             SetTextureType($"{TexturesFolder}/T_Bark_Tree_BaseColor.png", TextureImporterType.Default, true, false);
             SetTextureType($"{TexturesFolder}/T_UtilityPole_BaseColor.png", TextureImporterType.Default, true, false);
             SetTextureType($"{TexturesFolder}/T_Motorbike_BaseColor.png", TextureImporterType.Default, true, false);
+            SetTextureType($"{TexturesFolder}/T_Plant_BirdsOfParadise_BaseColor.png", TextureImporterType.Default, true, false);
             AssetDatabase.SaveAssets();
         }
 
@@ -159,9 +171,9 @@ namespace TramChanh.EditorTools
             Texture2D aspMask = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Asphalt_Night_MaskMap.png");
             if (aspTex != null) matAsphalt.SetTexture("_BaseMap", aspTex);
             if (aspMask != null) matAsphalt.SetTexture("_MetallicGlossMap", aspMask);
-            matAsphalt.SetColor("_BaseColor", new Color(0.12f, 0.13f, 0.14f));
+            matAsphalt.SetColor("_BaseColor", new Color(0.28f, 0.29f, 0.31f));
             matAsphalt.SetFloat("_Metallic", 0.10f);
-            matAsphalt.SetFloat("_Smoothness", 0.85f);
+            matAsphalt.SetFloat("_Smoothness", 0.50f);
             EditorUtility.SetDirty(matAsphalt);
 
             // 6. Shophouse A (Tạp Hóa Bình An)
@@ -243,6 +255,22 @@ namespace TramChanh.EditorTools
             matProps.SetFloat("_Smoothness", 0.45f);
             matProps.SetFloat("_Metallic", 0.05f);
             EditorUtility.SetDirty(matProps);
+
+            // 15. Tropical Planter (Birds of Paradise)
+            Material matPlant = LoadOrCreateMaterial("MAT_Plant_BirdsOfParadise", urpLit);
+            Texture2D plantTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/T_Plant_BirdsOfParadise_BaseColor.png");
+            if (plantTex != null) matPlant.SetTexture("_BaseMap", plantTex);
+            matPlant.SetColor("_BaseColor", Color.white);
+            matPlant.SetFloat("_Smoothness", 0.35f);
+            matPlant.SetFloat("_Metallic", 0.05f);
+            EditorUtility.SetDirty(matPlant);
+
+            // 16. Road Vehicle Sedan
+            Material matCar = LoadOrCreateMaterial("MAT_Street_Car_Sedan", urpLit);
+            matCar.SetColor("_BaseColor", new Color(0.12f, 0.22f, 0.35f));
+            matCar.SetFloat("_Smoothness", 0.85f);
+            matCar.SetFloat("_Metallic", 0.70f);
+            EditorUtility.SetDirty(matCar);
 
             AssetDatabase.SaveAssets();
         }
@@ -494,11 +522,20 @@ namespace TramChanh.EditorTools
             plantGo.transform.localPosition = new Vector3(0.8f, 0f, 0f);
             plantGo.layer = TramChanhLayers.EnvironmentIndex;
             plantGo.AddComponent<MeshFilter>().sharedMesh = LoadMesh($"{EnvironmentModelsFolder}/SM_PottedPlant.obj");
-            plantGo.AddComponent<MeshRenderer>().sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Foliage_Tree.mat");
+            plantGo.AddComponent<MeshRenderer>().sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Plant_BirdsOfParadise.mat");
 
             PrefabUtility.SaveAsPrefabAsset(propsRoot, RoadsidePropsPrefabPath);
             Object.DestroyImmediate(propsRoot);
             Debug.Log("[TramChanh] Created Roadside Props Prefab: " + RoadsidePropsPrefabPath);
+
+            CreateSimpleVisualPrefab(
+                CarSedanPrefabPath,
+                "PF_Car_Sedan",
+                LoadMesh($"{EnvironmentModelsFolder}/SM_Car_Sedan.obj"),
+                AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Street_Car_Sedan.mat"),
+                new Vector3(1.80f, 1.45f, 3.96f),
+                new Vector3(0f, 0.72f, 0f)
+            );
         }
 
         private static void CreateSimpleVisualPrefab(string prefabPath, string goName, Mesh mesh, Material mat, Vector3 colSize, Vector3 colCenter)
@@ -792,6 +829,14 @@ namespace TramChanh.EditorTools
                 p2.transform.position = new Vector3(2.8f, 0.0f, 3.1f);
             }
 
+            GameObject carPf = AssetDatabase.LoadAssetAtPath<GameObject>(CarSedanPrefabPath);
+            if (carPf != null)
+            {
+                var car1 = (GameObject)PrefabUtility.InstantiatePrefab(carPf, envRoot.transform);
+                car1.transform.position = new Vector3(6.5f, 0.0f, 6.8f);
+                car1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            }
+
             EditorSceneManager.SaveScene(scene, PreviewScenePath);
             Debug.Log("[TramChanh] Saved Environment Preview Scene: " + PreviewScenePath);
         }
@@ -830,6 +875,7 @@ namespace TramChanh.EditorTools
         {
             var camObj = new GameObject("QACamera_" + filename);
             var cam = camObj.AddComponent<Camera>();
+            camObj.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             cam.fieldOfView = fov;
             cam.nearClipPlane = 0.05f;
             cam.farClipPlane = 60f;
@@ -840,6 +886,79 @@ namespace TramChanh.EditorTools
 
             string filePath = $"{ScreenshotsFolder}/{filename}.png";
             CaptureCameraToFile(cam, filePath, 1920, 1080);
+            Object.DestroyImmediate(camObj);
+        }
+
+        [MenuItem("Tram Chanh/Art/Capture ART-FIX-010 After Screenshots")]
+        public static void CaptureArtFix010Screenshots()
+        {
+            string outDir = "QA/Screenshots/ART_FIX_010";
+            EnsureFolder(outDir);
+            var scene = EditorSceneManager.OpenScene(PreviewScenePath, OpenSceneMode.Single);
+
+            // 1. Motorbike & Rider After
+            var bikeGo = GameObject.Find("PF_Motorbike");
+            GameObject riderInstance = null;
+            if (bikeGo != null)
+            {
+                bikeGo.SetActive(false);
+                var riderPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Rider_01.prefab");
+                if (riderPrefab != null)
+                {
+                    riderInstance = Object.Instantiate(riderPrefab, bikeGo.transform.parent);
+                    riderInstance.transform.position = bikeGo.transform.position;
+                    riderInstance.transform.rotation = bikeGo.transform.rotation;
+                    var rideClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Rider_Motorbike_Ride_Idle.anim");
+                    if (rideClip != null) rideClip.SampleAnimation(riderInstance, 0f);
+                }
+                CaptureViewPath($"{outDir}/01_Motorbike_Rider_After.png",
+                    bikeGo.transform.position + bikeGo.transform.forward * 2.3f + bikeGo.transform.right * 1.6f + Vector3.up * 1.4f,
+                    bikeGo.transform.position + Vector3.up * 0.85f,
+                    50f);
+                if (riderInstance != null) Object.DestroyImmediate(riderInstance);
+                bikeGo.SetActive(true);
+            }
+
+            // 2. Furniture After (Crate table and new plastic stools)
+            CaptureViewPath($"{outDir}/03_Furniture_After.png",
+                new Vector3(-2.1f, 0.65f, 0.95f),
+                new Vector3(-2.1f, 0.28f, 1.70f),
+                45f);
+
+            // 3. Street Props After (Tree, Lamp, Bin, Plant)
+            CaptureViewPath($"{outDir}/04_StreetProps_After.png",
+                new Vector3(-9.5f, 2.2f, 5.5f),
+                new Vector3(-1.0f, 2.5f, 3.2f),
+                55f);
+
+            // 4. Car Sedan Placement on Roadway
+            CaptureViewPath($"{outDir}/05_Car_Sedan_Placement.png",
+                new Vector3(10.5f, 1.8f, 3.8f),
+                new Vector3(6.5f, 0.7f, 6.8f),
+                50f);
+
+            // 5. Pedestrians After
+            var peopleScene = EditorSceneManager.OpenScene(PeopleCharacterBuilder.PreviewScenePath, OpenSceneMode.Single);
+            CaptureViewPath($"{outDir}/02_Pedestrians_After.png",
+                new Vector3(0f, 1.15f, 4.3f),
+                new Vector3(0f, 1.0f, 0f),
+                38f);
+        }
+
+        public static void CaptureViewPath(string fullPath, Vector3 pos, Vector3 lookAt, float fov)
+        {
+            var camObj = new GameObject("QACamera_Temp");
+            var cam = camObj.AddComponent<Camera>();
+            camObj.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            cam.fieldOfView = fov;
+            cam.nearClipPlane = 0.05f;
+            cam.farClipPlane = 60f;
+            cam.clearFlags = CameraClearFlags.Color;
+            cam.backgroundColor = new Color(0.04f, 0.05f, 0.07f);
+            camObj.transform.position = pos;
+            camObj.transform.LookAt(lookAt);
+
+            CaptureCameraToFile(cam, fullPath, 1920, 1080);
             Object.DestroyImmediate(camObj);
         }
 
