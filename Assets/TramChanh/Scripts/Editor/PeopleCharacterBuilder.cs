@@ -439,11 +439,20 @@ namespace TramChanh.EditorTools
             // Camera setup for Lineup
             var camObj = new GameObject("PreviewCamera");
             var cam = camObj.AddComponent<Camera>();
+            camObj.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             cam.fieldOfView = 38f;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = 200f;
             cam.backgroundColor = new Color(0.12f, 0.12f, 0.14f);
             cam.clearFlags = CameraClearFlags.SolidColor;
+
+            // Ensure URP pipeline is active for preview rendering
+            var urpAsset = AssetDatabase.LoadAssetAtPath<RenderPipelineAsset>("Assets/TramChanh/Settings/Rendering/URP_TramChanh.asset");
+            if (urpAsset != null)
+            {
+                GraphicsSettings.defaultRenderPipeline = urpAsset;
+                QualitySettings.renderPipeline = urpAsset;
+            }
 
             // 1. T-Pose Lineup
             camObj.transform.position = new Vector3(0f, 1.1f, 4.5f);
@@ -465,8 +474,8 @@ namespace TramChanh.EditorTools
 
             // 3. Seated Lineup (Sample sit clip + stools + table)
             var sitClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Person_Sit_Idle.anim");
-            var stoolPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_PlasticStool_Beige.prefab");
-            var tablePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_CrateTable_Yellow.prefab");
+            var stoolPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/CustomerArea/PF_PlasticStool.prefab");
+            var tablePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/CustomerArea/PF_YellowCrateTable.prefab");
 
             var seatingRoot = new GameObject("Seating_Area");
             if (tablePrefab != null)
@@ -502,7 +511,7 @@ namespace TramChanh.EditorTools
 
             // 4. Riders on Motorbikes
             var rider01 = AssetDatabase.LoadAssetAtPath<GameObject>(RiderPrefabPaths[0]);
-            var bikePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_Motorbike_Parked_01.prefab");
+            var bikePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_Motorbike.prefab");
             var riderRoot = new GameObject("Rider_Area");
             if (bikePrefab != null && rider01 != null)
             {
