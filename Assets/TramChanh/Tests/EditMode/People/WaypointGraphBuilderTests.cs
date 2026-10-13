@@ -438,6 +438,32 @@ namespace TramChanh.Tests.EditMode.People
                 WaypointGraphTests.AssertNear(g.PositionOf(approach), follower.Position, 0f);
             }
         }
+
+        [Test]
+        public void ExtendedStreetPrefab_BuildsWaypointGraphCleanly()
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_TramChanh_StreetExtended.prefab");
+            Assert.That(prefab, Is.Not.Null);
+            var anchors = new List<KeyValuePair<string, Vector3>>();
+            foreach (Transform child in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (TramChanh.App.People.PeopleLayout.IsWalkwayAnchor(child.name))
+                {
+                    anchors.Add(new KeyValuePair<string, Vector3>(child.name, child.position));
+                }
+            }
+            var r = WaypointGraphBuilder.Build(anchors);
+            Assert.That(r.Errors, Is.Empty, string.Join(" | ", r.Errors));
+            Assert.That(r.Graph.Count, Is.GreaterThan(50));
+            Assert.That(r.Graph.LaneNames, Does.Contain("SidewalkSouth"));
+            Assert.That(r.Graph.LaneNames, Does.Contain("SidewalkNorth"));
+            Assert.That(r.Graph.LaneNames, Does.Contain("Alley"));
+            for (int t = 1; t <= 10; t++)
+            {
+                string name = "TableApproach_" + t.ToString("00", CultureInfo.InvariantCulture);
+                Assert.That(r.Graph.TryFind(name, out _), Is.True, name + " exists");
+            }
+        }
     }
 
     /// <summary>

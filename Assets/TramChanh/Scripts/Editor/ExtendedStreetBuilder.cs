@@ -732,30 +732,30 @@ namespace TramChanh.EditorTools
                 idx++;
             }
 
-            // 2. SidewalkSouth (spacing 2.5m, x in [-40, 40], z = 3.1m for x in [-10, 8])
+            // 2. SidewalkSouth (spacing 2.0m, x in [-40, 40], z = 3.1m for x in [-10, 8], transition step <= 0.5m)
             var swSouth = new GameObject("SidewalkSouth");
             swSouth.layer = TramChanhLayers.EnvironmentIndex;
             swSouth.transform.SetParent(walkways.transform, false);
             idx = 1;
-            for (float x = -40f; x <= 40.1f; x += 2.5f)
+            for (float x = -40f; x <= 40.1f; x += 2.0f)
             {
                 var wp = new GameObject($"WP_SidewalkSouth_{idx:D2}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(swSouth.transform, false);
-                float z = 1.8f;
+                float z = 2.0f;
                 if (x >= -10.0f && x <= 8.0f)
                 {
                     z = 3.1f;
                 }
-                else if (x < -10.0f && x >= -14.0f)
+                else if (x < -10.0f && x >= -16.0f)
                 {
-                    float t = (-10.0f - x) / 4.0f;
-                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                    float t = (-10.0f - x) / 6.0f;
+                    z = Mathf.Lerp(3.1f, 2.0f, t);
                 }
-                else if (x > 8.0f && x <= 12.0f)
+                else if (x > 8.0f && x <= 14.0f)
                 {
-                    float t = (x - 8.0f) / 4.0f;
-                    z = Mathf.Lerp(3.1f, 1.8f, t);
+                    float t = (x - 8.0f) / 6.0f;
+                    z = Mathf.Lerp(3.1f, 2.0f, t);
                 }
                 wp.transform.localPosition = new Vector3(x, 0.0f, z);
                 idx++;
@@ -807,27 +807,27 @@ namespace TramChanh.EditorTools
             var entryWest = new GameObject("StreetEntryWest");
             entryWest.layer = TramChanhLayers.EnvironmentIndex;
             entryWest.transform.SetParent(root, false);
-            entryWest.transform.localPosition = new Vector3(-16.0f, 0.0f, 0.5f);
+            entryWest.transform.localPosition = new Vector3(-16.0f, 0.0f, 2.0f);
             entryWest.transform.localRotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
 
             var entryEast = new GameObject("StreetEntryEast");
             entryEast.layer = TramChanhLayers.EnvironmentIndex;
             entryEast.transform.SetParent(root, false);
-            entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 0.5f);
+            entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 2.0f);
             entryEast.transform.localRotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
 
             // TableApproach_01..10 beside each table's open side, facing the table, on the ground (y = 0)
             var approachSpecs = new TableApproachSpec[]
             {
-                new TableApproachSpec { name = "TableApproach_01", pos = new Vector3(-2.10f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_02", pos = new Vector3(-3.35f, 0f, -0.60f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_03", pos = new Vector3(-4.60f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_04", pos = new Vector3(-5.85f, 0f, -0.60f), lookDir = new Vector3( 0f, 0f,  1f) },
-                new TableApproachSpec { name = "TableApproach_05", pos = new Vector3(-7.10f, 0f,  0.90f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_01", pos = new Vector3(-2.10f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_02", pos = new Vector3(-3.35f, 0f,  1.00f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_03", pos = new Vector3(-4.60f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_04", pos = new Vector3(-5.85f, 0f,  1.00f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_05", pos = new Vector3(-7.10f, 0f,  2.50f), lookDir = new Vector3( 0f, 0f,  1f) },
                 new TableApproachSpec { name = "TableApproach_06", pos = new Vector3(-3.35f, 0f, -1.00f), lookDir = new Vector3( 0f, 0f, -1f) },
                 new TableApproachSpec { name = "TableApproach_07", pos = new Vector3(-5.85f, 0f, -1.00f), lookDir = new Vector3( 0f, 0f, -1f) },
-                new TableApproachSpec { name = "TableApproach_08", pos = new Vector3( 3.40f, 0f,  0.60f), lookDir = new Vector3( 1f, 0f,  0f) },
-                new TableApproachSpec { name = "TableApproach_09", pos = new Vector3( 4.80f, 0f, -0.90f), lookDir = new Vector3( 1f, 0f,  0f) },
+                new TableApproachSpec { name = "TableApproach_08", pos = new Vector3( 4.20f, 0f,  1.40f), lookDir = new Vector3( 0f, 0f,  1f) },
+                new TableApproachSpec { name = "TableApproach_09", pos = new Vector3( 5.60f, 0f, -0.10f), lookDir = new Vector3( 0f, 0f,  1f) },
                 new TableApproachSpec { name = "TableApproach_10", pos = new Vector3( 4.20f, 0f, -1.40f), lookDir = new Vector3( 0f, 0f, -1f) },
             };
 
