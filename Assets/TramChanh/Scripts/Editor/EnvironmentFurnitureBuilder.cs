@@ -63,6 +63,16 @@ namespace TramChanh.EditorTools
             Debug.Log("[TramChanh] Environment & 10-Table Wave Reconstruction Complete!");
         }
 
+        [MenuItem("Tram Chanh/Art/Build and Capture ART-FIX-010")]
+        public static void BuildAndCaptureFix010()
+        {
+            Debug.Log("[TramChanh] Starting ART-FIX-010 Environment and Scene Update...");
+            CreateEnvironmentPrefabs();
+            CreatePreviewScene();
+            CaptureArtFix010Screenshots();
+            Debug.Log("[TramChanh] ART-FIX-010 Environment and Scene Update Complete!");
+        }
+
         public static void ConfigureTextureImporters()
         {
             SetTextureType($"{TexturesFolder}/T_Asphalt_Night_MaskMap.png", TextureImporterType.Default, false, false);
@@ -819,6 +829,14 @@ namespace TramChanh.EditorTools
                 p2.transform.position = new Vector3(2.8f, 0.0f, 3.1f);
             }
 
+            GameObject carPf = AssetDatabase.LoadAssetAtPath<GameObject>(CarSedanPrefabPath);
+            if (carPf != null)
+            {
+                var car1 = (GameObject)PrefabUtility.InstantiatePrefab(carPf, envRoot.transform);
+                car1.transform.position = new Vector3(6.5f, 0.0f, 6.8f);
+                car1.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            }
+
             EditorSceneManager.SaveScene(scene, PreviewScenePath);
             Debug.Log("[TramChanh] Saved Environment Preview Scene: " + PreviewScenePath);
         }
@@ -883,18 +901,22 @@ namespace TramChanh.EditorTools
             GameObject riderInstance = null;
             if (bikeGo != null)
             {
+                bikeGo.SetActive(false);
                 var riderPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Rider_01.prefab");
                 if (riderPrefab != null)
                 {
                     riderInstance = Object.Instantiate(riderPrefab, bikeGo.transform.parent);
                     riderInstance.transform.position = bikeGo.transform.position;
                     riderInstance.transform.rotation = bikeGo.transform.rotation;
+                    var rideClip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TramChanh/Art/Animations/People/AN_Rider_Motorbike_Ride_Idle.anim");
+                    if (rideClip != null) rideClip.SampleAnimation(riderInstance, 0f);
                 }
                 CaptureViewPath($"{outDir}/01_Motorbike_Rider_After.png",
                     bikeGo.transform.position + bikeGo.transform.forward * 2.3f + bikeGo.transform.right * 1.6f + Vector3.up * 1.4f,
                     bikeGo.transform.position + Vector3.up * 0.85f,
                     50f);
                 if (riderInstance != null) Object.DestroyImmediate(riderInstance);
+                bikeGo.SetActive(true);
             }
 
             // 2. Furniture After (Crate table and new plastic stools)
@@ -909,7 +931,13 @@ namespace TramChanh.EditorTools
                 new Vector3(-1.0f, 2.5f, 3.2f),
                 55f);
 
-            // 4. Pedestrians After
+            // 4. Car Sedan Placement on Roadway
+            CaptureViewPath($"{outDir}/05_Car_Sedan_Placement.png",
+                new Vector3(10.5f, 1.8f, 3.8f),
+                new Vector3(6.5f, 0.7f, 6.8f),
+                50f);
+
+            // 5. Pedestrians After
             var peopleScene = EditorSceneManager.OpenScene(PeopleCharacterBuilder.PreviewScenePath, OpenSceneMode.Single);
             CaptureViewPath($"{outDir}/02_Pedestrians_After.png",
                 new Vector3(0f, 1.15f, 4.3f),
