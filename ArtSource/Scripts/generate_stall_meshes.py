@@ -307,40 +307,50 @@ def generate_stall_counter(out_path):
     thick = 0.04
     y_bot = y_top - thick
     
-    # Countertop slab: 5 realistic wooden planks running along X from -w/2 to +w/2
-    # Recessed drop-in areas (shifted left in customer view towards x = +w/2 edge):
-    # 1. Right hole (in customer view): X from -0.15 to +0.15, Z from -0.32 to -0.02
-    # 2. Left hole (in customer view): X from +0.35 to +0.85, Z from -0.34 to +0.04 (5cm from +0.90m edge)
-    # To model cutouts cleanly in geometry, we divide the counter into modular plank sections:
+    # Real Stall Layout (viewed from operator looking out towards customer):
+    # 1. Left wing (-X): Elmich grill + Cake preparation station (solid slab, >= 0.8m wide, X: -0.90 to -0.15)
+    # 2. Center cutout (x=0): Recessed Ice Bin (0.3m wide x 0.4m deep, X: -0.15 to +0.15, Z: -0.32 to +0.08)
+    # 3. Center-right divider plank: X: +0.15 to +0.40
+    # 4. Right cutout (x=+0.6): Recessed Topping Tray rotated lengthwise (~0.4m wide x 0.6m deep, X: +0.40 to +0.80, Z: -0.35 to +0.25)
+    # 5. Right rim margin: X: +0.80 to +0.90
+    # 6. Customer front shelf (+Z, Z: 0.32 to 0.40) at y = 0.95m
     
-    # Rear operator plank section (behind cutouts, Z: -0.40 to -0.35)
-    mesh.add_box(-w/2, w/2, y_bot, y_top, -d/2, -0.35, uv_scale=1.5)
-    # Front customer plank section (in front of cutouts, Z: +0.05 to +d/2)
-    mesh.add_box(-w/2, w/2, y_bot, y_top, 0.05, d/2, uv_scale=1.5)
-    
-    # Left rim margin close to table edge (5cm margin from -0.90m to -0.85m, left side in picture)
-    mesh.add_box(-w/2, -0.85, y_bot, y_top, -0.35, 0.05, uv_scale=1.5)
-    # Center divider between cutouts (X: -0.35 to -0.15, Z: -0.35 to 0.05)
-    mesh.add_box(-0.35, -0.15, y_bot, y_top, -0.35, 0.05, uv_scale=1.5)
-    # Right-hand prep/cake wing (X: 0.15 to +w/2, Z: -0.35 to 0.05)
-    mesh.add_box(0.15, w/2, y_bot, y_top, -0.35, 0.05, uv_scale=1.5)
-    
+    # Left wing (Solid cake preparation area, width 0.75m from -0.90 to -0.15, depth from -0.40 to 0.32)
+    mesh.add_box(-w/2, -0.15, y_bot, y_top, -d/2, 0.32, uv_scale=1.5)
+
+    # Center section (Ice bin cutout at X: -0.15 to +0.15, Z: -0.32 to +0.08)
+    # Rear operator plank behind ice bin (Z: -0.40 to -0.32)
+    mesh.add_box(-0.15, 0.15, y_bot, y_top, -d/2, -0.32, uv_scale=1.5)
+    # Front customer plank in front of ice bin (Z: +0.08 to +0.32)
+    mesh.add_box(-0.15, 0.15, y_bot, y_top, 0.08, 0.32, uv_scale=1.5)
+
+    # Divider plank between ice bin and topping tray (X: +0.15 to +0.40, Z: -0.40 to +0.32)
+    mesh.add_box(0.15, 0.40, y_bot, y_top, -d/2, 0.32, uv_scale=1.5)
+
+    # Right section (Topping tray cutout at X: +0.40 to +0.80, Z: -0.35 to +0.25)
+    # Rear operator plank behind topping tray (Z: -0.40 to -0.35)
+    mesh.add_box(0.40, 0.80, y_bot, y_top, -d/2, -0.35, uv_scale=1.5)
+    # Front customer plank in front of topping tray (Z: +0.25 to +0.32)
+    mesh.add_box(0.40, 0.80, y_bot, y_top, 0.25, 0.32, uv_scale=1.5)
+
+    # Right rim margin (X: +0.80 to +0.90, Z: -0.40 to +0.32)
+    mesh.add_box(0.80, w/2, y_bot, y_top, -d/2, 0.32, uv_scale=1.5)
+
     # Drop-in cutout recessed support flanges (stainless steel lip inside cutouts)
     flange_t = 0.015
-    # Left cutout flange (X: -0.85 to -0.35)
-    mesh.add_box(-0.85, -0.35, y_bot - 0.02, y_bot, -0.35, -0.35 + flange_t)
-    mesh.add_box(-0.85, -0.35, y_bot - 0.02, y_bot, 0.05 - flange_t, 0.05)
-    mesh.add_box(-0.85, -0.85 + flange_t, y_bot - 0.02, y_bot, -0.35, 0.05)
-    mesh.add_box(-0.35 - flange_t, -0.35, y_bot - 0.02, y_bot, -0.35, 0.05)
-    
-    # Right cutout flange (X: -0.15 to 0.15)
-    mesh.add_box(-0.15, 0.15, y_bot - 0.02, y_bot, -0.35, -0.35 + flange_t)
-    mesh.add_box(-0.15, 0.15, y_bot - 0.02, y_bot, 0.05 - flange_t, 0.05)
-    mesh.add_box(-0.15, -0.15 + flange_t, y_bot - 0.02, y_bot, -0.35, 0.05)
-    mesh.add_box(0.15 - flange_t, 0.15, y_bot - 0.02, y_bot, -0.35, 0.05)
+    # Center cutout flange (Ice bin, X: -0.15 to 0.15, Z: -0.32 to 0.08)
+    mesh.add_box(-0.15, 0.15, y_bot - 0.02, y_bot, -0.32, -0.32 + flange_t)
+    mesh.add_box(-0.15, 0.15, y_bot - 0.02, y_bot, 0.08 - flange_t, 0.08)
+    mesh.add_box(-0.15, -0.15 + flange_t, y_bot - 0.02, y_bot, -0.32, 0.08)
+    mesh.add_box(0.15 - flange_t, 0.15, y_bot - 0.02, y_bot, -0.32, 0.08)
 
-    # 3. Customer Front Shelf Bar (+Z side) as photographed in IMG_5236.JPG!
-    # Contained within overall 0.80m depth (shelf ends at +d/2 = 0.40m, main slab ends at 0.32m)
+    # Right cutout flange (Topping tray, X: 0.40 to 0.80, Z: -0.35 to 0.25)
+    mesh.add_box(0.40, 0.80, y_bot - 0.02, y_bot, -0.35, -0.35 + flange_t)
+    mesh.add_box(0.40, 0.80, y_bot - 0.02, y_bot, 0.25 - flange_t, 0.25)
+    mesh.add_box(0.40, 0.40 + flange_t, y_bot - 0.02, y_bot, -0.35, 0.25)
+    mesh.add_box(0.80 - flange_t, 0.80, y_bot - 0.02, y_bot, -0.35, 0.25)
+
+    # Customer Front Shelf Bar (+Z side)
     shelf_w = 1.70
     shelf_t = 0.03
     shelf_y_top = 0.95
@@ -353,7 +363,6 @@ def generate_stall_counter(out_path):
     
     # 4 Angled wooden support brackets underneath the shelf
     for bx in (-0.65, -0.22, 0.22, 0.65):
-        # Angled bracket block
         mesh.add_box(bx - 0.02, bx + 0.02, shelf_y_bot - 0.12, shelf_y_bot, shelf_z_start, shelf_z_end)
 
     mesh.write_obj(out_path)
