@@ -18,8 +18,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Curbside Trash Bin** (`Trashcan Small`) | Quaternius | https://poly.pizza/m/i7HDuYDLkx | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_TrashBin.obj` |
 | **Low-Poly Sedan Car** (`Sports Car`) | Quaternius | https://poly.pizza/m/OyqKvX9xNh | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_Car_Sedan.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab` |
 | **Urban Street Dog** (`Dog`) | Quaternius | https://poly.pizza/m/2kUk0QqpCg | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Dog.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Dog.prefab` |
-| **Urban Street Cat** (`Cat`) | Quaternius | https://poly.pizza/m/2f54vbV0In | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Cat.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab` |
-| **Urban Street Chicken** (`Chicken`) | Quaternius | https://poly.pizza/m/ineV9pU5VL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Chicken.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab` |
+| **Urban Street Cat** (`Cat`) | Quaternius | https://poly.pizza/m/qKICY6xla2 | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Cat.fbx`<br>`Assets/TramChanh/Art/Textures/T_Animal_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab` |
+| **Urban Street Chicken** (`Chicken`) | Quaternius | https://poly.pizza/m/Z3RCoCYss4 | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Chicken.fbx`<br>`Assets/TramChanh/Art/Textures/T_Animal_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab` |
 | **Urban Street Pigeon** (`Pigeon`) | Quaternius | https://poly.pizza/m/9NGlBTpDEr | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Pigeon.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Pigeon.prefab` |
 | **Street Vendor Food Cart** (`Dining car`) | Poly by Google | https://poly.pizza/m/5teci4b6krG | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_StreetVendor_Cart.obj`<br>`Assets/TramChanh/Art/Textures/T_StreetVendor_Cart_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_StreetVendor_Cart.prefab` |
 | **Sidewalk Patio Umbrella** (`Blue/White Beach Umbrella`) | S. Paul Michael | https://poly.pizza/m/1BLLDjRdxoa | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Sidewalk_Umbrella.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Sidewalk_Umbrella.prefab` |
@@ -47,9 +47,9 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Street Tree (Trunk + Canopy)** | $\le 1,500$ tris | Tropical Street Tree (2 separate meshes) | 165 tris (79 trunk + 86 canopy) | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
 | **Trash Bin** | $\le 1,500$ tris | Curbside Green Bin | 432 tris | $\le 2048 \times 2048$ | Material colors | **PASS** |
 | **Potted Plant** | $\le 1,500$ tris | Birds of Paradise Planter | 972 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
-| **Street Dog** | $\le 5,000$ tris | Urban Street Dog | 3,604 tris | $\le 2048 \times 2048$ | Vertex colors / URP Lit | **PASS** |
-| **Street Cat** | $\le 5,000$ tris | Urban Street Cat | 1,772 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
-| **Street Chicken** | $\le 5,000$ tris | Urban Street Chicken | 2,904 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Street Dog** | $\le 5,000$ tris | Urban Street Dog | 3,604 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
+| **Street Cat** | $\le 5,000$ tris | Urban Street Cat (realistic proportions) | 2,448 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
+| **Street Chicken** | $\le 5,000$ tris | Urban Street Chicken (realistic proportions) | 2,140 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
 | **Street Pigeon** | $\le 5,000$ tris | Urban Street Pigeon | 2,184 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Food Vendor Cart** | $\le 3,000$ tris | Street Vendor Food Cart | 1,460 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
 | **Sidewalk Umbrella** | $\le 3,000$ tris | Blue/White Sidewalk Umbrella | 214 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
