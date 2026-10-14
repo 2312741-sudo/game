@@ -629,7 +629,7 @@ namespace TramChanh.EditorTools
                 }
 
                 // Street end closures across the street (at x = -StreetHalfLength and +StreetHalfLength)
-                float[] endClosureZs = new float[] { -2.0f, 4.0f, 10.0f, 16.0f };
+                float[] endClosureZs = new float[] { -3.0f, 1.0f, 5.0f, 9.0f, 13.0f, 17.0f };
                 for (int i = 0; i < endClosureZs.Length; i++)
                 {
                     slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = 90f, type = i % 3 });
