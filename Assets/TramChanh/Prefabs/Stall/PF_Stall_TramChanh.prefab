@@ -1441,8 +1441,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
+  m_Father: {fileID: 6964251458742585695}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1711544442995926424
 MonoBehaviour:
   m_ObjectHideFlags: 0
