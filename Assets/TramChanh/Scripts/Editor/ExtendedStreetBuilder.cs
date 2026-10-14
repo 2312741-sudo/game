@@ -723,8 +723,8 @@ namespace TramChanh.EditorTools
             {
                 var d1 = (GameObject)PrefabUtility.InstantiatePrefab(dogPf, animalsNode.transform);
                 d1.name = "PF_Street_Dog_WestPorch";
-                d1.transform.position = new Vector3(-12.5f, 0.0f, -3.2f);
-                d1.transform.rotation = Quaternion.Euler(0f, 25f, 0f);
+                d1.transform.position = new Vector3(-13.4f, 0.0f, -2.8f);
+                d1.transform.rotation = Quaternion.Euler(0f, 20f, 0f);
 
                 var d2 = (GameObject)PrefabUtility.InstantiatePrefab(dogPf, animalsNode.transform);
                 d2.name = "PF_Street_Dog_EastCorner";
@@ -736,7 +736,7 @@ namespace TramChanh.EditorTools
             {
                 var c1 = (GameObject)PrefabUtility.InstantiatePrefab(catPf, animalsNode.transform);
                 c1.name = "PF_Street_Cat_WestStoop";
-                c1.transform.position = new Vector3(-15.5f, 0.0f, -3.3f);
+                c1.transform.position = new Vector3(-12.2f, 0.0f, -2.8f);
                 c1.transform.rotation = Quaternion.Euler(0f, 15f, 0f);
 
                 var c2 = (GameObject)PrefabUtility.InstantiatePrefab(catPf, animalsNode.transform);
@@ -747,9 +747,14 @@ namespace TramChanh.EditorTools
 
             if (chickPf != null)
             {
+                var ch0 = (GameObject)PrefabUtility.InstantiatePrefab(chickPf, animalsNode.transform);
+                ch0.name = "PF_Street_Chicken_WestPorch";
+                ch0.transform.position = new Vector3(-11.0f, 0.0f, -2.8f);
+                ch0.transform.rotation = Quaternion.Euler(0f, 10f, 0f);
+
                 var ch1 = (GameObject)PrefabUtility.InstantiatePrefab(chickPf, animalsNode.transform);
                 ch1.name = "PF_Street_Chicken_EastCurbside";
-                ch1.transform.position = new Vector3(25.5f, 0.0f, 2.4f);
+                ch1.transform.position = new Vector3(27.0f, 0.0f, 3.5f);
                 ch1.transform.rotation = Quaternion.Euler(0f, -60f, 0f);
 
                 var ch2 = (GameObject)PrefabUtility.InstantiatePrefab(chickPf, animalsNode.transform);
