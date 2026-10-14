@@ -23,7 +23,8 @@ namespace TramChanh.EditorTools.Placeholders
     /// </summary>
     public static class StallPlaceholderBuilder
     {
-        public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Placeholders/Blockout/PF_Stall_TramChanh.prefab";
+        public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Stall_TramChanh.prefab";
+        public const string BlockoutStallPrefabPath = "Assets/TramChanh/Prefabs/Placeholders/Blockout/PF_Stall_TramChanh.prefab";
         public const string SignPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Sign_TramChanh_New.prefab";
         public const string MaterialFolder = "Assets/TramChanh/Art/Materials";
 

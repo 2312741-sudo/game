@@ -74,7 +74,7 @@ namespace TramChanh.EditorTools.Placeholders
                 return;
             }
 
-            GameObject stallPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(StallPlaceholderBuilder.StallPrefabPath)
+            GameObject stallPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(StallPlaceholderBuilder.BlockoutStallPrefabPath)
                 ?? StallPlaceholderBuilder.BuildAndSavePrefabs();
             foreach (string name in EquipmentNames)
             {
