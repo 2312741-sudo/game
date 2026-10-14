@@ -31,8 +31,12 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Commuter Motorcycle Cub** (`Motorcycle`) | Poly by Google | https://poly.pizza/m/5_MTCnqfUTr | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Motorcycle_Cub.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorcycle_Cub_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab` |
 | **Small Delivery Truck** (`Truck`) | Quaternius | https://poly.pizza/m/cXw6oiFtZ8 | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Truck_Small.obj`<br>`Assets/TramChanh/Art/Textures/T_Truck_Small_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab` |
 | **Compact Urban SUV** (`SUV`) | Quaternius | https://poly.pizza/m/xsMtZhBkxL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Car_SUV.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab` |
-| **Male Pedestrian (Casual)** (`Man`) | Quaternius | https://poly.pizza/m/HMnuH5geEG | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_07.prefab` |
-| **Female Pedestrian (Tank Top)** (`Woman in Tank Top`) | Quaternius | https://poly.pizza/m/XqzeZGB7iU | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_08.prefab` |
+| **Male Pedestrian (Casual)** (`Man`) | Quaternius | https://poly.pizza/m/HMnuH5geEG | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_01.prefab`<br>`Assets/TramChanh/Prefabs/People/PF_Person_07.prefab` |
+| **Female Pedestrian (Tank Top)** (`Woman in Tank Top`) | Quaternius | https://poly.pizza/m/XqzeZGB7iU | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_02.prefab`<br>`Assets/TramChanh/Prefabs/People/PF_Person_08.prefab` |
+| **Male Pedestrian (Hoodie)** (`Man with Hoodie`) | Quaternius | https://poly.pizza/m/kZ3DmIoGip | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleHoodie.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_03.prefab` |
+| **Female Pedestrian (Casual)** (`Casual Woman`) | Quaternius | https://poly.pizza/m/jpKRgGDxhk | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_04.prefab` |
+| **Male Pedestrian (Worker)** (`Worker Man`) | Quaternius | https://poly.pizza/m/Yg2bQZO6Hj | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleWorker.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_05.prefab` |
+| **Female Pedestrian (Dress)** (`Woman in Dress`) | Quaternius | https://poly.pizza/m/zMyPlQXBzq | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleDress.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_06.prefab` |
 
 ---
 
@@ -63,6 +67,10 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Compact SUV** | $\le 8,000$ tris | Low-Poly Compact SUV | 3,294 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Male Pedestrian (Casual)** | $\le 8,000$ tris | Male Casual Rigged Pedestrian | 1,850 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Female Pedestrian (Tank Top)** | $\le 8,000$ tris | Female Tank Top Rigged Pedestrian | 1,984 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Male Pedestrian (Hoodie)** | $\le 8,000$ tris | Male Hoodie Rigged Pedestrian | 2,416 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Female Pedestrian (Casual)** | $\le 8,000$ tris | Female Casual Rigged Pedestrian | 2,096 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Male Pedestrian (Worker)** | $\le 8,000$ tris | Male Worker Rigged Pedestrian | 2,990 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Female Pedestrian (Dress)** | $\le 8,000$ tris | Female Dress Rigged Pedestrian | 2,192 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 
 ---
 
