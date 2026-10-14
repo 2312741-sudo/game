@@ -866,19 +866,24 @@ namespace TramChanh.EditorTools
                     // Upright tea bags inside West crate (standing vertical, not laid flat)
                     var tb1 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr1.transform);
                     tb1.name = "TeaBag_Upright_01";
-                    tb1.transform.localPosition = new Vector3(-0.08f, 0.02f, 0.0f);
+                    tb1.transform.localPosition = new Vector3(-0.08f, 0.09f, 0.0f);
                     tb1.transform.localRotation = Quaternion.Euler(0f, -10f, 0f);
 
                     var tb2 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr1.transform);
                     tb2.name = "TeaBag_Upright_02";
-                    tb2.transform.localPosition = new Vector3(0.08f, 0.02f, 0.0f);
+                    tb2.transform.localPosition = new Vector3(0.08f, 0.09f, 0.0f);
                     tb2.transform.localRotation = Quaternion.Euler(0f, 15f, 0f);
 
                     // Upright tea bags inside East crate
                     var tb3 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr2.transform);
                     tb3.name = "TeaBag_Upright_03";
-                    tb3.transform.localPosition = new Vector3(0.0f, 0.02f, 0.0f);
-                    tb3.transform.localRotation = Quaternion.Euler(0f, 5f, 0f);
+                    tb3.transform.localPosition = new Vector3(-0.06f, 0.09f, 0.0f);
+                    tb3.transform.localRotation = Quaternion.Euler(0f, -6f, 0f);
+
+                    var tb4 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr2.transform);
+                    tb4.name = "TeaBag_Upright_04";
+                    tb4.transform.localPosition = new Vector3(0.06f, 0.09f, 0.0f);
+                    tb4.transform.localRotation = Quaternion.Euler(0f, 8f, 0f);
                 }
             }
 

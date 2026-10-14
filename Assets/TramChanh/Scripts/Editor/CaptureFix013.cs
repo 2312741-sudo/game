@@ -60,9 +60,9 @@ namespace TramChanh.EditorTools
                 CaptureView(camPos3, lookTarget3, 46f, Path.Combine(ScreenshotsDir, "03_Pedestrians.png"), 1920, 1080);
 
                 // Shot 4: Street Props & Crates (đồ phố) - Framing CC0 fruit/produce crate with upright tea bags and VN plastic tables/chairs
-                // Eye level close-up of crate next to stall with upright tea bags visible inside
-                Vector3 camPos4 = new Vector3(1.1f, 0.85f, 0.4f);
-                Vector3 lookTarget4 = new Vector3(1.7f, 0.15f, -0.6f);
+                // Eye level close-up looking down into open crate next to stall with upright tea bags clearly standing inside
+                Vector3 camPos4 = new Vector3(1.3f, 0.70f, 0.0f);
+                Vector3 lookTarget4 = new Vector3(1.7f, 0.18f, -0.6f);
                 CaptureView(camPos4, lookTarget4, 45f, Path.Combine(ScreenshotsDir, "04_Street_Props_And_Crates.png"), 1920, 1080);
 
                 // Shot 5: Vietnamese Sidewalk Plastic Table & Chairs
