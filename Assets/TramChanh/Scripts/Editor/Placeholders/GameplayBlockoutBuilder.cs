@@ -20,8 +20,8 @@ namespace TramChanh.EditorTools.Placeholders
     public static class GameplayBlockoutBuilder
     {
         public const string ScenePath = "Assets/TramChanh/Scenes/Gameplay/SCN_Gameplay_Blockout.unity";
-        public const string WorkstationFolder = "Assets/TramChanh/Prefabs/Workstations";
-        public const string FurnitureFolder = "Assets/TramChanh/Prefabs/CustomerArea";
+        public const string WorkstationFolder = "Assets/TramChanh/Prefabs/Placeholders/Blockout";
+        public const string FurnitureFolder = "Assets/TramChanh/Prefabs/Placeholders/Blockout";
         public const float ReferenceHeight = 1.7f;
 
         public static readonly string[] EquipmentNames =
