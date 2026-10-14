@@ -196,7 +196,7 @@ namespace TramChanh.Editor
             foreach (var r in renderers)
             {
                 r.gameObject.layer = root.layer;
-                if (r is MeshRenderer mr && (mr.sharedMaterials == null || mr.sharedMaterials.Length == 0 || mr.sharedMaterial == null))
+                if (r is MeshRenderer mr && fallbackMats != null && fallbackMats.Length > 0)
                 {
                     mr.sharedMaterials = fallbackMats;
                 }
