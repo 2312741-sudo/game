@@ -1,0 +1,25 @@
+ART-FIX-015 500M STREET PERFORMANCE AUDIT REPORT
+Generated: 2026-10-14 20:16:21 UTC
+Scene: Assets/TramChanh/Scenes/Gameplay/SCN_TramChanh_Main.unity
+Camera: Pos=(0.00, 1.60, -1.20), LookTarget=(0.00, 1.20, 2.50), FOV=65
+Visible Frustum Renderers: 90
+Visible Triangles in Frustum: 26,112 (Budget: <= 400,000) [PASS]
+Estimated Draw Calls (Submesh Batches): 100
+UnityStats Triangles: 0, DrawCalls: 0
+Real-time Lights near Player (<=10m immediate): 8 (Budget: <= 8) [PASS]
+Real-time Lights in vicinity (<=30m extended): 13
+
+Active Lights Detail (within 30m):
+  - Name: 'PointLight', Type: Point, Pos: (-0.18, 1.77, 0.15), Dist: 1.4m, Intensity: 2.80, Color: #FFD18C
+  - Name: 'WarmStallBulb', Type: Point, Pos: (0.00, 2.00, 0.00), Dist: 1.3m, Intensity: 3.80, Color: #FFD180
+  - Name: 'SkyFill', Type: Directional, Pos: (0.00, 0.00, 0.00), Dist: 0.0m, Intensity: 1.25, Color: #FFF5E6
+  - Name: 'PointLight', Type: Point, Pos: (0.55, 1.77, 0.15), Dist: 1.5m, Intensity: 2.80, Color: #FFD18C
+  - Name: 'Streetlight_East', Type: Point, Pos: (14.00, 5.80, 2.50), Dist: 15.1m, Intensity: 2.80, Color: #FFDBA6
+  - Name: 'Streetlight_West', Type: Point, Pos: (-18.00, 5.80, 2.50), Dist: 18.9m, Intensity: 2.80, Color: #FFDBA6
+  - Name: 'PointLight', Type: Point, Pos: (0.18, 1.77, 0.15), Dist: 1.4m, Intensity: 2.80, Color: #FFD18C
+  - Name: 'Streetlight_Center', Type: Point, Pos: (-0.60, 5.80, 2.50), Dist: 5.6m, Intensity: 3.20, Color: #FFDBA6
+  - Name: 'LuminaireLight', Type: Spot, Pos: (24.00, 5.95, 5.15), Dist: 25.2m, Intensity: 3.60, Color: #FFD699
+  - Name: 'Alley_FillLight', Type: Point, Pos: (18.50, 4.00, -8.00), Dist: 19.9m, Intensity: 2.20, Color: #FFD199
+  - Name: 'PointLight', Type: Point, Pos: (-0.55, 1.77, 0.15), Dist: 1.5m, Intensity: 2.80, Color: #FFD18C
+  - Name: 'LuminaireLight', Type: Spot, Pos: (-0.60, 5.95, 5.15), Dist: 7.7m, Intensity: 3.60, Color: #FFD699
+  - Name: 'LuminaireLight', Type: Spot, Pos: (-24.00, 5.95, 5.15), Dist: 25.2m, Intensity: 3.60, Color: #FFD699
