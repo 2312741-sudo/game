@@ -39,6 +39,24 @@ namespace TramChanh.EditorTools.Placeholders
             }
         }
 
+        [MenuItem("Tram Chanh/Placeholders/Rebuild Gameplay Blockout Scene")]
+        public static void RebuildFromMenu()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                Rebuild();
+            }
+        }
+
+        public static void Rebuild()
+        {
+            if (File.Exists(ScenePath))
+            {
+                AssetDatabase.DeleteAsset(ScenePath);
+            }
+            CreateAndSave();
+        }
+
         public static string PrefabPath(string name)
         {
             string folder = name == "PF_ReadyCounterPoint" ? "Assets/TramChanh/Prefabs/Stall"
