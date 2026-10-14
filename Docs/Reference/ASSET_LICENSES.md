@@ -78,3 +78,6 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 3. **Chó Vỉa Hè** (`dog.glb` ban đầu): Không có liên kết nguồn và tác giả chính thức -> Không đưa vào game. Đã thay bằng Urban Street Dog (Quaternius, CC0 1.0).
 4. **Casual Portrait in a Green T-Shirt** (`casual_portrait_in_a_green_t-shirt.glb`): 212.354 tris, bản scan người thật -> Đã BỎ hoàn toàn để tránh vi phạm bản quyền hình ảnh cá nhân và ngân sách đa giác.
 5. **Mô hình cây "Small Trees" (Poly by Google)**: Thử nghiệm trong ART-FIX-010 nhưng không đạt độ thẩm mỹ -> Đã giữ nguyên cây hiện tại của dự án.
+
+## Sound effects (generated in-project)
+`Assets/TramChanh/Resources/Audio/sfx_ready.wav`, `sfx_served.wav`, `sfx_failed.wav`: synthesised sine tones, created for this project. No third-party material, no attribution needed.

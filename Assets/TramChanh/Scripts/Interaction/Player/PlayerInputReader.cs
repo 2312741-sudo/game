@@ -21,6 +21,8 @@ namespace TramChanh.Interaction.Player
         public bool IsCaptured { get; private set; }
         public bool IsPausedByUser { get; private set; }
         /// <summary>When false, a click does not leave the user pause (a pause menu owns the pointer); Esc or the menu's Resume does.</summary>
+        /// <summary>True while a full-screen panel (title, end of day) owns the pointer: no click or Esc changes the pause state.</summary>
+        public bool ModalOpen { get; set; }
         public bool ClickResumesFromPause { get; set; } = true;
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 Look => _look.ReadValue<Vector2>();
@@ -62,6 +64,7 @@ namespace TramChanh.Interaction.Player
         private void Update()
         {
             _resumedThisFrame = false;
+            if (ModalOpen) { return; }
             if (_pause.WasPressedThisFrame())
             {
                 SetCaptured(!IsCaptured);

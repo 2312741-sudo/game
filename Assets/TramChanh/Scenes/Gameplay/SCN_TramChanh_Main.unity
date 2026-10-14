@@ -229,6 +229,7 @@ MonoBehaviour:
   _tablePointPrefab: {fileID: 3363350997845005691, guid: b3ce8d04b0a404d43b9091c2b1336e22, type: 3}
   _vehiclePointPrefab: {fileID: 8660045410336674729, guid: 6652ef7685e4f4047b9c17367c78fec4, type: 3}
   _cakeStationLocalPosition: {x: -0.51, y: 1, z: -0.08}
+  _showTitleScreen: 1
   _customerReturnSeconds: 4
   _customerSettings:
     _maxActiveCustomers: 3

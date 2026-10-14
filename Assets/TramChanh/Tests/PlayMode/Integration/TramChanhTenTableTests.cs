@@ -63,6 +63,7 @@ namespace TramChanh.Tests.PlayMode.Integration
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            TramChanhMainBootstrap.SuppressTitleScreen = true;
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(Path, new LoadSceneParameters(LoadSceneMode.Additive));
             _scene = SceneManager.GetSceneByPath(Path);
             foreach (GameObject root in _scene.GetRootGameObjects())

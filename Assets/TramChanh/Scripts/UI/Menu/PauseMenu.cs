@@ -14,9 +14,11 @@ namespace TramChanh.UI.Menu
         private readonly VisualElement _panel;
         private readonly Slider _volume;
         private readonly Slider _look;
+        private readonly Label _info;
         private readonly GameSettings _settings;
 
-        public PauseMenu(VisualElement root, GameSettings settings, Action onResume, Action onCredits, Action onQuit, Action onSettingsChanged)
+        public PauseMenu(VisualElement root, GameSettings settings, Action onResume, Action onCredits, Action onQuit, Action onSettingsChanged,
+            string titleText = "TẠM DỪNG", string primaryText = "Tiếp tục", string hintText = "Esc: tiếp tục")
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _panel = new VisualElement { name = "PauseMenu" };
@@ -39,14 +41,20 @@ namespace TramChanh.UI.Menu
             box.style.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
             _panel.Add(box);
 
-            var title = new Label("TẠM DỪNG");
+            var title = new Label(titleText);
             title.style.fontSize = 28f;
             title.style.color = Color.white;
             title.style.unityTextAlign = TextAnchor.MiddleCenter;
             title.style.marginBottom = 14f;
             box.Add(title);
 
-            box.Add(MakeButton("Tiếp tục", onResume));
+            _info = new Label(string.Empty);
+            _info.style.color = new Color(1f, 1f, 1f, 0.75f);
+            _info.style.fontSize = 14f;
+            _info.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _info.style.display = DisplayStyle.None;
+            box.Add(_info);
+            box.Add(MakeButton(primaryText, onResume));
 
             _volume = MakeSlider(box, "Âm lượng", GameSettings.MinVolume, GameSettings.MaxVolume, settings.MasterVolume,
                 value => { _settings.MasterVolume = value; onSettingsChanged?.Invoke(); });
@@ -62,7 +70,7 @@ namespace TramChanh.UI.Menu
             box.Add(MakeButton("Ghi công (Credits)", onCredits));
             box.Add(MakeButton("Thoát game", onQuit));
 
-            var hint = new Label("Esc: tiếp tục");
+            var hint = new Label(hintText);
             hint.style.fontSize = 13f;
             hint.style.color = new Color(1f, 1f, 1f, 0.6f);
             hint.style.unityTextAlign = TextAnchor.MiddleCenter;
@@ -70,6 +78,13 @@ namespace TramChanh.UI.Menu
             box.Add(hint);
 
             root.Add(_panel);
+        }
+
+        /// <summary>Small line under the title, for example the current day and lifetime totals. Empty hides it.</summary>
+        public void SetInfo(string text)
+        {
+            _info.text = text ?? string.Empty;
+            _info.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         public bool IsVisible => _panel.style.display.value == DisplayStyle.Flex;

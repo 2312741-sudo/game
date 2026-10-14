@@ -1,0 +1,2 @@
+# Small generated sounds: keep as plain git objects (no LFS).
+*.wav -filter -diff -merge

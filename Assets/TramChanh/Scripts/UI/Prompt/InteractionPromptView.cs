@@ -41,6 +41,11 @@ namespace TramChanh.UI.Prompt
         private Label _status;
         private Label _credits;
         private PauseMenu _pauseMenu;
+        private PauseMenu _titleMenu;
+        private DaySummaryPanel _summary;
+        private Action _titlePlay;
+        private string _titleInfo = string.Empty;
+        private bool _titleVisible;
         private PlayerInputReader _pauseInput;
         private GameSettings _settings;
         private Action _applySettings;
@@ -184,6 +189,7 @@ namespace TramChanh.UI.Prompt
             root.Add(_panel);
             BuildHud(root);
             BuildPauseMenu(root);
+            BuildTitle(root);
         }
 
         private void BuildHud(VisualElement root)
@@ -223,6 +229,46 @@ namespace TramChanh.UI.Prompt
             if (_panel != null) { BuildPauseMenu(GetComponent<UIDocument>().rootVisualElement); }
         }
 
+        /// <summary>
+        /// Title screen shown before the first day: Play, volume, look speed, credits, quit. Call after AttachPauseMenu.
+        /// <paramref name="info"/> is the small line under the title (day and totals).
+        /// </summary>
+        public void ShowTitle(Action play, string info)
+        {
+            _titlePlay = play;
+            _titleInfo = info ?? string.Empty;
+            _titleVisible = true;
+            if (_panel != null) { BuildTitle(GetComponent<UIDocument>().rootVisualElement); }
+        }
+
+        /// <summary>Shows the end-of-day card. <paramref name="onContinue"/> runs when the player presses the button.</summary>
+        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue)
+        {
+            _summary?.Hide();
+            VisualElement root = GetComponent<UIDocument>().rootVisualElement;
+            _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
+            _summary.Show(summary, progress);
+        }
+
+        private void BuildTitle(VisualElement root)
+        {
+            _titleMenu = null;
+            if (!_titleVisible || _settings == null) { return; }
+            _titleMenu = new PauseMenu(root, _settings,
+                () =>
+                {
+                    _titleVisible = false;
+                    _titleMenu.SetVisible(false);
+                    _titlePlay?.Invoke();
+                },
+                ToggleCredits,
+                () => _quit?.Invoke(),
+                () => _applySettings?.Invoke(),
+                "TRẠM CHANH", "Chơi", "Trà trái cây · Bánh lăn");
+            _titleMenu.SetInfo(_titleInfo);
+            _titleMenu.SetVisible(true);
+        }
+
         private void BuildPauseMenu(VisualElement root)
         {
             _pauseMenu = null;
@@ -240,6 +286,7 @@ namespace TramChanh.UI.Prompt
         {
             if (_credits == null) { return; }
             _credits.style.display = _credits.style.display.value == DisplayStyle.None ? DisplayStyle.Flex : DisplayStyle.None;
+            _credits.BringToFront();
         }
 
         private void Update()
@@ -250,9 +297,9 @@ namespace TramChanh.UI.Prompt
             if (_pauseMenu != null)
             {
                 bool paused = _pauseInput != null && _pauseInput.IsPausedByUser;
-                _pauseMenu.SetVisible(paused);
+                _pauseMenu.SetVisible(paused && !_titleVisible);
                 // Closing the pause menu closes the credits panel with it.
-                if (!paused && _credits != null) { _credits.style.display = DisplayStyle.None; }
+                if (!paused && !_titleVisible && _credits != null) { _credits.style.display = DisplayStyle.None; }
             }
         }
         private void Subscribe()

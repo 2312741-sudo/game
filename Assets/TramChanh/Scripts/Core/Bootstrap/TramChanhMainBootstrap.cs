@@ -173,6 +173,17 @@ namespace TramChanh.App
             _settings.Load(new PlayerPrefsSettingsStore());
             ApplySettings();
             _prompt.AttachPauseMenu(_input, _settings, () => { ApplySettings(); _settings.Save(new PlayerPrefsSettingsStore()); }, QuitGame);
+            _progress = new GameProgress();
+            _progress.Load(new PlayerPrefsSettingsStore());
+            SetUpSound();
+            _orderSubscription = _events.Subscribe<OrderStatusChanged>(OnOrderStatus);
+            if (_showTitleScreen && !SuppressTitleScreen)
+            {
+                _input.ModalOpen = true;
+                _input.SetCaptured(false);
+                _prompt.ShowTitle(() => { _input.ModalOpen = false; _input.SetCaptured(true); },
+                    "Ngày " + _progress.Day + "  |  Tổng cộng: " + _progress.TotalServed + " đơn");
+            }
             _entryUI.Initialize(_events);
             _lobby.Initialize(Orders, _events);
             _entryUI.Shown += OnEntryShown;
@@ -460,9 +471,11 @@ namespace TramChanh.App
             {
                 _shownClockMinute = clockMinute;
                 _shownClockOpen = open;
-                _prompt.SetStatus(GameClockText.Format(hour, open));
+                _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open));
             }
             Customers.ArrivalsEnabled = open;
+            if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
+            _wasOpen = open;
             if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
             double customerDelta = Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds);
@@ -502,6 +515,48 @@ namespace TramChanh.App
         }
 
         private GameSettings _settings;
+        private GameProgress _progress;
+        private IDisposable _orderSubscription;
+        private bool _wasOpen = true;
+        private AudioSource _sfx;
+        private AudioClip _readyClip;
+        private AudioClip _servedClip;
+        private AudioClip _failedClip;
+
+        /// <summary>Tests set this before loading the scene so the game starts running instead of waiting on the title screen.</summary>
+        public static bool SuppressTitleScreen { get; set; }
+        [SerializeField] private bool _showTitleScreen;
+
+        private void SetUpSound()
+        {
+            _sfx = gameObject.AddComponent<AudioSource>();
+            _sfx.playOnAwake = false;
+            _sfx.spatialBlend = 0f;
+            _readyClip = Resources.Load<AudioClip>("Audio/sfx_ready");
+            _servedClip = Resources.Load<AudioClip>("Audio/sfx_served");
+            _failedClip = Resources.Load<AudioClip>("Audio/sfx_failed");
+        }
+
+        private void OnOrderStatus(OrderStatusChanged change)
+        {
+            AudioClip clip = null;
+            switch (change.Status)
+            {
+                case OrderStatus.Ready: clip = _readyClip; break;
+                case OrderStatus.Completed: _progress.RecordServed(); clip = _servedClip; break;
+                case OrderStatus.Failed: _progress.RecordFailed(); clip = _failedClip; break;
+            }
+            if (clip != null && _sfx != null) { _sfx.PlayOneShot(clip); }
+        }
+
+        private void EndOfDay()
+        {
+            DaySummary summary = _progress.EndDay();
+            _progress.Save(new PlayerPrefsSettingsStore());
+            _input.ModalOpen = true;
+            _input.SetCaptured(false);
+            _prompt.ShowDaySummary(summary, _progress, () => { _input.ModalOpen = false; _input.SetCaptured(true); });
+        }
 
         private void ApplySettings()
         {
@@ -544,6 +599,7 @@ namespace TramChanh.App
                 Customers.CustomerLeft -= OnCustomerLeft;
                 Customers.CustomerRequestFailed -= OnCustomerRequestFailed;
             }
+            _orderSubscription?.Dispose();
             if (_entryUI != null)
             {
                 _entryUI.Shown -= OnEntryShown;
