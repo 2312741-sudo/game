@@ -53,7 +53,7 @@ namespace TramChanh.App
         [SerializeField] private GameObject _tablePointPrefab;
         [SerializeField] private GameObject _vehiclePointPrefab;
         [Tooltip("Cake station origin in stall-local space; aligns the station grill with the stall Grill anchor.")]
-        [SerializeField] private Vector3 _cakeStationLocalPosition = new Vector3(0.39f, 1f, -0.08f);
+        [SerializeField] private Vector3 _cakeStationLocalPosition = new Vector3(-0.51f, 1f, -0.08f);
         [SerializeField, Tbd("DEC-010", "Customer pacing is a development placeholder.")] private float _customerReturnSeconds = 4f;
         [Tooltip("Dine-in customer arrivals for TABLE_01..TABLE_10 (max active customers, pacing, menu weights).")]
         [SerializeField] private CustomerDirectorSettings _customerSettings = new CustomerDirectorSettings();
