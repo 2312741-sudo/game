@@ -88,9 +88,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: e3aa452d063514c55a2b59f2a0465c9b, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -120,6 +118,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 4b8e2d8b3025546008e689275ab1d89a, type: 2}
   m_Bones:
   - {fileID: 2319193880218692630}
+  - {fileID: 6003149763291572019}
+  - {fileID: 3749621373432455688}
+  - {fileID: 5244648966679765057}
+  - {fileID: 5204515814103221728}
+  - {fileID: 6940714045794713289}
+  - {fileID: 4529116501847070802}
+  - {fileID: 4856086928434311075}
+  - {fileID: 8366698285968462164}
   - {fileID: 939264056696861509}
   - {fileID: 3603461936125539287}
   - {fileID: 3368625004077249884}
@@ -132,14 +138,6 @@ SkinnedMeshRenderer:
   - {fileID: 799971961750880442}
   - {fileID: 2337467886800528588}
   - {fileID: 4066482533346576660}
-  - {fileID: 6003149763291572019}
-  - {fileID: 3749621373432455688}
-  - {fileID: 5244648966679765057}
-  - {fileID: 5204515814103221728}
-  - {fileID: 6940714045794713289}
-  - {fileID: 4529116501847070802}
-  - {fileID: 4856086928434311075}
-  - {fileID: 8366698285968462164}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2319193880218692630}
   m_AABB:
@@ -608,9 +606,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: e3aa452d063514c55a2b59f2a0465c9b, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -640,6 +636,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 0044134f2a8a64bb1bbb07dd04edc099, type: 2}
   m_Bones:
   - {fileID: 2319193880218692630}
+  - {fileID: 6003149763291572019}
+  - {fileID: 3749621373432455688}
+  - {fileID: 5244648966679765057}
+  - {fileID: 5204515814103221728}
+  - {fileID: 6940714045794713289}
+  - {fileID: 4529116501847070802}
+  - {fileID: 4856086928434311075}
+  - {fileID: 8366698285968462164}
   - {fileID: 939264056696861509}
   - {fileID: 3603461936125539287}
   - {fileID: 3368625004077249884}
@@ -652,14 +656,6 @@ SkinnedMeshRenderer:
   - {fileID: 799971961750880442}
   - {fileID: 2337467886800528588}
   - {fileID: 4066482533346576660}
-  - {fileID: 6003149763291572019}
-  - {fileID: 3749621373432455688}
-  - {fileID: 5244648966679765057}
-  - {fileID: 5204515814103221728}
-  - {fileID: 6940714045794713289}
-  - {fileID: 4529116501847070802}
-  - {fileID: 4856086928434311075}
-  - {fileID: 8366698285968462164}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2319193880218692630}
   m_AABB:
@@ -946,9 +942,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: e3aa452d063514c55a2b59f2a0465c9b, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -978,6 +972,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 023f6dcb56f924cd899b7c095be111e4, type: 2}
   m_Bones:
   - {fileID: 2319193880218692630}
+  - {fileID: 6003149763291572019}
+  - {fileID: 3749621373432455688}
+  - {fileID: 5244648966679765057}
+  - {fileID: 5204515814103221728}
+  - {fileID: 6940714045794713289}
+  - {fileID: 4529116501847070802}
+  - {fileID: 4856086928434311075}
+  - {fileID: 8366698285968462164}
   - {fileID: 939264056696861509}
   - {fileID: 3603461936125539287}
   - {fileID: 3368625004077249884}
@@ -990,14 +992,6 @@ SkinnedMeshRenderer:
   - {fileID: 799971961750880442}
   - {fileID: 2337467886800528588}
   - {fileID: 4066482533346576660}
-  - {fileID: 6003149763291572019}
-  - {fileID: 3749621373432455688}
-  - {fileID: 5244648966679765057}
-  - {fileID: 5204515814103221728}
-  - {fileID: 6940714045794713289}
-  - {fileID: 4529116501847070802}
-  - {fileID: 4856086928434311075}
-  - {fileID: 8366698285968462164}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2319193880218692630}
   m_AABB:

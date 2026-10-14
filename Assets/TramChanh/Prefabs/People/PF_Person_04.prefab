@@ -377,9 +377,14 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -409,6 +414,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 73564bffd42a64a5cb0672687b3b89ca, type: 2}
   m_Bones:
   - {fileID: 2728639063750139283}
+  - {fileID: 5392654691162947347}
+  - {fileID: 837806779979558483}
+  - {fileID: 1485528928132212358}
+  - {fileID: 4261809423202790371}
+  - {fileID: 4706185751581795832}
+  - {fileID: 7674517305976947225}
+  - {fileID: 8220389593561246809}
+  - {fileID: 2528889808329994303}
   - {fileID: 5848912433027364141}
   - {fileID: 3703444417508496143}
   - {fileID: 6871746861661036179}
@@ -421,14 +434,6 @@ SkinnedMeshRenderer:
   - {fileID: 6360212343184976932}
   - {fileID: 5494034505509832617}
   - {fileID: 5443598265163794256}
-  - {fileID: 5392654691162947347}
-  - {fileID: 837806779979558483}
-  - {fileID: 1485528928132212358}
-  - {fileID: 4261809423202790371}
-  - {fileID: 4706185751581795832}
-  - {fileID: 7674517305976947225}
-  - {fileID: 8220389593561246809}
-  - {fileID: 2528889808329994303}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2728639063750139283}
   m_AABB:
@@ -492,9 +497,14 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -524,6 +534,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 92040ee05ada34a4aab1adc58639f752, type: 2}
   m_Bones:
   - {fileID: 2728639063750139283}
+  - {fileID: 5392654691162947347}
+  - {fileID: 837806779979558483}
+  - {fileID: 1485528928132212358}
+  - {fileID: 4261809423202790371}
+  - {fileID: 4706185751581795832}
+  - {fileID: 7674517305976947225}
+  - {fileID: 8220389593561246809}
+  - {fileID: 2528889808329994303}
   - {fileID: 5848912433027364141}
   - {fileID: 3703444417508496143}
   - {fileID: 6871746861661036179}
@@ -536,14 +554,6 @@ SkinnedMeshRenderer:
   - {fileID: 6360212343184976932}
   - {fileID: 5494034505509832617}
   - {fileID: 5443598265163794256}
-  - {fileID: 5392654691162947347}
-  - {fileID: 837806779979558483}
-  - {fileID: 1485528928132212358}
-  - {fileID: 4261809423202790371}
-  - {fileID: 4706185751581795832}
-  - {fileID: 7674517305976947225}
-  - {fileID: 8220389593561246809}
-  - {fileID: 2528889808329994303}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2728639063750139283}
   m_AABB:
@@ -982,9 +992,14 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b2174a6e6d1d40fa8081ddd5e93fa89, type: 2}
   - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
-  - {fileID: 2100000, guid: a4e5fea53ab3e424db1e28f20f21aaf6, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
+  - {fileID: 2100000, guid: fe9ac1d925d9d4528817c399621ca5d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1014,6 +1029,14 @@ SkinnedMeshRenderer:
   m_Mesh: {fileID: 4300000, guid: 3f1d8f661067442f3b123ee55f8f7015, type: 2}
   m_Bones:
   - {fileID: 2728639063750139283}
+  - {fileID: 5392654691162947347}
+  - {fileID: 837806779979558483}
+  - {fileID: 1485528928132212358}
+  - {fileID: 4261809423202790371}
+  - {fileID: 4706185751581795832}
+  - {fileID: 7674517305976947225}
+  - {fileID: 8220389593561246809}
+  - {fileID: 2528889808329994303}
   - {fileID: 5848912433027364141}
   - {fileID: 3703444417508496143}
   - {fileID: 6871746861661036179}
@@ -1026,14 +1049,6 @@ SkinnedMeshRenderer:
   - {fileID: 6360212343184976932}
   - {fileID: 5494034505509832617}
   - {fileID: 5443598265163794256}
-  - {fileID: 5392654691162947347}
-  - {fileID: 837806779979558483}
-  - {fileID: 1485528928132212358}
-  - {fileID: 4261809423202790371}
-  - {fileID: 4706185751581795832}
-  - {fileID: 7674517305976947225}
-  - {fileID: 8220389593561246809}
-  - {fileID: 2528889808329994303}
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 2728639063750139283}
   m_AABB:

@@ -18,8 +18,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Curbside Trash Bin** (`Trashcan Small`) | Quaternius | https://poly.pizza/m/i7HDuYDLkx | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_TrashBin.obj` |
 | **Low-Poly Sedan Car** (`Sports Car`) | Quaternius | https://poly.pizza/m/OyqKvX9xNh | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_Car_Sedan.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_Sedan.prefab` |
 | **Urban Street Dog** (`Dog`) | Quaternius | https://poly.pizza/m/2kUk0QqpCg | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Dog.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Dog.prefab` |
-| **Urban Street Cat** (`Cat`) | Quaternius | https://poly.pizza/m/2f54vbV0In | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Cat.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab` |
-| **Urban Street Chicken** (`Chicken`) | Quaternius | https://poly.pizza/m/ineV9pU5VL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Chicken.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab` |
+| **Urban Street Cat** (`Cat`) | Quaternius | https://poly.pizza/m/qKICY6xla2 | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Cat.fbx`<br>`Assets/TramChanh/Art/Textures/T_Animal_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Cat.prefab` |
+| **Urban Street Chicken** (`Chicken`) | Quaternius | https://poly.pizza/m/Z3RCoCYss4 | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Chicken.fbx`<br>`Assets/TramChanh/Art/Textures/T_Animal_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Chicken.prefab` |
 | **Urban Street Pigeon** (`Pigeon`) | Quaternius | https://poly.pizza/m/9NGlBTpDEr | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Street_Pigeon.fbx`<br>`Assets/TramChanh/Prefabs/Environment/PF_Street_Pigeon.prefab` |
 | **Street Vendor Food Cart** (`Dining car`) | Poly by Google | https://poly.pizza/m/5teci4b6krG | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_StreetVendor_Cart.obj`<br>`Assets/TramChanh/Art/Textures/T_StreetVendor_Cart_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_StreetVendor_Cart.prefab` |
 | **Sidewalk Patio Umbrella** (`Blue/White Beach Umbrella`) | S. Paul Michael | https://poly.pizza/m/1BLLDjRdxoa | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Sidewalk_Umbrella.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Sidewalk_Umbrella.prefab` |
@@ -31,8 +31,12 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Commuter Motorcycle Cub** (`Motorcycle`) | Poly by Google | https://poly.pizza/m/5_MTCnqfUTr | CC-BY 3.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Motorcycle_Cub.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorcycle_Cub_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Motorcycle_Cub.prefab` |
 | **Small Delivery Truck** (`Truck`) | Quaternius | https://poly.pizza/m/cXw6oiFtZ8 | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Truck_Small.obj`<br>`Assets/TramChanh/Art/Textures/T_Truck_Small_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Truck_Small.prefab` |
 | **Compact Urban SUV** (`SUV`) | Quaternius | https://poly.pizza/m/xsMtZhBkxL | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/Environment/SM_Car_SUV.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab` |
-| **Male Pedestrian (Casual)** (`Man`) | Quaternius | https://poly.pizza/m/HMnuH5geEG | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_07.prefab` |
-| **Female Pedestrian (Tank Top)** (`Woman in Tank Top`) | Quaternius | https://poly.pizza/m/XqzeZGB7iU | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_08.prefab` |
+| **Male Pedestrian (Casual)** (`Man`) | Quaternius | https://poly.pizza/m/HMnuH5geEG | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_01.prefab`<br>`Assets/TramChanh/Prefabs/People/PF_Person_07.prefab` |
+| **Female Pedestrian (Tank Top)** (`Woman in Tank Top`) | Quaternius | https://poly.pizza/m/XqzeZGB7iU | CC0 1.0 | 2026-10-14 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_02.prefab`<br>`Assets/TramChanh/Prefabs/People/PF_Person_08.prefab` |
+| **Male Pedestrian (Hoodie)** (`Man with Hoodie`) | Quaternius | https://poly.pizza/m/kZ3DmIoGip | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleHoodie.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_03.prefab` |
+| **Female Pedestrian (Casual)** (`Casual Woman`) | Quaternius | https://poly.pizza/m/jpKRgGDxhk | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_04.prefab` |
+| **Male Pedestrian (Worker)** (`Worker Man`) | Quaternius | https://poly.pizza/m/Yg2bQZO6Hj | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleWorker.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_05.prefab` |
+| **Female Pedestrian (Dress)** (`Woman in Dress`) | Quaternius | https://poly.pizza/m/zMyPlQXBzq | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleDress.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_06.prefab` |
 
 ---
 
@@ -47,9 +51,9 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Street Tree (Trunk + Canopy)** | $\le 1,500$ tris | Tropical Street Tree (2 separate meshes) | 165 tris (79 trunk + 86 canopy) | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
 | **Trash Bin** | $\le 1,500$ tris | Curbside Green Bin | 432 tris | $\le 2048 \times 2048$ | Material colors | **PASS** |
 | **Potted Plant** | $\le 1,500$ tris | Birds of Paradise Planter | 972 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
-| **Street Dog** | $\le 5,000$ tris | Urban Street Dog | 3,604 tris | $\le 2048 \times 2048$ | Vertex colors / URP Lit | **PASS** |
-| **Street Cat** | $\le 5,000$ tris | Urban Street Cat | 1,772 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
-| **Street Chicken** | $\le 5,000$ tris | Urban Street Chicken | 2,904 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Street Dog** | $\le 5,000$ tris | Urban Street Dog | 3,604 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
+| **Street Cat** | $\le 5,000$ tris | Urban Street Cat (realistic proportions) | 2,448 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
+| **Street Chicken** | $\le 5,000$ tris | Urban Street Chicken (realistic proportions) | 2,140 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG (T_Animal_Atlas) | **PASS** |
 | **Street Pigeon** | $\le 5,000$ tris | Urban Street Pigeon | 2,184 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Food Vendor Cart** | $\le 3,000$ tris | Street Vendor Food Cart | 1,460 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
 | **Sidewalk Umbrella** | $\le 3,000$ tris | Blue/White Sidewalk Umbrella | 214 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
@@ -63,6 +67,10 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Compact SUV** | $\le 8,000$ tris | Low-Poly Compact SUV | 3,294 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Male Pedestrian (Casual)** | $\le 8,000$ tris | Male Casual Rigged Pedestrian | 1,850 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Female Pedestrian (Tank Top)** | $\le 8,000$ tris | Female Tank Top Rigged Pedestrian | 1,984 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Male Pedestrian (Hoodie)** | $\le 8,000$ tris | Male Hoodie Rigged Pedestrian | 2,416 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Female Pedestrian (Casual)** | $\le 8,000$ tris | Female Casual Rigged Pedestrian | 2,096 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Male Pedestrian (Worker)** | $\le 8,000$ tris | Male Worker Rigged Pedestrian | 2,990 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Female Pedestrian (Dress)** | $\le 8,000$ tris | Female Dress Rigged Pedestrian | 2,192 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 
 ---
 
