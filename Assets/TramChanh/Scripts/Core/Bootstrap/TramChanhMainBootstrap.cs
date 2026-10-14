@@ -169,6 +169,10 @@ namespace TramChanh.App
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
             _heldView.Initialize(context.Hands, _events);
             _prompt.Initialize(_events, _interactor, Orders);
+            _settings = new GameSettings();
+            _settings.Load(new PlayerPrefsSettingsStore());
+            ApplySettings();
+            _prompt.AttachPauseMenu(_input, _settings, () => { ApplySettings(); _settings.Save(new PlayerPrefsSettingsStore()); }, QuitGame);
             _entryUI.Initialize(_events);
             _lobby.Initialize(Orders, _events);
             _entryUI.Shown += OnEntryShown;
@@ -495,6 +499,23 @@ namespace TramChanh.App
             _sun.intensity = _sunBaseIntensity * Mathf.Lerp(0.2f, 1f, (float)lighting.LightIntensity);
             float pitch = Mathf.Clamp((float)lighting.SunAngleDegrees, 15f, 90f);
             _sun.transform.rotation = Quaternion.Euler(pitch, _sunBaseEuler.y, 0f);
+        }
+
+        private GameSettings _settings;
+
+        private void ApplySettings()
+        {
+            AudioListener.volume = _settings.MasterVolume;
+            _player.LookScale = _settings.LookScale;
+        }
+
+        private static void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         private void OnEntryShown()

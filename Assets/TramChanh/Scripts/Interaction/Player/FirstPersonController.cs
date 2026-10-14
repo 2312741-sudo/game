@@ -18,6 +18,8 @@ namespace TramChanh.Interaction.Player
         private float _pitch;
         private float _verticalSpeed;
         public Camera ViewCamera => _camera;
+        /// <summary>Player option that multiplies the configured look sensitivity (1 = as configured).</summary>
+        public float LookScale { get; set; } = 1f;
 
         public void Initialize(PlayerInputReader input, IGameClock clock, float moveSpeed, float lookSensitivity, float gravity, float pitchLimit)
         {
@@ -43,8 +45,8 @@ namespace TramChanh.Interaction.Player
             {
                 return;
             }
-            transform.Rotate(Vector3.up, look.x * _lookSensitivity, Space.World);
-            _pitch = Mathf.Clamp(_pitch - look.y * _lookSensitivity, -_pitchLimit, _pitchLimit);
+            transform.Rotate(Vector3.up, look.x * _lookSensitivity * LookScale, Space.World);
+            _pitch = Mathf.Clamp(_pitch - look.y * _lookSensitivity * LookScale, -_pitchLimit, _pitchLimit);
             _camera.transform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
             Vector2 direction = Vector2.ClampMagnitude(move, 1f);
             Vector3 horizontal = (transform.right * direction.x + transform.forward * direction.y) * _moveSpeed;

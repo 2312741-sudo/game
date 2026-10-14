@@ -3,7 +3,9 @@ using TramChanh.Core;
 using TramChanh.Interaction;
 using TramChanh.Orders;
 using TramChanh.UI.Hud;
+using TramChanh.Interaction.Player;
 using TramChanh.UI.Localization;
+using TramChanh.UI.Menu;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -38,6 +40,11 @@ namespace TramChanh.UI.Prompt
         private Label _heldHint;
         private Label _status;
         private Label _credits;
+        private PauseMenu _pauseMenu;
+        private PlayerInputReader _pauseInput;
+        private GameSettings _settings;
+        private Action _applySettings;
+        private Action _quit;
         private string _statusText = string.Empty;
         public PromptLocalizationTable Table => _table;
         public string Language => _language;
@@ -176,6 +183,7 @@ namespace TramChanh.UI.Prompt
             _hasRenderedHeldQuery = false;
             root.Add(_panel);
             BuildHud(root);
+            BuildPauseMenu(root);
         }
 
         private void BuildHud(VisualElement root)
@@ -202,6 +210,31 @@ namespace TramChanh.UI.Prompt
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
         }
 
+        /// <summary>
+        /// Adds the pause menu (Esc). It shows while the player is paused by the user. <paramref name="applySettings"/> runs after
+        /// any option changes so the game can apply and save them; <paramref name="quit"/> is the Quit button.
+        /// </summary>
+        public void AttachPauseMenu(PlayerInputReader input, GameSettings settings, Action applySettings, Action quit)
+        {
+            _pauseInput = input;
+            _settings = settings;
+            _applySettings = applySettings;
+            _quit = quit;
+            if (_panel != null) { BuildPauseMenu(GetComponent<UIDocument>().rootVisualElement); }
+        }
+
+        private void BuildPauseMenu(VisualElement root)
+        {
+            _pauseMenu = null;
+            if (_pauseInput == null || _settings == null) { return; }
+            _pauseInput.ClickResumesFromPause = false;
+            _pauseMenu = new PauseMenu(root, _settings,
+                () => _pauseInput.SetCaptured(true),
+                ToggleCredits,
+                () => _quit?.Invoke(),
+                () => _applySettings?.Invoke());
+        }
+
         /// <summary>Shows or hides the attribution panel the CC-BY licences require.</summary>
         public void ToggleCredits()
         {
@@ -214,6 +247,13 @@ namespace TramChanh.UI.Prompt
             _hud?.Tick();
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) { ToggleCredits(); }
+            if (_pauseMenu != null)
+            {
+                bool paused = _pauseInput != null && _pauseInput.IsPausedByUser;
+                _pauseMenu.SetVisible(paused);
+                // Closing the pause menu closes the credits panel with it.
+                if (!paused && _credits != null) { _credits.style.display = DisplayStyle.None; }
+            }
         }
         private void Subscribe()
         {

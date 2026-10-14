@@ -20,6 +20,8 @@ namespace TramChanh.Interaction.Player
         public InputActionAsset Actions => _actions;
         public bool IsCaptured { get; private set; }
         public bool IsPausedByUser { get; private set; }
+        /// <summary>When false, a click does not leave the user pause (a pause menu owns the pointer); Esc or the menu's Resume does.</summary>
+        public bool ClickResumesFromPause { get; set; } = true;
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 Look => _look.ReadValue<Vector2>();
         public bool InteractPressed => IsCaptured && !_resumedThisFrame && _interact.WasPressedThisFrame();
@@ -66,7 +68,7 @@ namespace TramChanh.Interaction.Player
                 IsPausedByUser = !IsCaptured;
                 _resumedThisFrame = IsCaptured;
             }
-            else if (!IsCaptured && _interact.WasPressedThisFrame())
+            else if (!IsCaptured && (ClickResumesFromPause || !IsPausedByUser) && _interact.WasPressedThisFrame())
             {
                 SetCaptured(true);
                 _resumedThisFrame = true;
