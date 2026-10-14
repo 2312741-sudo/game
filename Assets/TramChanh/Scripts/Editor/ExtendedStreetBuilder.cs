@@ -49,6 +49,7 @@ namespace TramChanh.EditorTools
         public const string CarSUVPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_Car_SUV.prefab";
         public const string Person07PrefabPath = "Assets/TramChanh/Prefabs/People/PF_Person_07.prefab";
         public const string Person08PrefabPath = "Assets/TramChanh/Prefabs/People/PF_Person_08.prefab";
+        public const string TeaBagPrefabPath = "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab";
 
         public const string ExtendedPreviewScenePath = "Assets/TramChanh/Scenes/Art/SCN_Art_EnvironmentExtendedPreview.unity";
         public const string ScreenshotsFolder = "QA/Screenshots/Map_Extended";
@@ -858,6 +859,27 @@ namespace TramChanh.EditorTools
                 cr2.name = "PF_PlasticCrate_Street_EastSide";
                 cr2.transform.position = new Vector3(1.7f, 0.0f, -0.6f);
                 cr2.transform.rotation = Quaternion.Euler(0f, -8f, 0f);
+
+                GameObject teaBagPf = AssetDatabase.LoadAssetAtPath<GameObject>(TeaBagPrefabPath);
+                if (teaBagPf != null)
+                {
+                    // Upright tea bags inside West crate (standing vertical, not laid flat)
+                    var tb1 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr1.transform);
+                    tb1.name = "TeaBag_Upright_01";
+                    tb1.transform.localPosition = new Vector3(-0.08f, 0.02f, 0.0f);
+                    tb1.transform.localRotation = Quaternion.Euler(0f, -10f, 0f);
+
+                    var tb2 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr1.transform);
+                    tb2.name = "TeaBag_Upright_02";
+                    tb2.transform.localPosition = new Vector3(0.08f, 0.02f, 0.0f);
+                    tb2.transform.localRotation = Quaternion.Euler(0f, 15f, 0f);
+
+                    // Upright tea bags inside East crate
+                    var tb3 = (GameObject)PrefabUtility.InstantiatePrefab(teaBagPf, cr2.transform);
+                    tb3.name = "TeaBag_Upright_03";
+                    tb3.transform.localPosition = new Vector3(0.0f, 0.02f, 0.0f);
+                    tb3.transform.localRotation = Quaternion.Euler(0f, 5f, 0f);
+                }
             }
 
             // Ambient Pedestrians on Sidewalk (PF_Person_07 & PF_Person_08)
