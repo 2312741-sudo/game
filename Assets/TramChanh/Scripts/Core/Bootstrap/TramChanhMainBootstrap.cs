@@ -51,6 +51,8 @@ namespace TramChanh.App
         [SerializeField] private GameObject _drinkStationPrefab;
         [SerializeField] private GameObject _cakeStationPrefab;
         [SerializeField] private GameObject _tablePointPrefab;
+        [Tooltip("Plastic stool the red tea rack stands on behind the counter. Optional.")]
+        [SerializeField] private GameObject _teaRackStoolPrefab;
         [SerializeField] private GameObject _vehiclePointPrefab;
         [Tooltip("Cake station origin in stall-local space; aligns the station grill with the stall Grill anchor.")]
         [SerializeField] private Vector3 _cakeStationLocalPosition = new Vector3(-0.51f, 1f, -0.08f);
@@ -225,7 +227,17 @@ namespace TramChanh.App
                 StallAnchorId.Grill, StallAnchorId.BatterArea, StallAnchorId.RollArea, StallAnchorId.Sauce, StallAnchorId.Wrap })
             { HideStallEquipment(anchors, id); }
 
-            foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true)) { rack.Initialize(Tickets, _ids, _events, Shelf); }
+            foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true))
+            {
+                rack.Initialize(Tickets, _ids, _events, Shelf);
+                if (_teaRackStoolPrefab != null)
+                {
+                    // The rack's origin is its base; the stool stands on the floor right under it.
+                    Vector3 under = rack.transform.position;
+                    GameObject stool = Instantiate(_teaRackStoolPrefab, new Vector3(under.x, Environment.transform.position.y, under.z), rack.transform.rotation, _runtime.transform);
+                    stool.name = "TeaRackStool";
+                }
+            }
             foreach (ReadyCounterPoint ready in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
             foreach (ReadyOrderPickupPoint pickup in DrinkStation.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
             CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes), Shelf);
