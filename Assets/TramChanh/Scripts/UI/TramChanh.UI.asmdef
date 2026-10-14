@@ -5,7 +5,8 @@
     "TramChanh.Core",
     "TramChanh.Interaction",
     "TramChanh.Orders",
-    "TramChanh.Content"
+    "TramChanh.Content",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

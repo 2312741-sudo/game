@@ -5,6 +5,7 @@ using TramChanh.Orders;
 using TramChanh.UI.Hud;
 using TramChanh.UI.Localization;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace TramChanh.UI.Prompt
@@ -36,6 +37,7 @@ namespace TramChanh.UI.Prompt
         private Label _hint;
         private Label _heldHint;
         private Label _status;
+        private Label _credits;
         private string _statusText = string.Empty;
         public PromptLocalizationTable Table => _table;
         public string Language => _language;
@@ -110,6 +112,31 @@ namespace TramChanh.UI.Prompt
             _status.style.unityTextAlign = TextAnchor.MiddleCenter;
             _status.style.backgroundColor = new Color(0f, 0f, 0f, 0.45f);
             root.Add(_status);
+            _credits = new Label(CreditsText.Build() + "\n\n[F1] close");
+            _credits.pickingMode = PickingMode.Ignore;
+            _credits.style.position = Position.Absolute;
+            _credits.style.left = Length.Percent(50f);
+            _credits.style.top = 90f;
+            _credits.style.width = 760f;
+            _credits.style.marginLeft = -380f;
+            _credits.style.paddingTop = 16f;
+            _credits.style.paddingBottom = 16f;
+            _credits.style.paddingLeft = 16f;
+            _credits.style.paddingRight = 16f;
+            _credits.style.fontSize = 14f;
+            _credits.style.color = Color.white;
+            _credits.style.whiteSpace = WhiteSpace.Normal;
+            _credits.style.backgroundColor = new Color(0f, 0f, 0f, 0.85f);
+            _credits.style.display = DisplayStyle.None;
+            root.Add(_credits);
+            var creditsHint = new Label("[F1] Credits");
+            creditsHint.pickingMode = PickingMode.Ignore;
+            creditsHint.style.position = Position.Absolute;
+            creditsHint.style.right = 20f;
+            creditsHint.style.top = 20f;
+            creditsHint.style.fontSize = 14f;
+            creditsHint.style.color = new Color(1f, 1f, 1f, 0.7f);
+            root.Add(creditsHint);
             var crosshair = new Label("+");
             crosshair.style.position = Position.Absolute;
             crosshair.style.left = Length.Percent(50f);
@@ -175,7 +202,19 @@ namespace TramChanh.UI.Prompt
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
         }
 
-        private void Update() => _hud?.Tick();
+        /// <summary>Shows or hides the attribution panel the CC-BY licences require.</summary>
+        public void ToggleCredits()
+        {
+            if (_credits == null) { return; }
+            _credits.style.display = _credits.style.display.value == DisplayStyle.None ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void Update()
+        {
+            _hud?.Tick();
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) { ToggleCredits(); }
+        }
         private void Subscribe()
         {
             if (_subscription == null && _events != null && isActiveAndEnabled)
