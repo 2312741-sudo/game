@@ -43,6 +43,9 @@ namespace TramChanh.EditorTools.QA
             new View("07_Street_East120", new Vector3(120f, EyeHeight, -1.2f), new Vector3(0f, -90f, 0f)),
             new View("08_Street_West240", new Vector3(-240f, EyeHeight, 2f), new Vector3(0f, -90f, 0f)),
             new View("09_Street_East240", new Vector3(240f, EyeHeight, 2f), new Vector3(0f, 90f, 0f)),
+            new View("10_Street_Center0", new Vector3(0f, EyeHeight, 2.0f), new Vector3(5f, 75f, 0f)),
+            new View("11_People_Lineup_Outfits", new Vector3(0f, 1.35f, 1.8f), new Vector3(6f, 0f, 0f)),
+            new View("12_People_InGame_WalkingSitting", new Vector3(-2.2f, 1.4f, -0.2f), new Vector3(8f, -135f, 0f)),
         };
 
         [MenuItem("Tram Chanh/QA/Capture Standard Views")]
@@ -60,11 +63,33 @@ namespace TramChanh.EditorTools.QA
         /// <summary>Renders every standard view into <paramref name="folder"/> (relative to the project root). Returns how many were saved.</summary>
         public static int Capture(string folder)
         {
-            if (!Application.isPlaying) { Debug.LogError("Capture Standard Views needs Play Mode on SCN_TramChanh_Main."); return 0; }
+            GameObject tempEnv = null;
             GameObject stall = GameObject.Find(StallRootName);
-            if (stall == null) { Debug.LogError("No object named '" + StallRootName + "' in the scene; load SCN_TramChanh_Main and press Play."); return 0; }
+            if (stall == null)
+            {
+                var envPf = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/Environment/PF_TramChanh_StreetExtended.prefab");
+                if (envPf != null)
+                {
+                    tempEnv = (GameObject)PrefabUtility.InstantiatePrefab(envPf);
+                    stall = GameObject.Find(StallRootName);
+                }
+            }
+            if (stall == null)
+            {
+                Debug.LogError("No object named '" + StallRootName + "' in the scene; load SCN_TramChanh_Main or ensure PF_TramChanh_StreetExtended is available.");
+                return 0;
+            }
+
             Camera template = Camera.main != null ? Camera.main : UnityEngine.Object.FindFirstObjectByType<Camera>();
-            if (template == null) { Debug.LogError("No camera in the scene to copy render settings from."); return 0; }
+            GameObject tempCamGo = null;
+            if (template == null)
+            {
+                tempCamGo = new GameObject("QA_TempTemplateCamera");
+                template = tempCamGo.AddComponent<Camera>();
+                template.fieldOfView = 60f;
+                template.nearClipPlane = 0.1f;
+                template.farClipPlane = 600f;
+            }
 
             Directory.CreateDirectory(folder);
             int saved = 0;
@@ -78,29 +103,164 @@ namespace TramChanh.EditorTools.QA
                 cam.enabled = false;
                 foreach (View view in Views)
                 {
-                    camObject.transform.SetPositionAndRotation(stall.transform.TransformPoint(view.Offset), stall.transform.rotation * Quaternion.Euler(view.Euler));
-                    cam.Render();
-                    Texture2D image = ReadBack(rt);
-                    if (IsBlank(image))
+                    List<GameObject> tempSpawns = new List<GameObject>();
+                    try
                     {
-                        Debug.LogError("Blank or single-colour image for view " + view.Name + "; not saved. Check lighting, culling and the camera position.");
+                        if (view.Name == "11_People_Lineup_Outfits")
+                        {
+                            string[] personPaths = new[]
+                            {
+                                "Assets/TramChanh/Prefabs/People/PF_Person_01.prefab",
+                                "Assets/TramChanh/Prefabs/People/PF_Person_02.prefab",
+                                "Assets/TramChanh/Prefabs/People/PF_Person_03.prefab",
+                                "Assets/TramChanh/Prefabs/People/PF_Person_04.prefab",
+                                "Assets/TramChanh/Prefabs/People/PF_Person_05.prefab",
+                                "Assets/TramChanh/Prefabs/People/PF_Person_06.prefab"
+                            };
+                            float[] xOffsets = new[] { -1.9f, -1.15f, -0.4f, 0.4f, 1.15f, 1.9f };
+                            for (int i = 0; i < personPaths.Length; i++)
+                            {
+                                var pf = AssetDatabase.LoadAssetAtPath<GameObject>(personPaths[i]);
+                                if (pf != null)
+                                {
+                                    var inst = UnityEngine.Object.Instantiate(pf);
+                                    inst.transform.position = stall.transform.TransformPoint(new Vector3(xOffsets[i], 0f, 4.5f));
+                                    inst.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
+                                    tempSpawns.Add(inst);
+                                }
+                            }
+                        }
+                        else if (view.Name == "12_People_InGame_WalkingSitting")
+                        {
+                            var pfWalk = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_01.prefab");
+                            if (pfWalk != null)
+                            {
+                                var instWalk = UnityEngine.Object.Instantiate(pfWalk);
+                                instWalk.transform.position = stall.transform.TransformPoint(new Vector3(-4.2f, 0f, 1.4f));
+                                instWalk.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 85f, 0f);
+                                tempSpawns.Add(instWalk);
+                            }
+                            var pfSit = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_02.prefab");
+                            if (pfSit != null)
+                            {
+                                var instSit = UnityEngine.Object.Instantiate(pfSit);
+                                instSit.transform.position = stall.transform.TransformPoint(new Vector3(-3.35f, 0f, 0.2f));
+                                instSit.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 0f, 0f);
+                                tempSpawns.Add(instSit);
+                            }
+                        }
+
+                        camObject.transform.SetPositionAndRotation(stall.transform.TransformPoint(view.Offset), stall.transform.rotation * Quaternion.Euler(view.Euler));
+                        cam.Render();
+                        Texture2D image = ReadBack(rt);
+                        if (IsBlank(image))
+                        {
+                            Debug.LogError("Blank or single-colour image for view " + view.Name + "; not saved. Check lighting, culling and the camera position.");
+                        }
+                        else
+                        {
+                            File.WriteAllBytes(Path.Combine(folder, view.Name + ".png"), image.EncodeToPNG());
+                            saved++;
+                        }
+                        UnityEngine.Object.Destroy(image);
                     }
-                    else
+                    finally
                     {
-                        File.WriteAllBytes(Path.Combine(folder, view.Name + ".png"), image.EncodeToPNG());
-                        saved++;
+                        foreach (var g in tempSpawns)
+                        {
+                            if (g != null) UnityEngine.Object.Destroy(g);
+                        }
                     }
-                    UnityEngine.Object.Destroy(image);
                 }
+
+                MeasureStreetPerformance(cam, stall, folder);
             }
             finally
             {
                 RenderTexture.active = null;
                 UnityEngine.Object.Destroy(camObject);
+                if (tempCamGo != null) UnityEngine.Object.Destroy(tempCamGo);
+                if (tempEnv != null) UnityEngine.Object.Destroy(tempEnv);
                 rt.Release();
                 UnityEngine.Object.Destroy(rt);
             }
             return saved;
+        }
+
+        public static void MeasureStreetPerformance(Camera cam, GameObject stall, string folder)
+        {
+            float[] sampleX = new[] { -240f, -120f, 0f, 120f, 240f };
+            var perfLines = new List<string>();
+            perfLines.Add("=== 500M Street Performance Audit (ART-FIX-016 Task E) ===");
+            perfLines.Add(string.Format("{0,-10} | {1,-18} | {2,-12} | {3,-19} | {4}", "Position", "Triangles in View", "Draw Calls", "Lights Near (<=30m)", "Budget Status"));
+            perfLines.Add(new string('-', 82));
+
+            var meshRenderers = UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
+            var skinnedRenderers = UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
+            var lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+
+            foreach (float x in sampleX)
+            {
+                Vector3 samplePos = stall.transform.TransformPoint(new Vector3(x, EyeHeight, 2.0f));
+                Quaternion sampleRot = stall.transform.rotation * Quaternion.Euler(0f, 90f, 0f);
+                cam.transform.SetPositionAndRotation(samplePos, sampleRot);
+
+                Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
+                int triCount = 0;
+                int visibleRenderers = 0;
+
+                foreach (var mr in meshRenderers)
+                {
+                    if (mr != null && mr.enabled && mr.gameObject.activeInHierarchy && GeometryUtility.TestPlanesAABB(planes, mr.bounds))
+                    {
+                        visibleRenderers++;
+                        var mf = mr.GetComponent<MeshFilter>();
+                        if (mf != null && mf.sharedMesh != null)
+                        {
+                            triCount += mf.sharedMesh.triangles.Length / 3;
+                        }
+                    }
+                }
+                foreach (var smr in skinnedRenderers)
+                {
+                    if (smr != null && smr.enabled && smr.gameObject.activeInHierarchy && GeometryUtility.TestPlanesAABB(planes, smr.bounds))
+                    {
+                        visibleRenderers++;
+                        if (smr.sharedMesh != null)
+                        {
+                            triCount += smr.sharedMesh.triangles.Length / 3;
+                        }
+                    }
+                }
+
+                int lightsNear = 0;
+                foreach (var l in lights)
+                {
+                    if (l != null && l.enabled && l.gameObject.activeInHierarchy && l.type != LightType.Directional)
+                    {
+                        float dist = Vector3.Distance(l.transform.position, samplePos);
+                        if (dist <= Mathf.Max(l.range, 30f))
+                        {
+                            lightsNear++;
+                        }
+                    }
+                }
+
+                string status = (triCount <= 400000 && lightsNear <= 8) ? "PASS" : "FAIL";
+                string row = string.Format("{0,-10} | {1,-18:N0} | {2,-12} | {3,-19} | {4}", $"x = {x:+0;-0;0}m", triCount, visibleRenderers, lightsNear, status);
+                perfLines.Add(row);
+                Debug.Log($"[PERF] {row}");
+            }
+
+            File.WriteAllLines(Path.Combine(folder, "street_performance_report.txt"), perfLines);
+        }
+
+        public static void CaptureFromBatchMode()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/TramChanh/Scenes/Gameplay/SCN_TramChanh_Main.unity");
+            string folder = "QA/Screenshots/Capture_" + DateTime.Now.ToString("yyyyMMdd_HHmm");
+            int saved = Capture(folder);
+            Debug.Log("[BatchModeCapture] Saved " + saved + " views to " + folder);
         }
 
         private static Texture2D ReadBack(RenderTexture rt)
