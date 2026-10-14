@@ -236,6 +236,7 @@ namespace TramChanh.App
                     Vector3 under = rack.transform.position;
                     GameObject stool = Instantiate(_teaRackStoolPrefab, new Vector3(under.x, Environment.transform.position.y, under.z), rack.transform.rotation, _runtime.transform);
                     stool.name = "TeaRackStool";
+                    ArrangeCrateRow(rack.transform);
                 }
             }
             foreach (ReadyCounterPoint ready in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
@@ -538,6 +539,31 @@ namespace TramChanh.App
         /// <summary>Tests set this before loading the scene so the game starts running instead of waiting on the title screen.</summary>
         public static bool SuppressTitleScreen { get; set; }
         [SerializeField] private bool _showTitleScreen;
+
+        /// <summary>Spacing between neighbouring crates in the row behind the counter, metres.</summary>
+        private const float CrateRowSpacing = 0.6f;
+
+        /// <summary>
+        /// Lines the street's decorative tea crates up beside the working tea rack, each on its own plastic stool,
+        /// so the stall shows one tidy row of crates behind the counter.
+        /// </summary>
+        private void ArrangeCrateRow(Transform rack)
+        {
+            var crates = new List<Transform>();
+            foreach (Transform t in Environment.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.StartsWith("PF_PlasticCrate_Street_")) { crates.Add(t); }
+            }
+            crates.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+            Vector3 origin = rack.position;
+            for (int i = 0; i < crates.Count; i++)
+            {
+                Vector3 spot = origin + Environment.transform.right * (CrateRowSpacing * (i + 1));
+                crates[i].SetPositionAndRotation(spot, rack.rotation);
+                var stool = Instantiate(_teaRackStoolPrefab, new Vector3(spot.x, Environment.transform.position.y, spot.z), rack.rotation, _runtime.transform);
+                stool.name = "CrateStool_" + (i + 1);
+            }
+        }
 
         private void SetUpSound()
         {
