@@ -20,6 +20,9 @@ namespace TramChanh.EditorTools
         public const string BaseStreetPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_TramChanh_Street.prefab";
         public const string ExtendedStreetPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_TramChanh_StreetExtended.prefab";
 
+        public const float StreetHalfLength = 250f;
+        public static readonly float[] AlleyPositions = new float[] { -221.5f, -101.5f, 18.5f, 138.5f };
+
         public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Stall_TramChanh.prefab";
         public const string SignPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Sign_TramChanh_New.prefab";
         public const string YellowCrateTablePrefabPath = "Assets/TramChanh/Prefabs/CustomerArea/PF_YellowCrateTable.prefab";
@@ -94,6 +97,15 @@ namespace TramChanh.EditorTools
             BuildExtendedStreetPrefab();
             CreatePreviewSceneAndCapture();
             Debug.Log("[TramChanh] Extended Street Construction (ART-MAP-002) Complete!");
+        }
+
+        [MenuItem("Tram Chanh/Art/Build Extended Street Prefabs Only")]
+        public static void BuildPrefabsOnly()
+        {
+            EnsureModelsImported();
+            BuildBaseStreetPrefab();
+            BuildExtendedStreetPrefab();
+            Debug.Log("[TramChanh] Extended Street Prefabs Built Successfully!");
         }
 
         public static void ConfigureProjectAndBuildSettings()
@@ -269,7 +281,7 @@ namespace TramChanh.EditorTools
             Material rdMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Street_WetAsphaltNight.mat");
             Material wallMat = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialsFolder}/MAT_Shopfront_C.mat");
 
-            // South Sidewalk (x in [-40, 40])
+            // South Sidewalk (x in [-StreetHalfLength, StreetHalfLength])
             if (sw80Mesh != null)
             {
                 var s80 = new GameObject("SouthSidewalk_80m");
@@ -278,24 +290,37 @@ namespace TramChanh.EditorTools
                 s80.AddComponent<MeshFilter>().sharedMesh = sw80Mesh;
                 s80.AddComponent<MeshRenderer>().sharedMaterial = swMat;
 
-                // BoxColliders covering the walkable south sidewalk surface (top at y = 0.0m)
-                // West segment
-                var colW = s80.AddComponent<BoxCollider>();
-                colW.center = new Vector3(-11.75f, -0.075f, -3.2f);
-                colW.size = new Vector3(56.5f, 0.15f, 13.6f);
+                // BoxColliders covering the walkable south sidewalk surface (top at y = 0.0m) across [-250, 250]
+                float xPrev = -StreetHalfLength;
+                int segIdx = 1;
+                foreach (float al in AlleyPositions)
+                {
+                    float xStartAl = al - 2.0f;
+                    float xEndAl = al + 2.0f;
+                    float w = xStartAl - xPrev;
+                    if (w > 0.05f)
+                    {
+                        var colSeg = s80.AddComponent<BoxCollider>();
+                        colSeg.center = new Vector3(xPrev + w * 0.5f, -0.075f, -3.2f);
+                        colSeg.size = new Vector3(w, 0.15f, 13.6f);
+                        segIdx++;
+                    }
+                    var colThresh = s80.AddComponent<BoxCollider>();
+                    colThresh.center = new Vector3(al, -0.075f, -3.2f);
+                    colThresh.size = new Vector3(4.0f, 0.15f, 13.6f);
 
-                // Alley threshold
-                var colThresh = s80.AddComponent<BoxCollider>();
-                colThresh.center = new Vector3(18.5f, -0.075f, -3.2f);
-                colThresh.size = new Vector3(4.0f, 0.15f, 13.6f);
-
-                // East segment
-                var colE = s80.AddComponent<BoxCollider>();
-                colE.center = new Vector3(30.25f, -0.075f, -3.2f);
-                colE.size = new Vector3(19.5f, 0.15f, 13.6f);
+                    xPrev = xEndAl;
+                }
+                float lastW = StreetHalfLength - xPrev;
+                if (lastW > 0.05f)
+                {
+                    var colSeg = s80.AddComponent<BoxCollider>();
+                    colSeg.center = new Vector3(xPrev + lastW * 0.5f, -0.075f, -3.2f);
+                    colSeg.size = new Vector3(lastW, 0.15f, 13.6f);
+                }
             }
 
-            // North Sidewalk (x in [-40, 40], z in [12.6, 22.0])
+            // North Sidewalk (x in [-StreetHalfLength, StreetHalfLength], z in [12.6, 22.0])
             if (nsw80Mesh != null)
             {
                 var n80 = new GameObject("NorthSidewalk_80m");
@@ -306,10 +331,10 @@ namespace TramChanh.EditorTools
 
                 var colN = n80.AddComponent<BoxCollider>();
                 colN.center = new Vector3(0.0f, -0.075f, 17.3f);
-                colN.size = new Vector3(80.0f, 0.15f, 9.4f);
+                colN.size = new Vector3(StreetHalfLength * 2f, 0.15f, 9.4f);
             }
 
-            // 2-lane Roadway (x in [-40, 40], z in [3.6, 12.6], y = -0.15m)
+            // 2-lane Roadway (x in [-StreetHalfLength, StreetHalfLength], z in [3.6, 12.6], y = -0.15m)
             if (rd80Mesh != null)
             {
                 var r80 = new GameObject("Roadway_80m");
@@ -320,10 +345,10 @@ namespace TramChanh.EditorTools
 
                 var colR = r80.AddComponent<BoxCollider>();
                 colR.center = new Vector3(0.0f, -0.185f, 8.1f);
-                colR.size = new Vector3(80.0f, 0.07f, 9.0f);
+                colR.size = new Vector3(StreetHalfLength * 2f, 0.07f, 9.0f);
             }
 
-            // Side Alley Pavement (x in [16.5, 20.5], z in [-15.0, -3.8], top at y = 0.0m)
+            // Side Alley Pavements (4 alleys every 120m, top at y = 0.0m)
             if (alMesh != null)
             {
                 var alObj = new GameObject("Alley_Pavement");
@@ -332,9 +357,12 @@ namespace TramChanh.EditorTools
                 alObj.AddComponent<MeshFilter>().sharedMesh = alMesh;
                 alObj.AddComponent<MeshRenderer>().sharedMaterial = swMat;
 
-                var colAl = alObj.AddComponent<BoxCollider>();
-                colAl.center = new Vector3(18.5f, -0.075f, -9.4f);
-                colAl.size = new Vector3(4.0f, 0.15f, 11.2f);
+                foreach (float al in AlleyPositions)
+                {
+                    var colAl = alObj.AddComponent<BoxCollider>();
+                    colAl.center = new Vector3(al, -0.075f, -9.4f);
+                    colAl.size = new Vector3(4.0f, 0.15f, 11.2f);
+                }
             }
 
             // Side Alley Walls
@@ -353,21 +381,49 @@ namespace TramChanh.EditorTools
             limits.transform.SetParent(root.transform, false);
 
             // A low curb, not a wall: the player (step offset 0.25 m) can walk from the sidewalk onto the road.
-            AddLimitBox(limits.transform, "Boundary_RoadCurb", new Vector3(0.0f, 0.06f, 3.65f), new Vector3(80.0f, 0.12f, 0.1f));
-            AddLimitBox(limits.transform, "Boundary_SouthBuildings_West", new Vector3(-11.75f, 1.5f, -3.85f), new Vector3(56.5f, 3.0f, 0.1f));
-            AddLimitBox(limits.transform, "Boundary_SouthBuildings_East", new Vector3(30.25f, 1.5f, -3.85f), new Vector3(19.5f, 3.0f, 0.1f));
-            AddLimitBox(limits.transform, "Boundary_Alley_West", new Vector3(16.45f, 1.5f, -9.4f), new Vector3(0.1f, 3.0f, 11.2f));
-            AddLimitBox(limits.transform, "Boundary_Alley_East", new Vector3(20.55f, 1.5f, -9.4f), new Vector3(0.1f, 3.0f, 11.2f));
-            AddLimitBox(limits.transform, "Boundary_Alley_Back", new Vector3(18.5f, 1.5f, -15.05f), new Vector3(4.2f, 3.0f, 0.1f));
-            AddLimitBox(limits.transform, "Boundary_MapEnd_West", new Vector3(-40.05f, 1.5f, -0.1f), new Vector3(0.1f, 3.0f, 7.5f));
-            AddLimitBox(limits.transform, "Boundary_MapEnd_East", new Vector3(40.05f, 1.5f, -0.1f), new Vector3(0.1f, 3.0f, 7.5f));
-            AddLimitBox(limits.transform, "Boundary_NorthSidewalk_Back", new Vector3(0.0f, 1.5f, 16.65f), new Vector3(80.0f, 3.0f, 0.1f));
+            AddLimitBox(limits.transform, "Boundary_RoadCurb", new Vector3(0.0f, 0.06f, 3.65f), new Vector3(StreetHalfLength * 2f, 0.12f, 0.1f));
+            AddLimitBox(limits.transform, "Boundary_NorthSidewalk_Back", new Vector3(0.0f, 1.5f, 16.65f), new Vector3(StreetHalfLength * 2f, 3.0f, 0.1f));
+
+            // South buildings boundaries
+            float xLimPrev = -StreetHalfLength;
+            int limIdx = 1;
+            foreach (float al in AlleyPositions)
+            {
+                float xStartAl = al - 2.0f;
+                float xEndAl = al + 2.0f;
+                float w = xStartAl - xLimPrev;
+                if (w > 0.05f)
+                {
+                    AddLimitBox(limits.transform, $"Boundary_SouthBuildings_{limIdx}", new Vector3(xLimPrev + w * 0.5f, 1.5f, -3.85f), new Vector3(w, 3.0f, 0.1f));
+                    limIdx++;
+                }
+                xLimPrev = xEndAl;
+            }
+            float lastLimW = StreetHalfLength - xLimPrev;
+            if (lastLimW > 0.05f)
+            {
+                AddLimitBox(limits.transform, $"Boundary_SouthBuildings_{limIdx}", new Vector3(xLimPrev + lastLimW * 0.5f, 1.5f, -3.85f), new Vector3(lastLimW, 3.0f, 0.1f));
+            }
+
+            // Flanking boundaries for each alley
+            for (int i = 0; i < AlleyPositions.Length; i++)
+            {
+                float al = AlleyPositions[i];
+                string suffix = i == 2 ? "" : $"_{i + 1}"; // Alley at index 2 (18.5) retains canonical Boundary_Alley_West/East/Back
+                AddLimitBox(limits.transform, $"Boundary_Alley_West{suffix}", new Vector3(al - 2.05f, 1.5f, -9.4f), new Vector3(0.1f, 3.0f, 11.2f));
+                AddLimitBox(limits.transform, $"Boundary_Alley_East{suffix}", new Vector3(al + 2.05f, 1.5f, -9.4f), new Vector3(0.1f, 3.0f, 11.2f));
+                AddLimitBox(limits.transform, $"Boundary_Alley_Back{suffix}", new Vector3(al, 1.5f, -15.05f), new Vector3(4.2f, 3.0f, 0.1f));
+            }
+
+            // Map ends: blocking at +/-250m spanning from sidewalk (z=-3.9) to north sidewalk (z=16.65)
+            AddLimitBox(limits.transform, "Boundary_MapEnd_West", new Vector3(-StreetHalfLength - 0.05f, 2.5f, 6.5f), new Vector3(0.1f, 5.0f, 22.0f));
+            AddLimitBox(limits.transform, "Boundary_MapEnd_East", new Vector3(StreetHalfLength + 0.05f, 2.5f, 6.5f), new Vector3(0.1f, 5.0f, 22.0f));
 
             // 5. Extended Buildings & Architecture
             var buildings = new GameObject("ExtendedBuildings");
             buildings.layer = TramChanhLayers.EnvironmentIndex;
             buildings.transform.SetParent(root.transform, false);
-            PopulateModularBuildings(buildings.transform, -40f, 40f, true);
+            PopulateModularBuildings(buildings.transform, -StreetHalfLength, StreetHalfLength, true);
 
             // 6. Street Props & Night Lighting
             var props = new GameObject("StreetProps");
@@ -527,15 +583,7 @@ namespace TramChanh.EditorTools
 
             if (isExtended)
             {
-                // West of service zone (x in [-40, -9])
-                slots.Add(new BuildingSlot { x = -37.5f, z = -5.0f, rotY = 180f, type = 1 });
-                slots.Add(new BuildingSlot { x = -33.0f, z = -5.0f, rotY = 180f, type = 0 });
-                slots.Add(new BuildingSlot { x = -28.5f, z = -5.0f, rotY = 180f, type = 2 });
-                slots.Add(new BuildingSlot { x = -24.0f, z = -5.0f, rotY = 180f, type = 1 });
-                slots.Add(new BuildingSlot { x = -19.5f, z = -5.0f, rotY = 180f, type = 0 });
-                slots.Add(new BuildingSlot { x = -15.0f, z = -5.0f, rotY = 180f, type = 2 });
-                slots.Add(new BuildingSlot { x = -10.5f, z = -5.0f, rotY = 180f, type = 1 });
-
+                // South side buildings along z = -5.0m, facing North (rotY = 180f)
                 // Behind service zone backdrop (preserving canonical positions)
                 slots.Add(new BuildingSlot { x = -7.0f, z = -5.0f, rotY = 180f, type = 2 });
                 slots.Add(new BuildingSlot { x = -2.6f, z = -5.0f, rotY = 180f, type = 0 });
@@ -543,25 +591,57 @@ namespace TramChanh.EditorTools
                 slots.Add(new BuildingSlot { x =  7.2f, z = -5.0f, rotY = 180f, type = 0 });
                 slots.Add(new BuildingSlot { x = 11.8f, z = -5.0f, rotY = 180f, type = 2 });
 
-                // Alley West wall facades (facing +X)
-                slots.Add(new BuildingSlot { x = 16.0f, z = -6.5f, rotY = 90f, type = 1 });
-                slots.Add(new BuildingSlot { x = 16.0f, z = -11.5f, rotY = 90f, type = 0 });
+                // West of service zone (x in [-StreetHalfLength, -9.5])
+                int bType = 1;
+                for (float x = -StreetHalfLength + 2.5f; x <= -9.5f; x += 4.5f)
+                {
+                    bool nearAlley = false;
+                    foreach (float al in AlleyPositions)
+                    {
+                        if (Mathf.Abs(x - al) < 3.2f) { nearAlley = true; break; }
+                    }
+                    if (nearAlley) continue;
+                    slots.Add(new BuildingSlot { x = x, z = -5.0f, rotY = 180f, type = bType % 3 });
+                    bType++;
+                }
 
-                // Alley East wall facades (facing -X)
-                slots.Add(new BuildingSlot { x = 21.0f, z = -6.5f, rotY = -90f, type = 2 });
-                slots.Add(new BuildingSlot { x = 21.0f, z = -11.5f, rotY = -90f, type = 1 });
+                // East of service zone (x in [14.0, StreetHalfLength])
+                for (float x = 14.5f; x <= StreetHalfLength - 2.5f; x += 4.5f)
+                {
+                    bool nearAlley = false;
+                    foreach (float al in AlleyPositions)
+                    {
+                        if (Mathf.Abs(x - al) < 3.2f) { nearAlley = true; break; }
+                    }
+                    if (nearAlley) continue;
+                    slots.Add(new BuildingSlot { x = x, z = -5.0f, rotY = 180f, type = bType % 3 });
+                    bType++;
+                }
 
-                // East of alley (x in [21, 40])
-                slots.Add(new BuildingSlot { x = 23.5f, z = -5.0f, rotY = 180f, type = 2 });
-                slots.Add(new BuildingSlot { x = 28.0f, z = -5.0f, rotY = 180f, type = 0 });
-                slots.Add(new BuildingSlot { x = 32.5f, z = -5.0f, rotY = 180f, type = 1 });
-                slots.Add(new BuildingSlot { x = 37.0f, z = -5.0f, rotY = 180f, type = 2 });
+                // Alley flanking facades for all 4 alleys
+                for (int i = 0; i < AlleyPositions.Length; i++)
+                {
+                    float al = AlleyPositions[i];
+                    slots.Add(new BuildingSlot { x = al - 2.5f, z = -6.5f, rotY = 90f, type = 1 });
+                    slots.Add(new BuildingSlot { x = al - 2.5f, z = -11.5f, rotY = 90f, type = 0 });
+                    slots.Add(new BuildingSlot { x = al + 2.5f, z = -6.5f, rotY = -90f, type = 2 });
+                    slots.Add(new BuildingSlot { x = al + 2.5f, z = -11.5f, rotY = -90f, type = 1 });
+                }
+
+                // Street end closures across the street (at x = -StreetHalfLength and +StreetHalfLength)
+                float[] endClosureZs = new float[] { -2.0f, 4.0f, 10.0f, 16.0f };
+                for (int i = 0; i < endClosureZs.Length; i++)
+                {
+                    slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = 90f, type = i % 3 });
+                    slots.Add(new BuildingSlot { x = StreetHalfLength - 1.5f, z = endClosureZs[i], rotY = -90f, type = (i + 1) % 3 });
+                }
 
                 // North edge shophouses across the road (lining z = 17.0m, facing South towards -Z)
-                float[] northXs = new float[] { -36f, -31f, -26f, -21f, -16f, -11f, -6f, -1f, 4f, 9f, 14f, 19f, 24f, 29f, 34f };
-                for (int i = 0; i < northXs.Length; i++)
+                int northIdx = 0;
+                for (float x = -StreetHalfLength + 4.0f; x <= StreetHalfLength - 4.0f; x += 5.0f)
                 {
-                    slots.Add(new BuildingSlot { x = northXs[i], z = 17.0f, rotY = 0f, type = i % 3 });
+                    slots.Add(new BuildingSlot { x = x, z = 17.0f, rotY = 0f, type = northIdx % 3 });
+                    northIdx++;
                 }
             }
             else
@@ -592,32 +672,56 @@ namespace TramChanh.EditorTools
             GameObject polePf = AssetDatabase.LoadAssetAtPath<GameObject>(UtilityPolePrefabPath);
             GameObject bikePf = AssetDatabase.LoadAssetAtPath<GameObject>(MotorbikePrefabPath);
 
-            // Street Trees along South sidewalk curb (z = 3.2m)
-            float[] southTreeXs = new[] { -36f, -26f, -16f, -7.5f, -4.5f, 4.5f, 7.5f, 14.0f, 25.0f, 35.0f };
+            // Street Trees along South sidewalk curb (z = 3.2m) every 12m
+            var southTrees = new List<float>();
+            for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += 12.0f)
+            {
+                if (Mathf.Abs(x) < 9.0f) continue;
+                bool nearAlley = false;
+                foreach (float al in AlleyPositions)
+                {
+                    if (Mathf.Abs(x - al) < 3.0f) { nearAlley = true; break; }
+                }
+                if (!nearAlley) southTrees.Add(x);
+            }
+            southTrees.AddRange(new float[] { -7.5f, -4.5f, 4.5f, 7.5f, 14.0f });
+
             if (treePf != null)
             {
-                for (int i = 0; i < southTreeXs.Length; i++)
+                for (int i = 0; i < southTrees.Count; i++)
                 {
                     var t = (GameObject)PrefabUtility.InstantiatePrefab(treePf, parent);
-                    t.transform.position = new Vector3(southTreeXs[i], 0.0f, 3.2f);
-                    t.transform.rotation = Quaternion.Euler(0f, i * 47f, 0f);
+                    t.transform.position = new Vector3(southTrees[i], 0.0f, 3.2f);
+                    t.transform.rotation = Quaternion.Euler(0f, (i * 47f) % 360f, 0f);
                 }
 
-                // Trees along North sidewalk curb (z = 13.0m)
-                float[] northTreeXs = new[] { -32f, -20f, -8f, 6f, 20f, 32f };
-                for (int i = 0; i < northTreeXs.Length; i++)
+                // Trees along North sidewalk curb (z = 13.0m) every 12m
+                int tIdx = 0;
+                for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += 12.0f)
                 {
                     var t = (GameObject)PrefabUtility.InstantiatePrefab(treePf, parent);
-                    t.transform.position = new Vector3(northTreeXs[i], 0.0f, 13.0f);
-                    t.transform.rotation = Quaternion.Euler(0f, i * 63f, 0f);
+                    t.transform.position = new Vector3(x, 0.0f, 13.0f);
+                    t.transform.rotation = Quaternion.Euler(0f, (tIdx * 63f) % 360f, 0f);
+                    tIdx++;
                 }
             }
 
-            // Street Lamps along South curb
-            float[] lampXs = new[] { -31f, -18f, -0.6f, 12.0f, 28.0f };
+            // Street Lamps along South curb every 24m
+            var lampList = new List<float>();
+            lampList.Add(-0.6f);
+            for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += 24.0f)
+            {
+                if (Mathf.Abs(x) < 7.0f) continue;
+                bool nearAlley = false;
+                foreach (float al in AlleyPositions)
+                {
+                    if (Mathf.Abs(x - al) < 3.0f) { nearAlley = true; break; }
+                }
+                if (!nearAlley) lampList.Add(x);
+            }
             if (lampPf != null)
             {
-                foreach (var x in lampXs)
+                foreach (var x in lampList)
                 {
                     var l = (GameObject)PrefabUtility.InstantiatePrefab(lampPf, parent);
                     l.transform.position = new Vector3(x, 0.0f, 3.4f);
@@ -625,11 +729,22 @@ namespace TramChanh.EditorTools
                 }
             }
 
-            // Utility Poles
-            float[] poleXs = new[] { -22f, 2.0f, 22.0f };
+            // Utility Poles every 36m along South curb (z = 3.4m)
+            var poleList = new List<float>();
+            poleList.Add(2.0f);
+            for (float x = -StreetHalfLength + 16f; x <= StreetHalfLength - 16f; x += 36.0f)
+            {
+                if (Mathf.Abs(x) < 10.0f) continue;
+                bool nearAlley = false;
+                foreach (float al in AlleyPositions)
+                {
+                    if (Mathf.Abs(x - al) < 3.0f) { nearAlley = true; break; }
+                }
+                if (!nearAlley) poleList.Add(x);
+            }
             if (polePf != null)
             {
-                foreach (var x in poleXs)
+                foreach (var x in poleList)
                 {
                     var p = (GameObject)PrefabUtility.InstantiatePrefab(polePf, parent);
                     p.transform.position = new Vector3(x, 0.0f, 3.4f);
@@ -994,28 +1109,30 @@ namespace TramChanh.EditorTools
             walkways.layer = TramChanhLayers.EnvironmentIndex;
             walkways.transform.SetParent(root, false);
 
-            // 1. SidewalkNorth (spacing 2.5m, x in [-40, 40], z = 14.5m)
+            // 1. SidewalkNorth (spacing 2.5m, x in [-StreetHalfLength, StreetHalfLength], z = 14.5m) -> 201 points
             var swNorth = new GameObject("SidewalkNorth");
             swNorth.layer = TramChanhLayers.EnvironmentIndex;
             swNorth.transform.SetParent(walkways.transform, false);
             int idx = 1;
-            for (float x = -40f; x <= 40.1f; x += 2.5f)
+            for (float x = -StreetHalfLength; x <= StreetHalfLength + 0.1f; x += 2.5f)
             {
-                var wp = new GameObject($"WP_SidewalkNorth_{idx:D2}");
+                string numStr = idx < 100 ? $"{idx:D2}" : $"{idx}";
+                var wp = new GameObject($"WP_SidewalkNorth_{numStr}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(swNorth.transform, false);
                 wp.transform.localPosition = new Vector3(x, 0.0f, 14.5f);
                 idx++;
             }
 
-            // 2. SidewalkSouth (spacing 2.0m, x in [-40, 40], z = 3.1m for x in [-10, 8], transition step <= 0.5m)
+            // 2. SidewalkSouth (spacing 2.0m, x in [-StreetHalfLength, StreetHalfLength], z = 3.1m for x in [-10, 8], transition step <= 0.5m) -> 251 points
             var swSouth = new GameObject("SidewalkSouth");
             swSouth.layer = TramChanhLayers.EnvironmentIndex;
             swSouth.transform.SetParent(walkways.transform, false);
             idx = 1;
-            for (float x = -40f; x <= 40.1f; x += 2.0f)
+            for (float x = -StreetHalfLength; x <= StreetHalfLength + 0.1f; x += 2.0f)
             {
-                var wp = new GameObject($"WP_SidewalkSouth_{idx:D2}");
+                string numStr = idx < 100 ? $"{idx:D2}" : $"{idx}";
+                var wp = new GameObject($"WP_SidewalkSouth_{numStr}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(swSouth.transform, false);
                 float z = 2.0f;
@@ -1050,28 +1167,30 @@ namespace TramChanh.EditorTools
                 wp.transform.localPosition = new Vector3(18.5f, 0.0f, alleyZs[i]);
             }
 
-            // 4. RoadEast (motorbikes heading +X, spacing 4m, z = 5.85m, y = -0.15m)
+            // 4. RoadEast (motorbikes heading +X, spacing 4m, z = 5.85m, y = -0.15m) -> 126 points
             var roadEast = new GameObject("RoadEast");
             roadEast.layer = TramChanhLayers.EnvironmentIndex;
             roadEast.transform.SetParent(walkways.transform, false);
             idx = 1;
-            for (float x = -40f; x <= 40.1f; x += 4.0f)
+            for (float x = -StreetHalfLength; x <= StreetHalfLength + 0.1f; x += 4.0f)
             {
-                var wp = new GameObject($"WP_RoadEast_{idx:D2}");
+                string numStr = idx < 100 ? $"{idx:D2}" : $"{idx}";
+                var wp = new GameObject($"WP_RoadEast_{numStr}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(roadEast.transform, false);
                 wp.transform.localPosition = new Vector3(x, -0.15f, 5.85f);
                 idx++;
             }
 
-            // 5. RoadWest (motorbikes heading -X, spacing 4m, z = 10.35m, y = -0.15m)
+            // 5. RoadWest (motorbikes heading -X, spacing 4m, z = 10.35m, y = -0.15m) -> 126 points
             var roadWest = new GameObject("RoadWest");
             roadWest.layer = TramChanhLayers.EnvironmentIndex;
             roadWest.transform.SetParent(walkways.transform, false);
             idx = 1;
-            for (float x = 40f; x >= -40.1f; x -= 4.0f)
+            for (float x = StreetHalfLength; x >= -StreetHalfLength - 0.1f; x -= 4.0f)
             {
-                var wp = new GameObject($"WP_RoadWest_{idx:D2}");
+                string numStr = idx < 100 ? $"{idx:D2}" : $"{idx}";
+                var wp = new GameObject($"WP_RoadWest_{numStr}");
                 wp.layer = TramChanhLayers.EnvironmentIndex;
                 wp.transform.SetParent(roadWest.transform, false);
                 wp.transform.localPosition = new Vector3(x, -0.15f, 10.35f);
@@ -1091,6 +1210,19 @@ namespace TramChanh.EditorTools
             entryEast.transform.SetParent(root, false);
             entryEast.transform.localPosition = new Vector3(12.0f, 0.0f, 2.0f);
             entryEast.transform.localRotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
+
+            // AmbientEntryWest & AmbientEntryEast (far ends at +/-250m for ambient pedestrians and bikes per STREET_500M_SPEC §4)
+            var ambientWest = new GameObject("AmbientEntryWest");
+            ambientWest.layer = TramChanhLayers.EnvironmentIndex;
+            ambientWest.transform.SetParent(root, false);
+            ambientWest.transform.localPosition = new Vector3(-StreetHalfLength, 0.0f, 2.0f);
+            ambientWest.transform.localRotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+
+            var ambientEast = new GameObject("AmbientEntryEast");
+            ambientEast.layer = TramChanhLayers.EnvironmentIndex;
+            ambientEast.transform.SetParent(root, false);
+            ambientEast.transform.localPosition = new Vector3(StreetHalfLength, 0.0f, 2.0f);
+            ambientEast.transform.localRotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
 
             // TableApproach_01..10 beside each table's open side, facing the table, on the ground (y = 0)
             var approachSpecs = new TableApproachSpec[]

@@ -90,54 +90,52 @@ class ObjMesh:
         print(f"Exported: {filepath} ({len(self.vertices)} verts, {len(self.faces)} faces)")
 
 def generate_all_extended_meshes(out_dir):
-    # 1. SM_Sidewalk_Extended_80m
-    # South sidewalk: x from -40.0 to +40.0, z from -10.0 to 3.6, y: -0.15 to 0.00
-    # Alley at x in [16.5, 20.5] cuts south.
+    street_half_len = 250.0 # 500m street: x in [-250.0, 250.0]
+    alleys = [-221.5, -101.5, 18.5, 138.5] # 4 side alleys every 120m
+
+    # 1. SM_Sidewalk_Extended_80m (Continuous south sidewalk for 500m)
     sw = ObjMesh("SM_Sidewalk_Extended_80m")
-    # West segment: x in [-40.0, 16.5]
-    sw.add_box(-40.0, 16.5, -0.15, 0.00, -10.0, 3.45, uv_scale=1.5, u_offset=0.0)
-    sw.add_box(-40.0, 16.5, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=0.0) # curb
-    # Alley entrance threshold: x in [16.5, 20.5], z in [-3.8, 3.45]
-    sw.add_box(16.5, 20.5, -0.15, 0.00, -3.8, 3.45, uv_scale=1.5, u_offset=(16.5+40)*1.5)
-    sw.add_box(16.5, 20.5, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=(16.5+40)*1.0) # curb
-    # East segment: x in [20.5, 40.0]
-    sw.add_box(20.5, 40.0, -0.15, 0.00, -10.0, 3.45, uv_scale=1.5, u_offset=(20.5+40)*1.5)
-    sw.add_box(20.5, 40.0, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=(20.5+40)*1.0) # curb
+    x_prev = -street_half_len
+    for al in alleys:
+        x_start_al = al - 2.0
+        x_end_al = al + 2.0
+        # Main sidewalk block from x_prev to x_start_al
+        sw.add_box(x_prev, x_start_al, -0.15, 0.00, -10.0, 3.45, uv_scale=1.5, u_offset=(x_prev + street_half_len) * 1.5)
+        sw.add_box(x_prev, x_start_al, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=(x_prev + street_half_len) * 1.0) # curb
+        # Alley threshold
+        sw.add_box(x_start_al, x_end_al, -0.15, 0.00, -3.8, 3.45, uv_scale=1.5, u_offset=(x_start_al + street_half_len) * 1.5)
+        sw.add_box(x_start_al, x_end_al, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=(x_start_al + street_half_len) * 1.0) # curb
+        x_prev = x_end_al
+    # Final segment to east end
+    sw.add_box(x_prev, street_half_len, -0.15, 0.00, -10.0, 3.45, uv_scale=1.5, u_offset=(x_prev + street_half_len) * 1.5)
+    sw.add_box(x_prev, street_half_len, -0.15, 0.00, 3.45, 3.60, uv_scale=1.0, u_offset=(x_prev + street_half_len) * 1.0) # curb
     sw.write_obj(os.path.join(out_dir, "SM_Sidewalk_Extended_80m.obj"))
 
-    # 2. SM_North_Sidewalk_80m
-    # North sidewalk across the road: x in [-40.0, 40.0], z in [12.6, 22.0], top at y: 0.00
+    # 2. SM_North_Sidewalk_80m (North sidewalk across the road for 500m)
     nsw = ObjMesh("SM_North_Sidewalk_80m")
-    nsw.add_box(-40.0, 40.0, -0.15, 0.00, 12.6, 12.75, uv_scale=1.0) # south-facing curb
-    nsw.add_box(-40.0, 40.0, -0.15, 0.00, 12.75, 22.0, uv_scale=1.5) # terrazzo pavement
+    nsw.add_box(-street_half_len, street_half_len, -0.15, 0.00, 12.6, 12.75, uv_scale=1.0) # south-facing curb
+    nsw.add_box(-street_half_len, street_half_len, -0.15, 0.00, 12.75, 22.0, uv_scale=1.5) # terrazzo pavement
     nsw.write_obj(os.path.join(out_dir, "SM_North_Sidewalk_80m.obj"))
 
-    # 3. SM_Asphalt_Road_80m
-    # 2-lane roadway: x in [-40.0, 40.0], z in [3.6, 12.6], road surface at y: -0.15m
+    # 3. SM_Asphalt_Road_80m (2-lane roadway for 500m)
     rd = ObjMesh("SM_Asphalt_Road_80m")
-    # South gutter strip (z: 3.6 to 4.0, y: -0.165m)
-    rd.add_box(-40.0, 40.0, -0.22, -0.165, 3.6, 4.0, uv_scale=1.0)
-    # Asphalt surface (z: 4.0 to 12.2, y: -0.150m)
-    rd.add_box(-40.0, 40.0, -0.22, -0.150, 4.0, 12.2, uv_scale=0.8)
-    # North gutter strip (z: 12.2 to 12.6, y: -0.165m)
-    rd.add_box(-40.0, 40.0, -0.22, -0.165, 12.2, 12.6, uv_scale=1.0)
+    rd.add_box(-street_half_len, street_half_len, -0.22, -0.165, 3.6, 4.0, uv_scale=1.0)
+    rd.add_box(-street_half_len, street_half_len, -0.22, -0.150, 4.0, 12.2, uv_scale=0.8)
+    rd.add_box(-street_half_len, street_half_len, -0.22, -0.165, 12.2, 12.6, uv_scale=1.0)
     rd.write_obj(os.path.join(out_dir, "SM_Asphalt_Road_80m.obj"))
 
-    # 4. SM_Alley_Extended
-    # Side alley pavement: x in [16.5, 20.5], z in [-16.0, -3.8], top at y: 0.00m
-    al = ObjMesh("SM_Alley_Extended")
-    al.add_box(16.5, 20.5, -0.15, 0.00, -16.0, -3.8, uv_scale=1.5)
-    al.write_obj(os.path.join(out_dir, "SM_Alley_Extended.obj"))
+    # 4. SM_Alley_Extended (pavements for all 4 alleys)
+    al_mesh = ObjMesh("SM_Alley_Extended")
+    for al in alleys:
+        al_mesh.add_box(al - 2.0, al + 2.0, -0.15, 0.00, -16.0, -3.8, uv_scale=1.5)
+    al_mesh.write_obj(os.path.join(out_dir, "SM_Alley_Extended.obj"))
 
-    # 5. SM_Alley_Walls
-    # Alley flanking walls:
-    # West wall: x in [16.4, 16.5], z in [-16.0, -3.8], height y in [-0.35, 7.5]
-    # East wall: x in [20.5, 20.6], z in [-16.0, -3.8], height y in [-0.35, 7.5]
-    # Back wall: z in [-16.1, -16.0], x in [16.4, 20.6], height y in [-0.35, 7.5]
+    # 5. SM_Alley_Walls (flanking walls for all 4 alleys)
     aw = ObjMesh("SM_Alley_Walls")
-    aw.add_box(16.4, 16.5, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
-    aw.add_box(20.5, 20.6, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
-    aw.add_box(16.4, 20.6, -0.35, 7.5, -16.1, -16.0, uv_scale=0.5)
+    for al in alleys:
+        aw.add_box(al - 2.05, al - 2.0, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
+        aw.add_box(al + 2.0, al + 2.05, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
+        aw.add_box(al - 2.05, al + 2.05, -0.35, 7.5, -16.1, -16.0, uv_scale=0.5)
     aw.write_obj(os.path.join(out_dir, "SM_Alley_Walls.obj"))
 
 if __name__ == "__main__":

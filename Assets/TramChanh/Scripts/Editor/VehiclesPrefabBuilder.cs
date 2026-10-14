@@ -150,8 +150,10 @@ namespace TramChanh.Editor
                 }
             }
 
+            int envLayer = LayerMask.NameToLayer("Environment");
+            if (envLayer < 0) envLayer = TramChanh.Core.GroundTruth.TramChanhLayers.EnvironmentIndex;
             var root = new GameObject(System.IO.Path.GetFileNameWithoutExtension(prefabPath));
-            root.layer = LayerMask.NameToLayer("Environment");
+            root.layer = envLayer;
 
             var visual = new GameObject("Visual");
             visual.layer = root.layer;
