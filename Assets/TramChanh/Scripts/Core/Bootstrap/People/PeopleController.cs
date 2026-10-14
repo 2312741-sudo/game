@@ -20,7 +20,7 @@ namespace TramChanh.App.People
         [SerializeField, Tbd("DEC-010")] private float _bikeIntervalSeconds = 2.5f;
         [SerializeField, Tbd("DEC-010")] private float _bikeSpeed = 6f;
         [Tooltip("Ambient pedestrians and bikes only use the part of a lane within this many metres of the environment origin (the stall). 0 = the whole lane. Use about 60 on a 500 m street.")]
-        [SerializeField, Tbd("DEC-010", "Keeps crowd density near the stall on a long street.")] private float _ambientWindowMeters = 0f;
+        [SerializeField, Tbd("DEC-010", "Keeps crowd density near the stall on a long street.")] private float _ambientWindowMeters = 60f;
 
         // Inspector values are clamped so a bad value can never stop the scene from composing.
         public float WalkSpeed => Positive(_walkSpeed, MinSpeed);
