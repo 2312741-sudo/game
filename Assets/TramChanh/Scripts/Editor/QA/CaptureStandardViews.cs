@@ -127,5 +127,143 @@ namespace TramChanh.EditorTools.QA
             }
             return true;
         }
+
+        public static void InspectFbxMaterials()
+        {
+            string[] fbxFiles = new[]
+            {
+                "Assets/TramChanh/Art/Models/People/SM_Person_MaleCasual.fbx",
+                "Assets/TramChanh/Art/Models/People/SM_Person_FemaleTankTop.fbx",
+                "Assets/TramChanh/Art/Models/People/SM_Person_MaleHoodie.fbx",
+                "Assets/TramChanh/Art/Models/People/SM_Person_FemaleCasual.fbx",
+                "Assets/TramChanh/Art/Models/People/SM_Person_MaleWorker.fbx",
+                "Assets/TramChanh/Art/Models/People/SM_Person_FemaleDress.fbx"
+            };
+
+            foreach (string path in fbxFiles)
+            {
+                Debug.Log("==========================================");
+                Debug.Log($"[InspectFBX] Path: {path}");
+                var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (var obj in allAssets)
+                {
+                    if (obj is Material mat)
+                    {
+                        Debug.Log($"  [Material] {mat.name} (Shader: {mat.shader?.name})");
+                    }
+                    else if (obj is Mesh mesh)
+                    {
+                        Debug.Log($"  [Mesh] {mesh.name}: subMeshCount={mesh.subMeshCount}, verts={mesh.vertexCount}, triangles={mesh.triangles.Length / 3}");
+                    }
+                }
+            }
+        }
+
+        public static void SetupPeopleMaterials()
+        {
+            string matFolder = "Assets/TramChanh/Art/Materials/People";
+            if (!Directory.Exists(matFolder)) Directory.CreateDirectory(matFolder);
+
+            Shader litShader = Shader.Find("Universal Render Pipeline/Lit");
+            if (litShader == null) litShader = Shader.Find("Standard");
+
+            Material CreateMat(string name, Color color, float smoothness)
+            {
+                string path = $"{matFolder}/{name}.mat";
+                Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (mat == null)
+                {
+                    mat = new Material(litShader);
+                    AssetDatabase.CreateAsset(mat, path);
+                }
+                mat.shader = litShader;
+                mat.color = color;
+                mat.SetColor("_BaseColor", color);
+                mat.SetFloat("_Smoothness", smoothness);
+                mat.SetFloat("_Metallic", 0f);
+                EditorUtility.SetDirty(mat);
+                return mat;
+            }
+
+            var skinLight = CreateMat("MAT_Person_Skin_Light", new Color(0.93f, 0.84f, 0.76f), 0.15f);
+            var skinGolden = CreateMat("MAT_Person_Skin_Golden", new Color(0.86f, 0.72f, 0.57f), 0.15f);
+            var skinFair = CreateMat("MAT_Person_Skin_Fair", new Color(0.96f, 0.88f, 0.82f), 0.15f);
+            var skinTan = CreateMat("MAT_Person_Skin_Tan", new Color(0.80f, 0.62f, 0.47f), 0.15f);
+
+            var hairDarkBrown = CreateMat("MAT_Person_Hair_DarkBrown", new Color(0.16f, 0.11f, 0.08f), 0.2f);
+            var hairBlack = CreateMat("MAT_Person_Hair_Black", new Color(0.08f, 0.08f, 0.09f), 0.2f);
+            var hairChestnut = CreateMat("MAT_Person_Hair_Chestnut", new Color(0.26f, 0.14f, 0.10f), 0.2f);
+
+            var shirtCoral = CreateMat("MAT_Person_Shirt_Coral", new Color(0.86f, 0.35f, 0.20f), 0.1f);
+            var topYellow = CreateMat("MAT_Person_Top_Yellow", new Color(0.91f, 0.70f, 0.18f), 0.1f);
+            var shirtWhite = CreateMat("MAT_Person_Shirt_White", new Color(0.94f, 0.93f, 0.91f), 0.1f);
+
+            var pantsNavy = CreateMat("MAT_Person_Pants_Navy", new Color(0.13f, 0.21f, 0.33f), 0.1f);
+            var pantsOlive = CreateMat("MAT_Person_Pants_Olive", new Color(0.22f, 0.34f, 0.25f), 0.1f);
+
+            var shoesWhite = CreateMat("MAT_Person_Shoes_White", new Color(0.90f, 0.90f, 0.90f), 0.25f);
+            var shoesTan = CreateMat("MAT_Person_Shoes_Tan", new Color(0.58f, 0.42f, 0.29f), 0.2f);
+            var shoesBrown = CreateMat("MAT_Person_Shoes_Brown", new Color(0.30f, 0.20f, 0.14f), 0.2f);
+            var shoesBlack = CreateMat("MAT_Person_Shoes_Black", new Color(0.09f, 0.09f, 0.10f), 0.25f);
+            var shoesSoles = CreateMat("MAT_Person_Shoes_Soles", new Color(0.50f, 0.50f, 0.50f), 0.15f);
+            var eyesDark = CreateMat("MAT_Person_Eyes_Dark", new Color(0.06f, 0.05f, 0.05f), 0.5f);
+
+            var clothingA = AssetDatabase.LoadAssetAtPath<Material>($"{matFolder}/MAT_Person_Clothing_A.mat");
+            var clothingB = AssetDatabase.LoadAssetAtPath<Material>($"{matFolder}/MAT_Person_Clothing_B.mat");
+
+            AssetDatabase.SaveAssets();
+
+            void ApplyMaterials(string prefabPath, Material[] materials)
+            {
+                var contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                try
+                {
+                    var smrs = contents.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                    foreach (var smr in smrs)
+                    {
+                        smr.sharedMaterials = materials;
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                    Debug.Log($"[PeopleArt] Successfully applied {materials.Length} materials to {prefabPath}");
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+            }
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_01.prefab", new Material[]
+            {
+                shirtCoral, skinLight, pantsNavy, shoesWhite, shoesSoles, hairDarkBrown
+            });
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_02.prefab", new Material[]
+            {
+                topYellow, skinGolden, pantsOlive, shoesTan, hairBlack, hairBlack, eyesDark
+            });
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_03.prefab", new Material[]
+            {
+                clothingA
+            });
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_04.prefab", new Material[]
+            {
+                shirtWhite, skinFair, clothingB, shoesBrown, shoesSoles, hairChestnut, hairChestnut, eyesDark
+            });
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_05.prefab", new Material[]
+            {
+                clothingB
+            });
+
+            ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_06.prefab", new Material[]
+            {
+                clothingB, skinTan, shoesBlack, hairBlack, eyesDark
+            });
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
     }
 }
