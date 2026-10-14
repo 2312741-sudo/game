@@ -182,7 +182,9 @@ namespace TramChanh.Editor
             }
 
             var root = new GameObject(System.IO.Path.GetFileNameWithoutExtension(prefabPath));
-            root.layer = LayerMask.NameToLayer("Environment");
+            int envLayer = LayerMask.NameToLayer("Environment");
+            if (envLayer < 0) envLayer = TramChanh.Core.GroundTruth.TramChanhLayers.EnvironmentIndex;
+            root.layer = envLayer;
 
             var visual = Object.Instantiate(modelAsset, root.transform);
             visual.name = "Visual";
@@ -196,7 +198,7 @@ namespace TramChanh.Editor
             foreach (var r in renderers)
             {
                 r.gameObject.layer = root.layer;
-                if (r is MeshRenderer mr && (mr.sharedMaterials == null || mr.sharedMaterials.Length == 0 || mr.sharedMaterial == null))
+                if (r is MeshRenderer mr && fallbackMats != null && fallbackMats.Length > 0)
                 {
                     mr.sharedMaterials = fallbackMats;
                 }
