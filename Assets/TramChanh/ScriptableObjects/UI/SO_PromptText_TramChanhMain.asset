@@ -634,3 +634,22 @@ MonoBehaviour:
   - _key: customers.seat.missing_point
     _en: 'This table has no order point configured'
     _vi: 'Bàn này chưa được cấu hình điểm gọi món'
+  - _key: progress.day
+    _en: Day
+    _vi: 'Ngày'
+  - _key: progress.total_served
+    _en: Total Served
+    _vi: 'Đã phục vụ'
+  - _key: progress.total_failed
+    _en: Total Failed
+    _vi: 'Khách bỏ đi'
+  - _key: progress.best_served
+    _en: Best Day
+    _vi: 'Ngày tốt nhất'
+  - _key: settings.master_volume
+    _en: Master Volume
+    _vi: 'Âm lượng'
+  - _key: settings.look_scale
+    _en: Look Sensitivity
+    _vi: 'Tốc độ xoay chuột'
+

@@ -27,34 +27,84 @@ namespace TramChanh.UI.Menu
             _panel.style.right = 0f;
             _panel.style.top = 0f;
             _panel.style.bottom = 0f;
-            _panel.style.backgroundColor = new Color(0f, 0f, 0f, 0.6f);
+            _panel.style.backgroundColor = new Color(0.03f, 0.06f, 0.05f, 0.75f);
             _panel.style.alignItems = Align.Center;
             _panel.style.justifyContent = Justify.Center;
             _panel.style.display = DisplayStyle.None;
 
             var box = new VisualElement();
-            box.style.width = 420f;
-            box.style.paddingTop = 20f;
-            box.style.paddingBottom = 20f;
-            box.style.paddingLeft = 24f;
-            box.style.paddingRight = 24f;
-            box.style.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+            box.style.width = 440f;
+            box.style.paddingTop = 24f;
+            box.style.paddingBottom = 24f;
+            box.style.paddingLeft = 28f;
+            box.style.paddingRight = 28f;
+            box.style.backgroundColor = new Color(0.08f, 0.17f, 0.12f, 0.96f);
+            box.style.borderTopWidth = 2.5f;
+            box.style.borderBottomWidth = 2.5f;
+            box.style.borderLeftWidth = 2.5f;
+            box.style.borderRightWidth = 2.5f;
+            box.style.borderTopColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderBottomColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderLeftColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderRightColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderTopLeftRadius = 16f;
+            box.style.borderTopRightRadius = 16f;
+            box.style.borderBottomLeftRadius = 16f;
+            box.style.borderBottomRightRadius = 16f;
             _panel.Add(box);
 
-            var title = new Label(titleText);
-            title.style.fontSize = 28f;
-            title.style.color = Color.white;
-            title.style.unityTextAlign = TextAnchor.MiddleCenter;
-            title.style.marginBottom = 14f;
-            box.Add(title);
+            // Title or Logo Branding
+            if (string.Equals(titleText, "TRẠM CHANH", StringComparison.OrdinalIgnoreCase))
+            {
+                var logoHeader = new VisualElement();
+                logoHeader.style.alignItems = Align.Center;
+                logoHeader.style.marginBottom = 16f;
+
+                var logoTitle = new Label("TRẠM CHANH");
+                logoTitle.style.fontSize = 36f;
+                logoTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+                logoTitle.style.color = new Color(0.99f, 0.78f, 0.15f, 1f); // Lime Gold
+                logoTitle.style.unityTextAlign = TextAnchor.MiddleCenter;
+                logoHeader.Add(logoTitle);
+
+                var subtitleBadge = new Label("TIỆM TRÀ & BÁNH NƯỚNG PHỐ VIỆT");
+                subtitleBadge.style.fontSize = 11f;
+                subtitleBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
+                subtitleBadge.style.color = Color.white;
+                subtitleBadge.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f); // Brand Orange
+                subtitleBadge.style.paddingTop = 3f;
+                subtitleBadge.style.paddingBottom = 3f;
+                subtitleBadge.style.paddingLeft = 10f;
+                subtitleBadge.style.paddingRight = 10f;
+                subtitleBadge.style.borderTopLeftRadius = 6f;
+                subtitleBadge.style.borderTopRightRadius = 6f;
+                subtitleBadge.style.borderBottomLeftRadius = 6f;
+                subtitleBadge.style.borderBottomRightRadius = 6f;
+                subtitleBadge.style.marginTop = 4f;
+                logoHeader.Add(subtitleBadge);
+
+                box.Add(logoHeader);
+            }
+            else
+            {
+                var title = new Label(titleText);
+                title.style.fontSize = 28f;
+                title.style.unityFontStyleAndWeight = FontStyle.Bold;
+                title.style.color = new Color(0.95f, 0.48f, 0.10f, 1f); // Brand Orange
+                title.style.unityTextAlign = TextAnchor.MiddleCenter;
+                title.style.marginBottom = 14f;
+                box.Add(title);
+            }
 
             _info = new Label(string.Empty);
-            _info.style.color = new Color(1f, 1f, 1f, 0.75f);
+            _info.style.color = new Color(0.90f, 0.95f, 0.90f, 0.85f);
             _info.style.fontSize = 14f;
             _info.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _info.style.marginBottom = 8f;
             _info.style.display = DisplayStyle.None;
             box.Add(_info);
-            box.Add(MakeButton(primaryText, onResume));
+
+            box.Add(MakeButton(primaryText, onResume, true));
 
             _volume = MakeSlider(box, "Âm lượng", GameSettings.MinVolume, GameSettings.MaxVolume, settings.MasterVolume,
                 value => { _settings.MasterVolume = value; onSettingsChanged?.Invoke(); });
@@ -66,15 +116,15 @@ namespace TramChanh.UI.Menu
                 _settings.ResetToDefaults();
                 SyncSliders();
                 onSettingsChanged?.Invoke();
-            }));
-            box.Add(MakeButton("Ghi công (Credits)", onCredits));
-            box.Add(MakeButton("Thoát game", onQuit));
+            }, false));
+            box.Add(MakeButton("Ghi công (Credits)", onCredits, false));
+            box.Add(MakeButton("Thoát game", onQuit, false));
 
             var hint = new Label(hintText);
             hint.style.fontSize = 13f;
-            hint.style.color = new Color(1f, 1f, 1f, 0.6f);
+            hint.style.color = new Color(0.80f, 0.90f, 0.84f, 0.70f);
             hint.style.unityTextAlign = TextAnchor.MiddleCenter;
-            hint.style.marginTop = 10f;
+            hint.style.marginTop = 12f;
             box.Add(hint);
 
             root.Add(_panel);
@@ -102,23 +152,55 @@ namespace TramChanh.UI.Menu
             _look.SetValueWithoutNotify(_settings.LookScale);
         }
 
-        private static Button MakeButton(string text, Action onClick)
+        private static Button MakeButton(string text, Action onClick, bool isPrimary = false)
         {
             var button = new Button(() => onClick?.Invoke()) { text = text };
-            button.style.fontSize = 18f;
-            button.style.height = 38f;
+            button.style.fontSize = isPrimary ? 19f : 16f;
+            button.style.unityFontStyleAndWeight = isPrimary ? FontStyle.Bold : FontStyle.Normal;
+            button.style.height = isPrimary ? 44f : 36f;
             button.style.marginTop = 8f;
+            button.style.borderTopLeftRadius = 8f;
+            button.style.borderTopRightRadius = 8f;
+            button.style.borderBottomLeftRadius = 8f;
+            button.style.borderBottomRightRadius = 8f;
+            button.style.borderTopWidth = 1.5f;
+            button.style.borderBottomWidth = 1.5f;
+            button.style.borderLeftWidth = 1.5f;
+            button.style.borderRightWidth = 1.5f;
+
+            if (isPrimary)
+            {
+                button.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f); // Brand Orange
+                button.style.color = Color.white;
+                button.style.borderTopColor = new Color(1.0f, 0.68f, 0.28f, 1f);
+                button.style.borderBottomColor = new Color(0.80f, 0.38f, 0.05f, 1f);
+                button.style.borderLeftColor = new Color(1.0f, 0.68f, 0.28f, 1f);
+                button.style.borderRightColor = new Color(0.80f, 0.38f, 0.05f, 1f);
+            }
+            else
+            {
+                button.style.backgroundColor = new Color(0.12f, 0.24f, 0.18f, 0.95f); // Deep Tea Green
+                button.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
+                button.style.borderTopColor = new Color(0.24f, 0.44f, 0.34f, 0.8f);
+                button.style.borderBottomColor = new Color(0.18f, 0.34f, 0.26f, 0.8f);
+                button.style.borderLeftColor = new Color(0.24f, 0.44f, 0.34f, 0.8f);
+                button.style.borderRightColor = new Color(0.18f, 0.34f, 0.26f, 0.8f);
+            }
+
             return button;
         }
 
         private static Slider MakeSlider(VisualElement parent, string caption, float min, float max, float value, Action<float> onChanged)
         {
             var label = new Label(caption);
-            label.style.color = Color.white;
-            label.style.fontSize = 16f;
-            label.style.marginTop = 12f;
+            label.style.color = new Color(0.99f, 0.85f, 0.45f, 1f); // Warm Lime Accent
+            label.style.fontSize = 15f;
+            label.style.marginTop = 10f;
+            label.style.marginBottom = 2f;
             parent.Add(label);
+
             var slider = new Slider(min, max) { value = value };
+            slider.style.height = 24f;
             slider.RegisterValueChangedCallback(e => onChanged(e.newValue));
             parent.Add(slider);
             return slider;

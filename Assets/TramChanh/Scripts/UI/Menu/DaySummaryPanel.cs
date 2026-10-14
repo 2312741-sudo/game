@@ -26,32 +26,72 @@ namespace TramChanh.UI.Menu
             _panel.style.display = DisplayStyle.None;
 
             var box = new VisualElement();
-            box.style.width = 420f;
-            box.style.paddingTop = 20f;
-            box.style.paddingBottom = 20f;
-            box.style.paddingLeft = 24f;
-            box.style.paddingRight = 24f;
-            box.style.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+            box.style.width = 440f;
+            box.style.paddingTop = 24f;
+            box.style.paddingBottom = 24f;
+            box.style.paddingLeft = 28f;
+            box.style.paddingRight = 28f;
+            box.style.backgroundColor = new Color(0.08f, 0.18f, 0.13f, 0.95f); // Deep Tea Green
+            box.style.borderTopWidth = 2.5f;
+            box.style.borderBottomWidth = 2.5f;
+            box.style.borderLeftWidth = 2.5f;
+            box.style.borderRightWidth = 2.5f;
+            box.style.borderTopColor = new Color(0.95f, 0.48f, 0.10f, 0.90f); // Brand Orange
+            box.style.borderBottomColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderLeftColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderRightColor = new Color(0.95f, 0.48f, 0.10f, 0.90f);
+            box.style.borderTopLeftRadius = 16f;
+            box.style.borderTopRightRadius = 16f;
+            box.style.borderBottomLeftRadius = 16f;
+            box.style.borderBottomRightRadius = 16f;
             _panel.Add(box);
 
             _title = new Label();
-            _title.style.fontSize = 26f;
-            _title.style.color = Color.white;
+            _title.style.fontSize = 28f;
+            _title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _title.style.color = new Color(0.99f, 0.78f, 0.15f, 1f); // Lime Gold
             _title.style.unityTextAlign = TextAnchor.MiddleCenter;
             box.Add(_title);
 
+            var statBox = new VisualElement();
+            statBox.style.backgroundColor = new Color(0.05f, 0.12f, 0.08f, 0.75f);
+            statBox.style.marginTop = 14f;
+            statBox.style.marginBottom = 18f;
+            statBox.style.paddingTop = 14f;
+            statBox.style.paddingBottom = 14f;
+            statBox.style.paddingLeft = 16f;
+            statBox.style.paddingRight = 16f;
+            statBox.style.borderTopLeftRadius = 10f;
+            statBox.style.borderTopRightRadius = 10f;
+            statBox.style.borderBottomLeftRadius = 10f;
+            statBox.style.borderBottomRightRadius = 10f;
+            box.Add(statBox);
+
             _body = new Label();
-            _body.style.fontSize = 18f;
-            _body.style.color = Color.white;
+            _body.style.fontSize = 17f;
+            _body.style.color = new Color(0.95f, 0.96f, 0.94f, 1f); // Clean cream
             _body.style.whiteSpace = WhiteSpace.Normal;
             _body.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _body.style.marginTop = 14f;
-            _body.style.marginBottom = 14f;
-            box.Add(_body);
+            statBox.Add(_body);
 
             var button = new Button(() => onContinue?.Invoke()) { text = "Ngày mới" };
-            button.style.fontSize = 18f;
-            button.style.height = 38f;
+            button.style.fontSize = 19f;
+            button.style.unityFontStyleAndWeight = FontStyle.Bold;
+            button.style.height = 44f;
+            button.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f); // Brand Orange
+            button.style.color = Color.white;
+            button.style.borderTopLeftRadius = 8f;
+            button.style.borderTopRightRadius = 8f;
+            button.style.borderBottomLeftRadius = 8f;
+            button.style.borderBottomRightRadius = 8f;
+            button.style.borderTopWidth = 1.5f;
+            button.style.borderBottomWidth = 1.5f;
+            button.style.borderLeftWidth = 1.5f;
+            button.style.borderRightWidth = 1.5f;
+            button.style.borderTopColor = new Color(1.0f, 0.68f, 0.28f, 1f);
+            button.style.borderBottomColor = new Color(0.80f, 0.38f, 0.05f, 1f);
+            button.style.borderLeftColor = new Color(1.0f, 0.68f, 0.28f, 1f);
+            button.style.borderRightColor = new Color(0.80f, 0.38f, 0.05f, 1f);
             box.Add(button);
 
             root.Add(_panel);
