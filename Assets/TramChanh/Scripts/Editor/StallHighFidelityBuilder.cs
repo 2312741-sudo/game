@@ -323,7 +323,10 @@ namespace TramChanh.EditorTools
 
             // 2. Counter (top at y = 1.00m)
             var counterGroup = CreateGroup("Counter", root.transform);
-            CreateMeshChild("SM_Stall_Counter", counterGroup, counterMesh, woodMat);
+            GameObject counterSlab = CreateMeshChild("SM_Stall_Counter", counterGroup, counterMesh, woodMat);
+            // Unity mirrors OBJ files on X on import. The counter is authored with the cake wing at -x and the topping hole at +x
+            // (seen from the seller), so mirror it back here to keep that layout in the scene.
+            counterSlab.transform.localScale = new Vector3(-1f, 1f, 1f);
 
             // 3. Frame (dark supporting beams + diagonal supports)
             var frameGroup = CreateGroup("Frame", root.transform);
