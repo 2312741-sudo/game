@@ -39,6 +39,29 @@ namespace TramChanh.EditorTools.Placeholders
             }
         }
 
+        [MenuItem("Tram Chanh/Placeholders/Rebuild Gameplay Blockout Scene and Prefabs")]
+        public static void ForceRebuild()
+        {
+            foreach (string name in EquipmentNames)
+            {
+                string path = PrefabPath(name);
+                GameObject equipment = CreateEquipment(name);
+                PrefabUtility.SaveAsPrefabAsset(equipment, path);
+                Object.DestroyImmediate(equipment);
+            }
+
+            if (File.Exists(ScenePath))
+            {
+                File.Delete(ScenePath);
+            }
+            CreateAndSave();
+        }
+
+        public static void ForceRebuildBatch()
+        {
+            ForceRebuild();
+        }
+
         public static string PrefabPath(string name)
         {
             string folder = name == "PF_ReadyCounterPoint" ? "Assets/TramChanh/Prefabs/Stall"
@@ -83,7 +106,8 @@ namespace TramChanh.EditorTools.Placeholders
             groundCollider.size = new Vector3(10f, 0.1f, 10f);
             ground.layer = TramChanhLayers.EnvironmentIndex;
 
-            GameObject stall = (GameObject)PrefabUtility.InstantiatePrefab(stallPrefab);
+            GameObject stall = StallPlaceholderBuilder.BuildStallHierarchy(
+                StallPlaceholderBuilder.LoadOrCreateMaterialAssets(), null, null);
             StallAnchorSet anchors = stall.GetComponent<StallAnchorSet>();
             PlaceStation(anchors, StallAnchorId.TeaRack, "TeaRackAnchor", new Vector3(-0.72f, 1f, -0.13f), "PF_RedTeaRack");
             PlaceStation(anchors, StallAnchorId.Topping, "ToppingStationAnchor", new Vector3(-0.41f, 0.91f, -0.13f), "PF_ToppingStation");

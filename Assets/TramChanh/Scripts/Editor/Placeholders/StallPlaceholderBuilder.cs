@@ -300,7 +300,7 @@ namespace TramChanh.EditorTools.Placeholders
             return poses;
         }
 
-        private static PlaceholderMaterials LoadOrCreateMaterialAssets()
+        public static PlaceholderMaterials LoadOrCreateMaterialAssets()
         {
             PlaceholderMaterials transient = PlaceholderMaterials.CreateTransient();
             return new PlaceholderMaterials
