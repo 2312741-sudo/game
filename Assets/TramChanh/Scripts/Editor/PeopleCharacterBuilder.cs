@@ -41,6 +41,74 @@ namespace TramChanh.EditorTools
             Debug.Log("[PeopleQA] ========== People Character Kit Verification Complete ==========");
         }
 
+        public static void InspectMeshStructure()
+        {
+            for (int i = 0; i < PersonPrefabPaths.Length; i++)
+            {
+                var pf = AssetDatabase.LoadAssetAtPath<GameObject>(PersonPrefabPaths[i]);
+                var smr = pf.GetComponentInChildren<SkinnedMeshRenderer>();
+                var mesh = smr.sharedMesh;
+                var verts = mesh.vertices;
+                var bones = smr.bones;
+                var weights = mesh.boneWeights;
+                Debug.Log($"[MESH_INSPECT] {pf.name}: Mesh={mesh.name}, subMeshCount={mesh.subMeshCount}, verts={verts.Length}, tris={mesh.triangles.Length / 3}");
+
+                if (i == 2 || i == 4) // Person 03 or 05
+                {
+                    int headTris = 0, torsoTris = 0, legTris = 0, footTris = 0, handTris = 0, faceTris = 0;
+                    var tris = mesh.triangles;
+                    for (int t = 0; t < tris.Length; t += 3)
+                    {
+                        int v0 = tris[t], v1 = tris[t + 1], v2 = tris[t + 2];
+                        float avgY = (verts[v0].y + verts[v1].y + verts[v2].y) / 3f;
+                        float avgZ = (verts[v0].z + verts[v1].z + verts[v2].z) / 3f;
+                        float avgX = (verts[v0].x + verts[v1].x + verts[v2].x) / 3f;
+                        int b0 = weights[v0].boneIndex0;
+                        string bName = (b0 >= 0 && b0 < bones.Length && bones[b0] != null) ? bones[b0].name : "unknown";
+
+                        if (bName.Contains("Foot") || bName.Contains("Toes") || avgY < 0.12f)
+                        {
+                            footTris++;
+                        }
+                        else if (bName.Contains("Leg") || (avgY < 0.85f && !bName.Contains("Hand") && !bName.Contains("Arm")))
+                        {
+                            legTris++;
+                        }
+                        else if (bName.Contains("Hand") || (bName.Contains("Arm") && avgY < 0.95f && Mathf.Abs(avgX) > 0.35f))
+                        {
+                            handTris++;
+                        }
+                        else if (bName.Contains("Head") || bName.Contains("Neck") || avgY >= 1.45f)
+                        {
+                            if (avgZ > 0.04f && avgY < 1.62f) faceTris++;
+                            else headTris++;
+                        }
+                        else
+                        {
+                            torsoTris++;
+                        }
+                    }
+                    Debug.Log($"  Classification {pf.name}: Foot={footTris}, Leg={legTris}, Torso={torsoTris}, Hand={handTris}, Head/Hair={headTris}, Face={faceTris}");
+                }
+                else
+                {
+                    for (int s = 0; s < mesh.subMeshCount; s++)
+                    {
+                        var subTris = mesh.GetTriangles(s);
+                        float minY = 999f, maxY = -999f;
+                        foreach (int idx in subTris)
+                        {
+                            float y = verts[idx].y;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                        }
+                        var mat = s < smr.sharedMaterials.Length ? smr.sharedMaterials[s] : null;
+                        Debug.Log($"  Submesh[{s}]: {subTris.Length / 3} tris, y=[{minY:F2}..{maxY:F2}]m, Mat={(mat != null ? mat.name : "null")}");
+                    }
+                }
+            }
+        }
+
         public static void VerifyPrefabsAndRig()
         {
             foreach (string path in PersonPrefabPaths)

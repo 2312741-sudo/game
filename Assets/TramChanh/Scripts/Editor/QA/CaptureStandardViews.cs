@@ -44,7 +44,7 @@ namespace TramChanh.EditorTools.QA
             new View("08_Street_West240", new Vector3(-240f, EyeHeight, 2f), new Vector3(0f, -90f, 0f)),
             new View("09_Street_East240", new Vector3(240f, EyeHeight, 2f), new Vector3(0f, 90f, 0f)),
             new View("10_Street_Center0", new Vector3(0f, EyeHeight, 2.0f), new Vector3(5f, 75f, 0f)),
-            new View("11_People_Lineup_Outfits", new Vector3(0f, 1.35f, 1.8f), new Vector3(6f, 0f, 0f)),
+            new View("11_People_Lineup_Outfits", new Vector3(0f, 1.35f, 2.7f), new Vector3(6f, 0f, 0f)),
             new View("12_People_InGame_WalkingSitting", new Vector3(-2.2f, 1.4f, -0.2f), new Vector3(8f, -135f, 0f)),
         };
 
@@ -116,7 +116,7 @@ namespace TramChanh.EditorTools.QA
                                 if (pf != null)
                                 {
                                     var inst = UnityEngine.Object.Instantiate(pf);
-                                    inst.transform.position = stall.transform.TransformPoint(new Vector3(xOffsets[i], 0f, 4.5f));
+                                    inst.transform.position = stall.transform.TransformPoint(new Vector3(xOffsets[i], 0f, 5.2f));
                                     inst.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                                     tempSpawns.Add(inst);
                                 }
@@ -139,6 +139,22 @@ namespace TramChanh.EditorTools.QA
                                 instSit.transform.position = stall.transform.TransformPoint(new Vector3(-3.35f, 0f, 0.2f));
                                 instSit.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 0f, 0f);
                                 tempSpawns.Add(instSit);
+                            }
+                            var pfWalk2 = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_03.prefab");
+                            if (pfWalk2 != null)
+                            {
+                                var instWalk2 = UnityEngine.Object.Instantiate(pfWalk2);
+                                instWalk2.transform.position = stall.transform.TransformPoint(new Vector3(-5.6f, 0f, 2.2f));
+                                instWalk2.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, -80f, 0f);
+                                tempSpawns.Add(instWalk2);
+                            }
+                            var pfWorker = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_05.prefab");
+                            if (pfWorker != null)
+                            {
+                                var instWorker = UnityEngine.Object.Instantiate(pfWorker);
+                                instWorker.transform.position = stall.transform.TransformPoint(new Vector3(-6.8f, 0f, 1.2f));
+                                instWorker.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 30f, 0f);
+                                tempSpawns.Add(instWorker);
                             }
                         }
 
@@ -234,6 +250,10 @@ namespace TramChanh.EditorTools.QA
                         if (dist <= Mathf.Max(l.range, 30f))
                         {
                             lightsNear++;
+                            if (Mathf.Abs(x) < 0.1f)
+                            {
+                                Debug.Log($"[LIGHT_AUDIT_x0] {l.name} (parent: {(l.transform.parent != null ? l.transform.parent.name : "root")}, pos: {l.transform.position}, dist: {dist:F1}m, range: {l.range}m)");
+                            }
                         }
                     }
                 }
@@ -311,10 +331,90 @@ namespace TramChanh.EditorTools.QA
             }
         }
 
+        private static void RepartitionMesh(string baseMeshPath)
+        {
+            for (int lod = 0; lod < 3; lod++)
+            {
+                string path = baseMeshPath.Replace("LOD0", $"LOD{lod}");
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                if (mesh == null) continue;
+
+                Vector3[] verts = mesh.vertices;
+                BoneWeight[] weights = mesh.boneWeights;
+                int[] tris = mesh.triangles;
+
+                var footList = new List<int>();
+                var legList = new List<int>();
+                var handList = new List<int>();
+                var faceList = new List<int>();
+                var headList = new List<int>();
+                var torsoList = new List<int>();
+
+                for (int t = 0; t < tris.Length; t += 3)
+                {
+                    int v0 = tris[t], v1 = tris[t + 1], v2 = tris[t + 2];
+                    float avgY = (verts[v0].y + verts[v1].y + verts[v2].y) / 3f;
+                    float avgZ = (verts[v0].z + verts[v1].z + verts[v2].z) / 3f;
+                    float avgX = (verts[v0].x + verts[v1].x + verts[v2].x) / 3f;
+                    int b0 = weights.Length > v0 ? weights[v0].boneIndex0 : 0;
+
+                    bool isFoot = (b0 == 3 || b0 == 4 || b0 == 7 || b0 == 8 || avgY < 0.12f);
+                    bool isLeg = !isFoot && (b0 == 1 || b0 == 2 || b0 == 5 || b0 == 6 || (avgY < 0.85f && b0 != 16 && b0 != 20 && b0 != 15 && b0 != 19));
+                    bool isHand = (b0 == 16 || b0 == 20 || ((b0 == 15 || b0 == 19) && avgY < 0.95f && Mathf.Abs(avgX) > 0.35f));
+                    bool isHeadArea = (b0 == 11 || b0 == 12 || avgY >= 1.45f);
+
+                    if (isFoot)
+                    {
+                        footList.AddRange(new[] { v0, v1, v2 });
+                    }
+                    else if (isLeg)
+                    {
+                        legList.AddRange(new[] { v0, v1, v2 });
+                    }
+                    else if (isHand)
+                    {
+                        handList.AddRange(new[] { v0, v1, v2 });
+                    }
+                    else if (isHeadArea)
+                    {
+                        if (avgZ > 0.04f && avgY < 1.62f)
+                        {
+                            faceList.AddRange(new[] { v0, v1, v2 });
+                        }
+                        else
+                        {
+                            headList.AddRange(new[] { v0, v1, v2 });
+                        }
+                    }
+                    else
+                    {
+                        torsoList.AddRange(new[] { v0, v1, v2 });
+                    }
+                }
+
+                var skinList = new List<int>(faceList);
+                skinList.AddRange(handList);
+
+                mesh.subMeshCount = 5;
+                mesh.SetTriangles(torsoList.ToArray(), 0);
+                mesh.SetTriangles(skinList.ToArray(), 1);
+                mesh.SetTriangles(legList.ToArray(), 2);
+                mesh.SetTriangles(footList.ToArray(), 3);
+                mesh.SetTriangles(headList.ToArray(), 4);
+
+                EditorUtility.SetDirty(mesh);
+                Debug.Log($"[PeopleArt] Repartitioned {path} into 5 submeshes: Torso={torsoList.Count / 3}, Skin={skinList.Count / 3}, Legs={legList.Count / 3}, Feet={footList.Count / 3}, Head={headList.Count / 3}");
+            }
+        }
+
         public static void SetupPeopleMaterials()
         {
             string matFolder = "Assets/TramChanh/Art/Materials/People";
             if (!Directory.Exists(matFolder)) Directory.CreateDirectory(matFolder);
+
+            // 1. Repartition Person 03 (Hoodie) and Person 05 (Worker) so they have independent submeshes for torso, skin, legs, feet, head
+            RepartitionMesh("Assets/TramChanh/Art/Models/People/M_Person_03_LOD0.asset");
+            RepartitionMesh("Assets/TramChanh/Art/Models/People/M_Person_05_LOD0.asset");
 
             Shader litShader = Shader.Find("Universal Render Pipeline/Lit");
             if (litShader == null) litShader = Shader.Find("Standard");
@@ -338,30 +438,34 @@ namespace TramChanh.EditorTools.QA
             }
 
             var skinLight = CreateMat("MAT_Person_Skin_Light", new Color(0.93f, 0.84f, 0.76f), 0.15f);
-            var skinGolden = CreateMat("MAT_Person_Skin_Golden", new Color(0.86f, 0.72f, 0.57f), 0.15f);
+            var skinGolden = CreateMat("MAT_Person_Skin_Golden", new Color(0.88f, 0.72f, 0.58f), 0.15f);
             var skinFair = CreateMat("MAT_Person_Skin_Fair", new Color(0.96f, 0.88f, 0.82f), 0.15f);
-            var skinTan = CreateMat("MAT_Person_Skin_Tan", new Color(0.80f, 0.62f, 0.47f), 0.15f);
+            var skinTan = CreateMat("MAT_Person_Skin_Tan", new Color(0.78f, 0.58f, 0.42f), 0.15f);
 
             var hairDarkBrown = CreateMat("MAT_Person_Hair_DarkBrown", new Color(0.16f, 0.11f, 0.08f), 0.2f);
             var hairBlack = CreateMat("MAT_Person_Hair_Black", new Color(0.08f, 0.08f, 0.09f), 0.2f);
-            var hairChestnut = CreateMat("MAT_Person_Hair_Chestnut", new Color(0.26f, 0.14f, 0.10f), 0.2f);
+            var hairChestnut = CreateMat("MAT_Person_Hair_Chestnut", new Color(0.28f, 0.15f, 0.10f), 0.2f);
 
-            var shirtCoral = CreateMat("MAT_Person_Shirt_Coral", new Color(0.86f, 0.35f, 0.20f), 0.1f);
-            var topYellow = CreateMat("MAT_Person_Top_Yellow", new Color(0.91f, 0.70f, 0.18f), 0.1f);
-            var shirtWhite = CreateMat("MAT_Person_Shirt_White", new Color(0.94f, 0.93f, 0.91f), 0.1f);
+            var shirtCoral = CreateMat("MAT_Person_Shirt_Coral", new Color(0.88f, 0.35f, 0.20f), 0.1f);
+            var topYellow = CreateMat("MAT_Person_Top_Yellow", new Color(0.95f, 0.75f, 0.15f), 0.1f);
+            var shirtWhite = CreateMat("MAT_Person_Shirt_White", new Color(0.95f, 0.95f, 0.95f), 0.1f);
+            var hoodieTeal = CreateMat("MAT_Person_Hoodie_Teal", new Color(0.18f, 0.62f, 0.72f), 0.1f);
+            var hatOrange = CreateMat("MAT_Person_Hat_Orange", new Color(0.98f, 0.48f, 0.08f), 0.25f);
+            var vestYellow = CreateMat("MAT_Person_Vest_Yellow", new Color(0.94f, 0.76f, 0.16f), 0.1f);
 
             var pantsNavy = CreateMat("MAT_Person_Pants_Navy", new Color(0.13f, 0.21f, 0.33f), 0.1f);
-            var pantsOlive = CreateMat("MAT_Person_Pants_Olive", new Color(0.22f, 0.34f, 0.25f), 0.1f);
+            var pantsOlive = CreateMat("MAT_Person_Pants_Olive", new Color(0.25f, 0.38f, 0.25f), 0.1f);
+            var pantsCharcoal = CreateMat("MAT_Person_Pants_Charcoal", new Color(0.18f, 0.19f, 0.22f), 0.1f);
 
-            var shoesWhite = CreateMat("MAT_Person_Shoes_White", new Color(0.90f, 0.90f, 0.90f), 0.25f);
-            var shoesTan = CreateMat("MAT_Person_Shoes_Tan", new Color(0.58f, 0.42f, 0.29f), 0.2f);
+            var shoesWhite = CreateMat("MAT_Person_Shoes_White", new Color(0.92f, 0.92f, 0.92f), 0.25f);
+            var shoesTan = CreateMat("MAT_Person_Shoes_Tan", new Color(0.65f, 0.48f, 0.32f), 0.2f);
             var shoesBrown = CreateMat("MAT_Person_Shoes_Brown", new Color(0.30f, 0.20f, 0.14f), 0.2f);
             var shoesBlack = CreateMat("MAT_Person_Shoes_Black", new Color(0.09f, 0.09f, 0.10f), 0.25f);
-            var shoesSoles = CreateMat("MAT_Person_Shoes_Soles", new Color(0.50f, 0.50f, 0.50f), 0.15f);
+            var shoesSoles = CreateMat("MAT_Person_Shoes_Soles", new Color(0.40f, 0.40f, 0.40f), 0.15f);
             var eyesDark = CreateMat("MAT_Person_Eyes_Dark", new Color(0.06f, 0.05f, 0.05f), 0.5f);
 
-            var clothingA = AssetDatabase.LoadAssetAtPath<Material>($"{matFolder}/MAT_Person_Clothing_A.mat");
-            var clothingB = AssetDatabase.LoadAssetAtPath<Material>($"{matFolder}/MAT_Person_Clothing_B.mat");
+            // Clothing B styled as rich dark navy indigo jeans/dress/workpants
+            var clothingB = CreateMat("MAT_Person_Clothing_B", new Color(0.16f, 0.24f, 0.38f), 0.12f);
 
             AssetDatabase.SaveAssets();
 
@@ -384,31 +488,37 @@ namespace TramChanh.EditorTools.QA
                 }
             }
 
+            // Person 01 (Male Casual): Coral T-shirt, navy shorts, white sneakers, dark brown hair, light skin
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_01.prefab", new Material[]
             {
                 shirtCoral, skinLight, pantsNavy, shoesWhite, shoesSoles, hairDarkBrown
             });
 
+            // Person 02 (Female Tank Top): Mustard yellow top, golden skin, olive pants, tan sandals, black hair, eyes
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_02.prefab", new Material[]
             {
                 topYellow, skinGolden, pantsOlive, shoesTan, hairBlack, hairBlack, eyesDark
             });
 
+            // Person 03 (Male Hoodie): Teal hoodie, light skin, charcoal pants, black sneakers, chestnut hair
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_03.prefab", new Material[]
             {
-                clothingA
+                hoodieTeal, skinLight, pantsCharcoal, shoesBlack, hairChestnut
             });
 
+            // Person 04 (Female Casual): White shirt, fair ivory skin, navy jeans (ClothingB), brown shoes, chestnut hair, eyes
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_04.prefab", new Material[]
             {
                 shirtWhite, skinFair, clothingB, shoesBrown, shoesSoles, hairChestnut, hairChestnut, eyesDark
             });
 
+            // Person 05 (Male Worker): High-vis yellow vest, tan skin, navy work pants (ClothingB), black boots, orange hard hat
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_05.prefab", new Material[]
             {
-                clothingB
+                vestYellow, skinTan, clothingB, shoesBlack, hatOrange
             });
 
+            // Person 06 (Female Dress): Navy blue dress (ClothingB), tan skin, black shoes, black hair, eyes
             ApplyMaterials("Assets/TramChanh/Prefabs/People/PF_Person_06.prefab", new Material[]
             {
                 clothingB, skinTan, shoesBlack, hairBlack, eyesDark
