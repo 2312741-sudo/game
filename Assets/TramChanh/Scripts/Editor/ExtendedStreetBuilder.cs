@@ -726,6 +726,11 @@ namespace TramChanh.EditorTools
                     var l = (GameObject)PrefabUtility.InstantiatePrefab(lampPf, parent);
                     l.transform.position = new Vector3(x, 0.0f, 3.4f);
                     l.transform.rotation = Quaternion.identity;
+                    if (Mathf.Abs(x - (-0.6f)) < 0.1f)
+                    {
+                        var light = l.GetComponentInChildren<Light>();
+                        if (light != null) Object.DestroyImmediate(light);
+                    }
                 }
             }
 
@@ -1036,8 +1041,8 @@ namespace TramChanh.EditorTools
 
         private static void PopulateNightLighting(Transform parent)
         {
-            // Requirement: "no real-time shadows from more than 4 lights"
-            // Light 1: Warm stall bulb
+            // Requirement: Real-time light budget <= 8 near stall (ART-FIX-017 Task B)
+            // Light 1: Warm stall bulb (illuminates stall floor and interior)
             var stallLight = new GameObject("WarmStallBulb").AddComponent<Light>();
             stallLight.gameObject.layer = TramChanhLayers.EnvironmentIndex;
             stallLight.transform.SetParent(parent, false);
@@ -1048,7 +1053,7 @@ namespace TramChanh.EditorTools
             stallLight.intensity = 3.8f;
             stallLight.shadows = LightShadows.Soft;
 
-            // Light 2: Center Streetlight
+            // Light 2: Center Streetlight (illuminating stall front & sidewalk)
             var streetCenter = new GameObject("Streetlight_Center").AddComponent<Light>();
             streetCenter.gameObject.layer = TramChanhLayers.EnvironmentIndex;
             streetCenter.transform.SetParent(parent, false);
@@ -1057,29 +1062,7 @@ namespace TramChanh.EditorTools
             streetCenter.range = 22f;
             streetCenter.color = new Color(1.0f, 0.86f, 0.65f);
             streetCenter.intensity = 3.2f;
-            streetCenter.shadows = LightShadows.Soft;
-
-            // Light 3: West Streetlight
-            var streetWest = new GameObject("Streetlight_West").AddComponent<Light>();
-            streetWest.gameObject.layer = TramChanhLayers.EnvironmentIndex;
-            streetWest.transform.SetParent(parent, false);
-            streetWest.transform.position = new Vector3(-18.0f, 5.8f, 2.5f);
-            streetWest.type = LightType.Point;
-            streetWest.range = 22f;
-            streetWest.color = new Color(1.0f, 0.86f, 0.65f);
-            streetWest.intensity = 2.8f;
-            streetWest.shadows = LightShadows.Soft;
-
-            // Light 4: East Streetlight
-            var streetEast = new GameObject("Streetlight_East").AddComponent<Light>();
-            streetEast.gameObject.layer = TramChanhLayers.EnvironmentIndex;
-            streetEast.transform.SetParent(parent, false);
-            streetEast.transform.position = new Vector3(14.0f, 5.8f, 2.5f);
-            streetEast.type = LightType.Point;
-            streetEast.range = 22f;
-            streetEast.color = new Color(1.0f, 0.86f, 0.65f);
-            streetEast.intensity = 2.8f;
-            streetEast.shadows = LightShadows.Soft;
+            streetCenter.shadows = LightShadows.None;
 
             // Ambient fills (No shadows)
             var skyFill = new GameObject("SkyFill").AddComponent<Light>();
@@ -1090,16 +1073,6 @@ namespace TramChanh.EditorTools
             skyFill.color = new Color(0.35f, 0.45f, 0.70f);
             skyFill.intensity = 1.5f;
             skyFill.shadows = LightShadows.None;
-
-            var alleyLight = new GameObject("Alley_FillLight").AddComponent<Light>();
-            alleyLight.gameObject.layer = TramChanhLayers.EnvironmentIndex;
-            alleyLight.transform.SetParent(parent, false);
-            alleyLight.transform.position = new Vector3(18.5f, 4.0f, -8.0f);
-            alleyLight.type = LightType.Point;
-            alleyLight.range = 14.0f;
-            alleyLight.color = new Color(1.0f, 0.82f, 0.60f);
-            alleyLight.intensity = 2.2f;
-            alleyLight.shadows = LightShadows.None;
         }
 
         private static void BuildWalkwaysGraph(Transform root)
