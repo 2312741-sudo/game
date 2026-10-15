@@ -72,7 +72,7 @@ namespace TramChanh.EditorTools.QA
                 return 0;
             }
 
-            Camera template = Camera.main != null ? Camera.main : UnityEngine.Object.FindFirstObjectByType<Camera>();
+            Camera template = Camera.main != null ? Camera.main : UnityEngine.Object.FindAnyObjectByType<Camera>();
             GameObject tempCamGo = null;
             if (template == null)
             {
@@ -187,9 +187,9 @@ namespace TramChanh.EditorTools.QA
             perfLines.Add(string.Format("{0,-10} | {1,-18} | {2,-12} | {3,-19} | {4}", "Position", "Triangles in View", "Draw Calls", "Lights Near (<=30m)", "Budget Status"));
             perfLines.Add(new string('-', 82));
 
-            var meshRenderers = UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
-            var skinnedRenderers = UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
-            var lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            var meshRenderers = UnityEngine.Object.FindObjectsByType<MeshRenderer>();
+            var skinnedRenderers = UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>();
+            var lights = UnityEngine.Object.FindObjectsByType<Light>();
 
             foreach (float x in sampleX)
             {
