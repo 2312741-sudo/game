@@ -227,6 +227,7 @@ namespace TramChanh.App
                 StallAnchorId.Grill, StallAnchorId.BatterArea, StallAnchorId.RollArea, StallAnchorId.Sauce, StallAnchorId.Wrap })
             { HideStallEquipment(anchors, id); }
 
+            SetUpStreetAnimals();
             foreach (TeaRackController rack in DrinkStation.GetComponentsInChildren<TeaRackController>(true))
             {
                 rack.Initialize(Tickets, _ids, _events, Shelf);
@@ -486,6 +487,7 @@ namespace TramChanh.App
                 _shownClockOpen = open;
                 _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open));
             }
+            foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
             Customers.ArrivalsEnabled = open;
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
@@ -528,6 +530,7 @@ namespace TramChanh.App
         }
 
         private GameSettings _settings;
+        private readonly List<StreetAnimalWander> _animals = new List<StreetAnimalWander>();
         private GameProgress _progress;
         private IDisposable _orderSubscription;
         private bool _wasOpen = true;
@@ -562,6 +565,25 @@ namespace TramChanh.App
                 crates[i].SetPositionAndRotation(spot, rack.rotation);
                 var stool = Instantiate(_teaRackStoolPrefab, new Vector3(spot.x, Environment.transform.position.y, spot.z), rack.rotation, _runtime.transform);
                 stool.name = "CrateStool_" + (i + 1);
+            }
+        }
+
+        /// <summary>Street dogs, cats and chickens (instances named PF_Street_Dog/Cat/Chicken...) wander near where they were placed.</summary>
+        private void SetUpStreetAnimals()
+        {
+            int seed = 11;
+            foreach (Transform t in Environment.GetComponentsInChildren<Transform>(true))
+            {
+                string n = t.name;
+                float speed;
+                if (n.StartsWith("PF_Street_Dog")) { speed = 0.5f; }
+                else if (n.StartsWith("PF_Street_Cat")) { speed = 0.4f; }
+                else if (n.StartsWith("PF_Street_Chicken")) { speed = 0.35f; }
+                else { continue; }
+                if (t.GetComponent<StreetAnimalWander>() != null) { continue; }
+                var wander = t.gameObject.AddComponent<StreetAnimalWander>();
+                wander.Configure(1.4f, speed, seed++);
+                _animals.Add(wander);
             }
         }
 
