@@ -412,17 +412,17 @@ def build_grill_elmich():
     # --- SM_Grill_Elmich_Lid.obj ---
     lid = ObjWriter("SM_Grill_Elmich_Lid")
 
-    # 1. Rear Hinge Knuckles (Z down to -0.020, Y down to -0.015)
-    lid.add_box(-0.140, -0.115, -0.015, 0.030, -0.020, 0.040, 0.05, 0.3, 0.05, 0.3)
-    lid.add_box(0.115, 0.140, -0.015, 0.030, -0.020, 0.040, 0.05, 0.3, 0.05, 0.3)
+    # 1. Rear Hinge Knuckles (Z down to -0.020, Y down to -0.014)
+    lid.add_box(-0.140, -0.115, -0.014, 0.030, -0.020, 0.040, 0.05, 0.3, 0.05, 0.3)
+    lid.add_box(0.115, 0.140, -0.014, 0.030, -0.020, 0.040, 0.05, 0.3, 0.05, 0.3)
     lid.add_cylinder(-0.127, -0.005, 0.010, -0.012, 0.025, segments=8, u_min=0.6, u_max=0.9, v_min=0.1, v_max=0.3)
     lid.add_cylinder(0.127, -0.005, 0.010, -0.012, 0.025, segments=8, u_min=0.6, u_max=0.9, v_min=0.1, v_max=0.3)
 
-    # 2. Underside Ribbed Upper Grill Plate (Y: -0.012 .. 0.008, Z in [0.040, 0.280])
+    # 2. Underside Ribbed Upper Grill Plate (Y: -0.014 .. 0.008, Z in [0.040, 0.280])
     lid.add_box(-0.140, 0.140, 0.000, 0.008, 0.040, 0.280, 0.6, 0.9, 0.1, 0.4)
     for i in range(num_ribs):
         rx_c = -0.140 + (i + 0.5) * (0.280 / num_ribs)
-        lid.add_box(rx_c - 0.003, rx_c + 0.003, -0.012, 0.000, 0.045, 0.275, 0.6, 0.9, 0.1, 0.4)
+        lid.add_box(rx_c - 0.003, rx_c + 0.003, -0.014, 0.000, 0.045, 0.275, 0.6, 0.9, 0.1, 0.4)
 
     # 3. Main Upper Hood Body (X in [-0.170, 0.170], Y in [0.010, 0.055], Z in [0.030, 0.320])
     lid.add_box(-0.155, 0.155, 0.010, 0.052, 0.030, 0.315, 0.05, 0.45, 0.05, 0.45)
@@ -487,32 +487,37 @@ def build_wipe_cloth():
 def build_cake_food_meshes():
     os.makedirs("Assets/TramChanh/Art/Models/Food", exist_ok=True)
 
-    # 1. SM_Cake_Flat (normalized unit box [-0.5, 0.5])
+    # 1. SM_Cake_Flat (waffle sheet with grilled ribs, sauce, and chà bông toppings)
     flat = ObjWriter("SM_Cake_Flat")
-    flat.add_box(-0.48, 0.48, -0.4, 0.4, -0.48, 0.48, 0.05, 0.95, 0.05, 0.95)
-    flat.add_box(-0.50, 0.50, -0.2, 0.2, -0.46, 0.46, 0.02, 0.98, 0.1, 0.9)
-    flat.add_box(-0.46, 0.46, -0.2, 0.2, -0.50, 0.50, 0.1, 0.9, 0.02, 0.98)
-    for i in range(5):
-        coord = -0.35 + i * 0.175
-        flat.add_box(coord - 0.015, coord + 0.015, 0.35, 0.50, -0.42, 0.42, 0.1, 0.9, 0.1, 0.9)
-        flat.add_box(-0.42, 0.42, 0.35, 0.50, coord - 0.015, coord + 0.015, 0.1, 0.9, 0.1, 0.9)
+    flat.add_box(-0.48, 0.48, -0.40, 0.10, -0.48, 0.48, 0.05, 0.95, 0.05, 0.95)
+    for i in range(7):
+        cz = -0.42 + i * (0.84 / 6.0)
+        flat.add_box(-0.47, 0.47, 0.08, 0.25, cz - 0.035, cz + 0.035, 0.05, 0.95, 0.1, 0.9)
+    for i in [1, 3, 5]:
+        cz = -0.42 + i * (0.84 / 6.0)
+        flat.add_box(-0.45, 0.45, 0.24, 0.38, cz - 0.020, cz + 0.020, 0.1, 0.9, 0.4, 0.6)
+    for i in range(12):
+        mx = -0.38 + (i % 6) * 0.14
+        mz = -0.30 + (i // 6) * 0.45
+        flat.add_box(mx - 0.045, mx + 0.045, 0.24, 0.48, mz - 0.045, mz + 0.045, 0.7, 0.95, 0.7, 0.95)
     flat.normalize_to_unit_cube()
     flat.write("Assets/TramChanh/Art/Models/Food/SM_Cake_Flat.obj")
 
-    # 2. SM_Cake_RolledVertical (normalized unit box [-0.5, 0.5])
+    # 2. SM_Cake_RolledVertical (two cylindrical rolls with longitudinal fluted ridges)
     rolled = ObjWriter("SM_Cake_RolledVertical")
-    segs = 16
-    r_outer = 0.45
-    r_filling = 0.30
-    r_core = 0.15
-    rolled.add_cylinder(0, 0, r_outer, -0.5, 0.5, segments=segs, u_min=0.05, u_max=0.95, v_min=0.05, v_max=0.95)
-    for i in range(8):
-        ang = 2.0 * math.pi * i / 8.0
-        bx = math.cos(ang) * (r_outer - 0.01)
+    r_outer = 0.22
+    rolled.add_cylinder(-0.24, 0, r_outer, -0.48, 0.48, segments=16, u_min=0.05, u_max=0.95, v_min=0.05, v_max=0.95)
+    for i in range(6):
+        ang = 2.0 * math.pi * i / 6.0
+        bx = -0.24 + math.cos(ang) * (r_outer - 0.01)
         bz = math.sin(ang) * (r_outer - 0.01)
-        rolled.add_box(bx - 0.02, bx + 0.02, -0.48, 0.48, bz - 0.02, bz + 0.02, 0.6, 0.9, 0.1, 0.4)
-    rolled.add_cylinder(0, 0, r_filling, -0.5, 0.5, segments=12, u_min=0.1, u_max=0.4, v_min=0.6, v_max=0.9)
-    rolled.add_cylinder(0, 0, r_core, -0.5, 0.5, segments=8, u_min=0.7, u_max=0.9, v_min=0.1, v_max=0.3)
+        rolled.add_box(bx - 0.025, bx + 0.025, -0.46, 0.46, bz - 0.025, bz + 0.025, 0.6, 0.9, 0.1, 0.4)
+    rolled.add_cylinder(0.24, 0, r_outer, -0.48, 0.48, segments=16, u_min=0.05, u_max=0.95, v_min=0.05, v_max=0.95)
+    for i in range(6):
+        ang = 2.0 * math.pi * i / 6.0
+        bx = 0.24 + math.cos(ang) * (r_outer - 0.01)
+        bz = math.sin(ang) * (r_outer - 0.01)
+        rolled.add_box(bx - 0.025, bx + 0.025, -0.46, 0.46, bz - 0.025, bz + 0.025, 0.6, 0.9, 0.1, 0.4)
     rolled.normalize_to_unit_cube()
     rolled.write("Assets/TramChanh/Art/Models/Food/SM_Cake_RolledVertical.obj")
 
@@ -553,13 +558,40 @@ def build_cake_tool_meshes():
     sauce.normalize_to_unit_cube()
     sauce.write("Assets/TramChanh/Art/Models/CakeStation/SM_SauceBag.obj")
 
-    # 4. SM_CakeWrappingPaper (normalized to [-0.5, 0.5])
+    # 4. SM_CakeWrappingPaper (Thin paper sheet on counter, 21cm x 18cm)
     paper = ObjWriter("SM_CakeWrappingPaper")
-    paper.add_box(-0.5, 0.5, -0.5, 0.0, -0.5, 0.5, 0.1, 0.9, 0.1, 0.9)
-    paper.add_box(-0.5, 0.5, 0.0, 0.5, -0.5, -0.45, 0.1, 0.9, 0.1, 0.2)
-    paper.add_box(-0.5, 0.5, 0.0, 0.5, 0.45, 0.5, 0.1, 0.9, 0.8, 0.9)
-    paper.normalize_to_unit_cube()
+    paper.add_box(-0.105, 0.105, 0.000, 0.0015, -0.090, 0.090, 0.05, 0.95, 0.05, 0.95)
     paper.write("Assets/TramChanh/Art/Models/CakeStation/SM_CakeWrappingPaper.obj")
+
+    # 5. SM_RollBoard (Sleek food-grade silicone prep mat on cake counter)
+    mat = ObjWriter("SM_RollBoard")
+    mat.add_box(-0.115, 0.115, 0.000, 0.003, -0.100, 0.100, 0.05, 0.95, 0.05, 0.95)
+    mat.add_box(-0.115, 0.115, 0.003, 0.005, -0.100, -0.094, 0.05, 0.95, 0.05, 0.95)
+    mat.add_box(-0.115, 0.115, 0.003, 0.005, 0.094, 0.100, 0.05, 0.95, 0.05, 0.95)
+    mat.add_box(-0.115, -0.109, 0.003, 0.005, -0.094, 0.094, 0.05, 0.95, 0.05, 0.95)
+    mat.add_box(0.109, 0.115, 0.003, 0.005, -0.094, 0.094, 0.05, 0.95, 0.05, 0.95)
+    mat.write("Assets/TramChanh/Art/Models/CakeStation/SM_RollBoard.obj")
+
+    # 6. SM_BatterContainer (Stainless steel batter dispenser container)
+    vat = ObjWriter("SM_BatterContainer")
+    vat.add_cylinder(0, 0, 0.060, 0.000, 0.076, segments=16, u_min=0.1, u_max=0.9, v_min=0.1, v_max=0.9)
+    vat.add_cylinder(0, 0, 0.064, 0.074, 0.080, segments=16, u_min=0.1, u_max=0.9, v_min=0.1, v_max=0.9)
+    vat.add_box(0.062, 0.076, 0.040, 0.065, -0.015, 0.015, 0.1, 0.5, 0.1, 0.5)
+    vat.write("Assets/TramChanh/Art/Models/CakeStation/SM_BatterContainer.obj")
+
+    # 7. SM_Grill_Display (Slanted touch panel screen mesh)
+    disp = ObjWriter("SM_Grill_Display")
+    v_bl = disp.add_vert(0.080, 0.025, -0.1505)
+    v_br = disp.add_vert(-0.080, 0.025, -0.1505)
+    v_tr = disp.add_vert(-0.080, 0.065, -0.1455)
+    v_tl = disp.add_vert(0.080, 0.065, -0.1455)
+    uv_bl = disp.add_uv(0.0, 0.0)
+    uv_br = disp.add_uv(1.0, 0.0)
+    uv_tr = disp.add_uv(1.0, 1.0)
+    uv_tl = disp.add_uv(0.0, 1.0)
+    n_disp = disp.add_normal(0.0, 0.12, -0.99)
+    disp.add_quad(v_bl, v_br, v_tr, v_tl, uv_bl, uv_br, uv_tr, uv_tl, n_disp)
+    disp.write("Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Display.obj")
 
 def build_ready_counter_plate():
     plate = ObjWriter("SM_ReadyCounter_Plate")
