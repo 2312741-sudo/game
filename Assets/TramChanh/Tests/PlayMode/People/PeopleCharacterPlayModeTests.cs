@@ -115,8 +115,22 @@ namespace TramChanh.Tests.PlayMode.People
             var animator = go.GetComponent<Animator>();
             animator.SetFloat("Speed", 1.30f);
 
-            // Wait for transition from Idle to Walk
-            yield return new WaitForSeconds(0.25f);
+            // Fixed-step simulation. The earlier version moved the body in Update with Time.deltaTime and read the feet right after
+            // "yield return null", before the Animator had evaluated that frame, so every sample paired the new body position with the
+            // previous frame's pose: an error of speed x frame time (1.3 m/s x 8 ms = 10 mm) that changed with every frame hitch.
+            // Now the body and the Animator advance together by the same fixed step and the feet are read after both, so the
+            // result no longer depends on how long a real frame took. The 10 mm tolerance is unchanged.
+            const float FixedStep = 1f / 60f;
+            follower.enabled = false;
+            animator.enabled = false;
+            System.Action advance = () =>
+            {
+                go.transform.position += follower.Direction * (follower.Speed * FixedStep);
+                animator.Update(FixedStep);
+            };
+
+            // Transition from Idle to Walk (0.25 s of simulated time)
+            for (int warmUp = 0; warmUp < 15; warmUp++) { advance(); }
 
             var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
             Assert.That(stateInfo.IsName("Walk"), Is.True,
@@ -145,10 +159,12 @@ namespace TramChanh.Tests.PlayMode.People
 
             float startBodyZ = go.transform.position.z;
 
-            while (elapsed < testDuration)
+            int stepCount = Mathf.RoundToInt(testDuration / FixedStep);
+            for (int step = 0; step < stepCount; step++)
             {
-                yield return null;
-                elapsed += Time.deltaTime;
+                yield return null; // keeps the editor responsive; the measurement below does not use this frame's duration
+                advance();
+                elapsed += FixedStep;
 
                 float normTime = animator.GetCurrentAnimatorStateInfo(0).normalizedTime % 1.0f;
                 if (normTime < 0f) normTime += 1.0f;
