@@ -53,7 +53,7 @@ namespace TramChanh.EditorTools.QA
         {
             string folder = "QA/Screenshots/Capture_" + DateTime.Now.ToString("yyyyMMdd_HHmm");
             int saved = Capture(folder);
-            EditorUtility.RevealInFinder(Path.GetFullPath(folder));
+            if (saved > 0) { EditorUtility.RevealInFinder(Path.GetFullPath(folder)); }
             Debug.Log("Capture Standard Views: saved " + saved + " of " + Views.Length + " views to " + folder);
         }
 
@@ -64,6 +64,13 @@ namespace TramChanh.EditorTools.QA
         public static int Capture(string folder)
         {
             if (!Application.isPlaying) { Debug.LogError("Capture Standard Views needs Play Mode on SCN_TramChanh_Main, otherwise the pictures do not show the real game."); return 0; }
+            // Unity pauses the game and stops serving mesh data to editor code while its window is in the background, so the
+            // pictures and the numbers would be wrong. Refuse instead of writing a misleading report.
+            if (!Application.isBatchMode && !Application.isFocused)
+            {
+                Debug.LogError("Capture Standard Views refused to run: the Unity window is not focused. Click the Unity window, keep it in front, and run the command again.");
+                return 0;
+            }
             GameObject tempEnv = null;
             GameObject stall = GameObject.Find(StallRootName);
             if (stall == null)
@@ -158,9 +165,10 @@ namespace TramChanh.EditorTools.QA
                     }
                     finally
                     {
+                        // Immediate, so the temporary people are gone before the street is measured in the same call.
                         foreach (var g in tempSpawns)
                         {
-                            if (g != null) UnityEngine.Object.Destroy(g);
+                            if (g != null) UnityEngine.Object.DestroyImmediate(g);
                         }
                     }
                 }
@@ -200,28 +208,23 @@ namespace TramChanh.EditorTools.QA
                 Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
                 int triCount = 0;
                 int visibleRenderers = 0;
+                HashSet<Renderer> inactiveLod = InactiveLodRenderers(cam);
 
                 foreach (var mr in meshRenderers)
                 {
-                    if (mr != null && mr.enabled && mr.gameObject.activeInHierarchy && GeometryUtility.TestPlanesAABB(planes, mr.bounds))
+                    if (mr != null && mr.enabled && mr.gameObject.activeInHierarchy && !IsInactiveLod(mr, inactiveLod) && GeometryUtility.TestPlanesAABB(planes, mr.bounds))
                     {
                         visibleRenderers++;
                         var mf = mr.GetComponent<MeshFilter>();
-                        if (mf != null && mf.sharedMesh != null)
-                        {
-                            triCount += mf.sharedMesh.triangles.Length / 3;
-                        }
+                        if (mf != null) { triCount += CountTriangles(mf.sharedMesh); }
                     }
                 }
                 foreach (var smr in skinnedRenderers)
                 {
-                    if (smr != null && smr.enabled && smr.gameObject.activeInHierarchy && GeometryUtility.TestPlanesAABB(planes, smr.bounds))
+                    if (smr != null && smr.enabled && smr.gameObject.activeInHierarchy && !IsInactiveLod(smr, inactiveLod) && GeometryUtility.TestPlanesAABB(planes, smr.bounds))
                     {
                         visibleRenderers++;
-                        if (smr.sharedMesh != null)
-                        {
-                            triCount += smr.sharedMesh.triangles.Length / 3;
-                        }
+                        triCount += CountTriangles(smr.sharedMesh);
                     }
                 }
 
@@ -245,6 +248,76 @@ namespace TramChanh.EditorTools.QA
             }
 
             File.WriteAllLines(Path.Combine(folder, "street_performance_report.txt"), perfLines);
+        }
+
+        /// <summary>
+        /// Triangles of a mesh from its index counts. Unlike Mesh.triangles this works on meshes without Read/Write enabled and does
+        /// not copy the index buffer. Only triangle and quad sub-meshes contribute.
+        /// </summary>
+        public static int CountTriangles(Mesh mesh)
+        {
+            if (mesh == null) { return 0; }
+            long total = 0;
+            for (int i = 0; i < mesh.subMeshCount; i++)
+            {
+                MeshTopology topology = mesh.GetTopology(i);
+                if (topology == MeshTopology.Triangles) { total += mesh.GetIndexCount(i) / 3; }
+                else if (topology == MeshTopology.Quads) { total += mesh.GetIndexCount(i) / 2; }
+            }
+            return (int)total;
+        }
+
+        /// <summary>
+        /// Renderers that belong to a LOD level other than the one <paramref name="cam"/> would draw. The active level follows
+        /// Unity's rule: the first level whose transition height does not exceed the group's relative screen height times the quality
+        /// LOD bias. When even the last level is below its threshold the whole group is culled and every renderer is listed.
+        /// </summary>
+        public static HashSet<Renderer> InactiveLodRenderers(Camera cam)
+        {
+            var inactive = new HashSet<Renderer>();
+            float tanHalfFov = Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            foreach (LODGroup group in UnityEngine.Object.FindObjectsByType<LODGroup>())
+            {
+                if (group == null || !group.enabled || !group.gameObject.activeInHierarchy) { continue; }
+                LOD[] levels = group.GetLODs();
+                if (levels.Length == 0) { continue; }
+                Vector3 scale = group.transform.lossyScale;
+                float worldSize = group.size * Mathf.Max(Mathf.Abs(scale.x), Mathf.Max(Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+                float distance = Vector3.Distance(cam.transform.position, group.transform.TransformPoint(group.localReferencePoint));
+                float relativeHeight = distance < 0.0001f ? 1f : worldSize / (2f * distance * tanHalfFov);
+                relativeHeight *= QualitySettings.lodBias;
+                int active = -1;
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    if (relativeHeight >= levels[i].screenRelativeTransitionHeight) { active = i; break; }
+                }
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    if (i == active) { continue; }
+                    foreach (Renderer renderer in levels[i].renderers) { if (renderer != null) { inactive.Add(renderer); } }
+                }
+                if (active >= 0)
+                {
+                    // A renderer shared by the active level and another level is still drawn.
+                    foreach (Renderer renderer in levels[active].renderers) { if (renderer != null) { inactive.Remove(renderer); } }
+                }
+            }
+            return inactive;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex LodSuffix =
+            new System.Text.RegularExpressions.Regex(@"(?:^|[_\s.\-])LOD(\d+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// True when the renderer should not be counted as drawn: it is a lower level of a LODGroup that is not active, or, with no
+        /// LODGroup above it, it is a LOD1 or higher renderer named like "..._LOD1" (only the first level is counted).
+        /// </summary>
+        private static bool IsInactiveLod(Renderer renderer, HashSet<Renderer> inactiveInGroups)
+        {
+            if (inactiveInGroups.Contains(renderer)) { return true; }
+            if (renderer.GetComponentInParent<LODGroup>() != null) { return false; }
+            System.Text.RegularExpressions.Match match = LodSuffix.Match(renderer.gameObject.name);
+            return match.Success && int.Parse(match.Groups[1].Value) > 0;
         }
 
         public static void CaptureFromBatchMode()
