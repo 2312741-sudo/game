@@ -24,6 +24,13 @@ namespace TramChanh.EditorTools
         public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Stall_TramChanh.prefab";
         public const string CounterRendererName = "SM_Stall_Counter";
         public const string RedTeaRackName = "RedTeaRack";
+        public const string LobbyPickupName = "LobbyPickup";
+
+        /// <summary>
+        /// Approved layout (owner's reference photo): the red tea rack stands on a stool behind the counter, so it must lie
+        /// entirely behind the counter's back edge (stall-local -Z) and no further than this gap from it.
+        /// </summary>
+        public const float MaxRackGapMetres = 1.5f;
 
         /// <summary>Menu entry under Tram Chanh/QA/ (one attribute, same root as the other QA commands).</summary>
         [MenuItem(TramChanhValidationMenu.MenuRoot + "Check Stall Prop Overlaps", false, 25)]
@@ -284,7 +291,16 @@ namespace TramChanh.EditorTools
 
             if (counter.HasValue)
             {
-                IReadOnlyList<string> outside = StallCounterLayoutRule.FindPropsOutsideCounter(counter.Value, props, tolerance);
+                // The rack is judged by the behind-counter rule below, and the customer-side pickup point is meant to
+                // stand in front of the counter, so neither belongs in the "must be on the counter" check.
+                var onCounterProps = new List<FootprintRect>();
+                foreach (FootprintRect prop in props)
+                {
+                    if (IsNamed(prop, RedTeaRackName) || IsCustomerSidePickup(counter.Value, prop, tolerance)) { continue; }
+                    onCounterProps.Add(prop);
+                }
+
+                IReadOnlyList<string> outside = StallCounterLayoutRule.FindPropsOutsideCounter(counter.Value, onCounterProps, tolerance);
                 sb.AppendLine("Props outside the counter footprint: " + outside.Count);
                 foreach (string name in outside) { sb.AppendLine("  OUTSIDE: " + name); }
                 problems += outside.Count;
@@ -297,8 +313,9 @@ namespace TramChanh.EditorTools
                 {
                     if (prop.Name.IndexOf(RedTeaRackName, System.StringComparison.OrdinalIgnoreCase) < 0) { continue; }
                     anyRack = true;
-                    bool behind = StallCounterLayoutRule.IsBehindCounter(counter.Value, prop, tolerance);
-                    sb.AppendLine("Red tea rack behind counter (" + prop.Name + "): " + (behind ? "yes" : "NO"));
+                    bool behind = IsRackBehindCounter(counter.Value, prop, tolerance);
+                    sb.AppendLine("Red tea rack behind counter (" + prop.Name + "): " + (behind ? "yes" : "NO")
+                        + "  [Z gap to counter back edge " + Fmt(counter.Value.MinZ - prop.MaxZ) + " m, limit " + Fmt(MaxRackGapMetres) + " m]");
                     if (!behind) { problems++; }
                 }
 
@@ -311,6 +328,26 @@ namespace TramChanh.EditorTools
             sb.AppendLine();
             sb.AppendLine("SUMMARY: " + (problems == 0 ? "PASS" : "FAIL") + " - problems " + problems);
             return sb.ToString();
+        }
+
+        private static bool IsNamed(FootprintRect prop, string name)
+        {
+            return prop.Name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>Behind the counter's back edge, within <see cref="MaxRackGapMetres"/> of it, and in line with the counter along X.</summary>
+        private static bool IsRackBehindCounter(FootprintRect counter, FootprintRect rack, float tolerance)
+        {
+            bool behindBackEdge = rack.MaxZ <= counter.MinZ + tolerance;
+            bool closeEnough = counter.MinZ - rack.MaxZ <= MaxRackGapMetres;
+            bool inLineWithCounter = rack.MaxX > counter.MinX && rack.MinX < counter.MaxX;
+            return behindBackEdge && closeEnough && inLineWithCounter;
+        }
+
+        /// <summary>The lobby pickup point is allowed in front of the counter (customer side, stall-local +Z).</summary>
+        private static bool IsCustomerSidePickup(FootprintRect counter, FootprintRect prop, float tolerance)
+        {
+            return IsNamed(prop, LobbyPickupName) && prop.MinZ >= counter.MaxZ - tolerance;
         }
 
         private static FootprintRect? ReadCounterFootprint(GameObject root, StringBuilder sb, ref int problems)
