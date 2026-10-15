@@ -37,6 +37,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Female Pedestrian (Casual)** (`Casual Woman`) | Quaternius | https://poly.pizza/m/jpKRgGDxhk | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleCasual.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_04.prefab` |
 | **Male Pedestrian (Worker)** (`Worker Man`) | Quaternius | https://poly.pizza/m/Yg2bQZO6Hj | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_MaleWorker.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_05.prefab` |
 | **Female Pedestrian (Dress)** (`Woman in Dress`) | Quaternius | https://poly.pizza/m/zMyPlQXBzq | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Models/People/SM_Person_FemaleDress.fbx`<br>`Assets/TramChanh/Prefabs/People/PF_Person_06.prefab` |
+| **Vietnamese Terrazzo Sidewalk Paver Texture** (`T_Sidewalk_Tiles_BaseColor`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Textures/T_Sidewalk_Tiles_BaseColor.png` |
+| **Marked Asphalt Roadway Texture** (`T_Asphalt_Night_BaseColor`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Textures/T_Asphalt_Night_BaseColor.png` |
 
 ---
 
@@ -71,6 +73,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Female Pedestrian (Casual)** | $\le 8,000$ tris | Female Casual Rigged Pedestrian | 2,096 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Male Pedestrian (Worker)** | $\le 8,000$ tris | Male Worker Rigged Pedestrian | 2,990 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Female Pedestrian (Dress)** | $\le 8,000$ tris | Female Dress Rigged Pedestrian | 2,192 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
+| **Sidewalk Pavers** | $\le 10,000$ tris | Tiled Sidewalk Meshes | 216 tris (SM_Sidewalk_Extended_80m) | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_Sidewalk_Tiles_BaseColor) | **PASS** |
+| **Asphalt Roadway** | $\le 10,000$ tris | Asphalt Road Meshes | 36 tris (SM_Asphalt_Road_80m) | $\le 2048 \times 2048$ | $2048 \times 1024$ PNG (T_Asphalt_Night_BaseColor) | **PASS** |
 
 ---
 

@@ -24,6 +24,7 @@ namespace TramChanh.EditorTools.Placeholders
     public static class StallPlaceholderBuilder
     {
         public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Stall_TramChanh.prefab";
+        public const string BlockoutStallPrefabPath = "Assets/TramChanh/Prefabs/Placeholders/Blockout/PF_Stall_TramChanh.prefab";
         public const string SignPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Sign_TramChanh_New.prefab";
         public const string MaterialFolder = "Assets/TramChanh/Art/Materials";
 
@@ -112,7 +113,7 @@ namespace TramChanh.EditorTools.Placeholders
             }
 
             Dictionary<StallAnchorId, AnchorPose> preserved = ReadAnchorPoses(existingStall);
-            GameObject stall = BuildStallHierarchy(materials, preserved, signPrefab);
+            GameObject stall = BuildStallHierarchy(materials, preserved, null);
             GameObject saved = PrefabUtility.SaveAsPrefabAsset(stall, StallPrefabPath);
             Object.DestroyImmediate(stall);
             AssetDatabase.SaveAssets();
