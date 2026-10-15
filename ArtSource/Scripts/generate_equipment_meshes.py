@@ -99,6 +99,66 @@ class ObjWriter:
             # Bottom fan
             self.add_tri(c_bot, bot_verts[i], bot_verts[nxt], uv_c, uv_b0, uv_b1, n_bot)
 
+    def add_frustum(self, cx, cz, r_bot, r_top, y0, y1, segments=12, u_min=0.1, u_max=0.6, v_min=0.1, v_max=0.6):
+        top_verts = []
+        bot_verts = []
+        normals = []
+        dy = y1 - y0
+        dr = r_bot - r_top
+        slant = math.sqrt(dr*dr + dy*dy) or 1.0
+        ny_side = dr / slant
+        nr_side = dy / slant
+        for i in range(segments):
+            angle = 2 * math.pi * i / segments
+            dx_b = math.cos(angle) * r_bot
+            dz_b = math.sin(angle) * r_bot
+            dx_t = math.cos(angle) * r_top
+            dz_t = math.sin(angle) * r_top
+            bot_verts.append(self.add_vert(cx + dx_b, y0, cz + dz_b))
+            top_verts.append(self.add_vert(cx + dx_t, y1, cz + dz_t))
+            normals.append(self.add_normal(math.cos(angle)*nr_side, ny_side, math.sin(angle)*nr_side))
+
+        n_top = self.add_normal(0, 1, 0)
+        n_bot = self.add_normal(0, -1, 0)
+        c_top = self.add_vert(cx, y1, cz)
+        c_bot = self.add_vert(cx, y0, cz)
+        uv_c = self.add_uv((u_min+u_max)/2, (v_min+v_max)/2)
+
+        for i in range(segments):
+            nxt = (i + 1) % segments
+            u0 = u_min + (u_max - u_min) * (i / segments)
+            u1 = u_min + (u_max - u_min) * ((i + 1) / segments)
+            uv_b0 = self.add_uv(u0, v_min)
+            uv_b1 = self.add_uv(u1, v_min)
+            uv_t1 = self.add_uv(u1, v_max)
+            uv_t0 = self.add_uv(u0, v_max)
+
+            self.add_quad(bot_verts[i], bot_verts[nxt], top_verts[nxt], top_verts[i],
+                          uv_b0, uv_b1, uv_t1, uv_t0, normals[i])
+            if r_top > 0.0001:
+                self.add_tri(c_top, top_verts[nxt], top_verts[i], uv_c, uv_t1, uv_t0, n_top)
+            if r_bot > 0.0001:
+                self.add_tri(c_bot, bot_verts[i], bot_verts[nxt], uv_c, uv_b0, uv_b1, n_bot)
+
+    def get_bounds(self):
+        xs = [v[0] for v in self.verts]
+        ys = [v[1] for v in self.verts]
+        zs = [v[2] for v in self.verts]
+        return (min(xs), max(xs)), (min(ys), max(ys)), (min(zs), max(zs))
+
+    def normalize_to_unit_cube(self):
+        (xmin, xmax), (ymin, ymax), (zmin, zmax) = self.get_bounds()
+        dx = xmax - xmin or 1.0
+        dy = ymax - ymin or 1.0
+        dz = zmax - zmin or 1.0
+        new_verts = []
+        for x, y, z in self.verts:
+            nx = -0.5 + (x - xmin) / dx
+            ny = -0.5 + (y - ymin) / dy
+            nz = -0.5 + (z - zmin) / dz
+            new_verts.append((nx, ny, nz))
+        self.verts = new_verts
+
     def write(self, filepath):
         with open(filepath, 'w') as f:
             f.write(f"# Wavefront OBJ: {self.name}\n")
@@ -140,11 +200,31 @@ def build_icebin_well():
     obj.add_box(-0.208, 0.208, -0.320, -0.305, -0.183, 0.183, 0.1, 0.6, 0.1, 0.6)
 
     # Black studded rubber bar mat in front of ice bin (facing seller)
-    # UV maps to rubber mat atlas region U: [0.73, 1.0], V: [0.0, 0.40]
-    obj.add_box(-0.240, 0.240, 0.006, 0.009, -0.225, -0.160, 0.73, 0.99, 0.02, 0.38)
+    # Base mat slab: y in [0.006, 0.0075]
+    obj.add_box(-0.240, 0.240, 0.006, 0.0075, -0.225, -0.160, 0.73, 0.99, 0.02, 0.38)
+    # Raised perimeter rims: y in [0.0075, 0.009]
+    obj.add_box(-0.240, 0.240, 0.0075, 0.009, -0.225, -0.221, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(-0.240, 0.240, 0.0075, 0.009, -0.164, -0.160, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(-0.240, -0.236, 0.0075, 0.009, -0.221, -0.164, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.236, 0.240, 0.0075, 0.009, -0.221, -0.164, 0.73, 0.99, 0.02, 0.38)
+    # Studded rubber pins grid: 15 along X, 3 along Z
+    for ix in range(15):
+        cx = -0.220 + ix * (0.440 / 14.0)
+        for iz in range(3):
+            cz = -0.210 + iz * (0.040 / 2.0)
+            obj.add_box(cx - 0.004, cx + 0.004, 0.0075, 0.009, cz - 0.004, cz + 0.004, 0.75, 0.85, 0.05, 0.25)
 
     # Narrow rubber runner strip on right side for ice scoop
-    obj.add_box(0.180, 0.245, 0.006, 0.009, -0.160, 0.200, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.180, 0.245, 0.006, 0.0075, -0.160, 0.200, 0.73, 0.99, 0.02, 0.38)
+    # Runner perimeter rims
+    obj.add_box(0.180, 0.184, 0.0075, 0.009, -0.160, 0.200, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.241, 0.245, 0.0075, 0.009, -0.160, 0.200, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.184, 0.241, 0.0075, 0.009, -0.160, -0.156, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.184, 0.241, 0.0075, 0.009, 0.196, 0.200, 0.73, 0.99, 0.02, 0.38)
+    # Transverse drainage ribs
+    for ir in range(8):
+        cz = -0.140 + ir * (0.320 / 7.0)
+        obj.add_box(0.184, 0.241, 0.0075, 0.009, cz - 0.003, cz + 0.003, 0.75, 0.85, 0.05, 0.25)
 
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_IceBin_Well.obj")
 
@@ -241,21 +321,36 @@ def build_topping_station_frame():
     obj.add_box(0.018, 0.178, 0.080, 0.138, 0.015, 0.175, 0.87, 0.99, 0.44, 0.68)
 
     # Ledge beside pans: X in [0.198, 0.268]
-    # Bottle 1: Yellow passionfruit syrup pump bottle
-    # Body cylinder
-    obj.add_cylinder(0.230, -0.100, 0.022, 0.035, 0.125, segments=8, u_min=0.74, u_max=0.82, v_min=0.74, v_max=0.98)
-    # Pump neck & head
-    obj.add_cylinder(0.230, -0.100, 0.007, 0.125, 0.142, segments=6, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
-    obj.add_box(0.220, 0.240, 0.140, 0.148, -0.125, -0.090, 0.1, 0.3, 0.1, 0.3)
+    # Helper for detailed syrup pump dispenser
+    def add_syrup_bottle(cx, cz, u_min, u_max, v_min, v_max, spout_dz):
+        # Bottle cylinder body
+        obj.add_cylinder(cx, cz, 0.021, 0.035, 0.115, segments=12, u_min=u_min, u_max=u_max, v_min=v_min, v_max=v_max)
+        # Tapered bottle shoulder
+        obj.add_frustum(cx, cz, 0.021, 0.012, 0.115, 0.125, segments=12, u_min=u_min, u_max=u_max, v_min=v_min+0.1, v_max=v_max)
+        # Ribbed screw cap collar
+        obj.add_cylinder(cx, cz, 0.0135, 0.125, 0.130, segments=10, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # Plunger stem rod
+        obj.add_cylinder(cx, cz, 0.005, 0.130, 0.142, segments=8, u_min=0.6, u_max=0.8, v_min=0.1, v_max=0.3)
+        # Ergonomic pump head press cap
+        obj.add_box(cx - 0.010, cx + 0.010, 0.142, 0.148, cz - 0.010, cz + 0.010, 0.1, 0.3, 0.1, 0.3)
+        # Dispenser spout nozzle pointing towards seller
+        sz0 = cz - 0.010
+        sz1 = cz - 0.024 if spout_dz < 0 else cz + 0.024
+        sz_min, sz_max = min(sz0, sz1), max(sz0, sz1)
+        obj.add_box(cx - 0.004, cx + 0.004, 0.140, 0.146, sz_min, sz_max, 0.1, 0.3, 0.1, 0.3)
 
-    # Bottle 2: Clear sugar syrup pump bottle
-    obj.add_cylinder(0.230, -0.030, 0.022, 0.035, 0.125, segments=8, u_min=0.83, u_max=0.91, v_min=0.74, v_max=0.98)
-    # Pump neck & head
-    obj.add_cylinder(0.230, -0.030, 0.007, 0.125, 0.142, segments=6, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
-    obj.add_box(0.220, 0.240, 0.140, 0.148, -0.055, -0.020, 0.1, 0.3, 0.1, 0.3)
+    # Bottle 1: Yellow passionfruit syrup pump bottle (cz = -0.100)
+    add_syrup_bottle(0.230, -0.100, 0.74, 0.82, 0.74, 0.98, spout_dz=-1)
+
+    # Bottle 2: Clear sugar syrup pump bottle (cz = -0.030)
+    add_syrup_bottle(0.230, -0.030, 0.83, 0.91, 0.74, 0.98, spout_dz=-1)
 
     # Straw Basket on rear-right: Yellow perforated basket with colorful drinking straws
-    obj.add_box(0.202, 0.262, 0.035, 0.148, 0.040, 0.160, 0.92, 0.99, 0.73, 0.98)
+    obj.add_box(0.202, 0.262, 0.035, 0.120, 0.040, 0.160, 0.92, 0.99, 0.73, 0.98)
+    straw_colors = [(0.75, 0.85, 0.05, 0.25), (0.1, 0.3, 0.6, 0.9), (0.7, 0.9, 0.7, 0.9)]
+    for s_idx, (sx, sz) in enumerate([(0.218, 0.075), (0.242, 0.075), (0.220, 0.125), (0.244, 0.125), (0.230, 0.100)]):
+        uv_c = straw_colors[s_idx % len(straw_colors)]
+        obj.add_cylinder(sx, sz, 0.004, 0.120, 0.148, segments=6, u_min=uv_c[0], u_max=uv_c[1], v_min=uv_c[2], v_max=uv_c[3])
 
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingStation_Frame.obj")
 
@@ -581,6 +676,69 @@ def build_grill_elmich():
             f.write(f"f {f_tuple[0]}/{f_tuple[1]} {f_tuple[2]}/{f_tuple[3]} {f_tuple[4]}/{f_tuple[5]}\n")
     print(f"Generated {out_lid}: {len(verts_l)} verts, {len(faces_l)} faces")
 
+def build_cake_tool_meshes():
+    # 1. SM_Spatula_WoodHandle (normalized to [-0.5, 0.5])
+    spat = ObjWriter("SM_Spatula_WoodHandle")
+    # Wood handle along Z: z in [-0.5, -0.1]
+    spat.add_cylinder(0, -0.3, 0.25, -0.5, -0.1, segments=12, u_min=0.1, u_max=0.5, v_min=0.1, v_max=0.5)
+    # Ferrule: z in [-0.1, -0.05]
+    spat.add_cylinder(0, -0.3, 0.28, -0.1, -0.05, segments=12, u_min=0.6, u_max=0.8, v_min=0.1, v_max=0.3)
+    # Crank neck: stepped from y=-0.3 to y=0.0
+    spat.add_box(-0.15, 0.15, -0.35, 0.05, -0.05, 0.08, 0.6, 0.8, 0.1, 0.3)
+    # Wide blade: z in [0.08, 0.5], x in [-0.5, 0.5], y in [0.0, 0.05]
+    spat.add_box(-0.5, 0.5, 0.0, 0.05, 0.08, 0.5, 0.6, 0.9, 0.3, 0.6)
+    spat.normalize_to_unit_cube()
+    spat.write("Assets/TramChanh/Art/Models/CakeStation/SM_Spatula_WoodHandle.obj")
+
+    # 2. SM_Scissors_RedGray (normalized to [-0.5, 0.5])
+    scis = ObjWriter("SM_Scissors_RedGray")
+    # Pivot screw
+    scis.add_cylinder(0, 0, 0.15, -0.3, 0.3, segments=10, u_min=0.6, u_max=0.8, v_min=0.1, v_max=0.3)
+    # Twin stainless blades extending +Z: 0.0 to 0.5
+    scis.add_box(-0.15, 0.0, -0.05, 0.05, 0.0, 0.5, 0.6, 0.9, 0.3, 0.6)
+    scis.add_box(0.0, 0.15, -0.05, 0.05, 0.0, 0.5, 0.6, 0.9, 0.3, 0.6)
+    # Ergonomic handle loops extending -Z: -0.5 to 0.0
+    # Thumb loop (-X side)
+    scis.add_cylinder(-0.35, -0.3, 0.22, -0.2, 0.2, segments=12, u_min=0.1, u_max=0.4, v_min=0.6, v_max=0.9)
+    # Multi-finger loop (+X side)
+    scis.add_cylinder(0.35, -0.25, 0.28, -0.2, 0.2, segments=12, u_min=0.1, u_max=0.4, v_min=0.6, v_max=0.9)
+    # Shanks connecting pivot to loops
+    scis.add_box(-0.3, -0.05, -0.15, 0.15, -0.2, 0.0, 0.1, 0.4, 0.6, 0.9)
+    scis.add_box(0.05, 0.3, -0.15, 0.15, -0.2, 0.0, 0.1, 0.4, 0.6, 0.9)
+    scis.normalize_to_unit_cube()
+    scis.write("Assets/TramChanh/Art/Models/CakeStation/SM_Scissors_RedGray.obj")
+
+    # 3. SM_SauceBag (normalized to [-0.5, 0.5])
+    sauce = ObjWriter("SM_SauceBag")
+    # Conical squeeze piping pouch: apex dispensing tip at y = -0.5, wide body at y = 0.35
+    sauce.add_frustum(0, 0, 0.08, 0.45, -0.5, 0.35, segments=16, u_min=0.1, u_max=0.5, v_min=0.1, v_max=0.8)
+    # Crimped sealed top closure
+    sauce.add_box(-0.35, 0.35, 0.35, 0.5, -0.08, 0.08, 0.1, 0.5, 0.8, 0.95)
+    sauce.normalize_to_unit_cube()
+    sauce.write("Assets/TramChanh/Art/Models/CakeStation/SM_SauceBag.obj")
+
+    # 4. SM_CakeWrappingPaper (normalized to [-0.5, 0.5])
+    paper = ObjWriter("SM_CakeWrappingPaper")
+    paper.add_box(-0.5, 0.5, -0.5, 0.0, -0.5, 0.5, 0.1, 0.9, 0.1, 0.9)
+    # Subtle crease borders
+    paper.add_box(-0.5, 0.5, 0.0, 0.5, -0.5, -0.45, 0.1, 0.9, 0.1, 0.2)
+    paper.add_box(-0.5, 0.5, 0.0, 0.5, 0.45, 0.5, 0.1, 0.9, 0.8, 0.9)
+    paper.normalize_to_unit_cube()
+    paper.write("Assets/TramChanh/Art/Models/CakeStation/SM_CakeWrappingPaper.obj")
+
+def build_ready_counter_plate():
+    plate = ObjWriter("SM_ReadyCounter_Plate")
+    # Width X: [-0.150, 0.150], Depth Z: [-0.090, 0.090], Height Y: [0.000, 0.008]
+    # Bottom plate bed
+    plate.add_box(-0.145, 0.145, 0.000, 0.003, -0.085, 0.085, 0.1, 0.6, 0.1, 0.6)
+    # Raised rolled rim
+    plate.add_box(-0.150, 0.150, 0.000, 0.008, 0.080, 0.090, 0.6, 0.9, 0.1, 0.3)
+    plate.add_box(-0.150, 0.150, 0.000, 0.008, -0.090, -0.080, 0.6, 0.9, 0.1, 0.3)
+    plate.add_box(-0.150, -0.140, 0.000, 0.008, -0.080, 0.080, 0.6, 0.9, 0.1, 0.3)
+    plate.add_box(0.140, 0.150, 0.000, 0.008, -0.080, 0.080, 0.6, 0.9, 0.1, 0.3)
+    os.makedirs("Assets/TramChanh/Art/Models/Props", exist_ok=True)
+    plate.write("Assets/TramChanh/Art/Models/Props/SM_ReadyCounter_Plate.obj")
+
 if __name__ == "__main__":
     build_icebin_well()
     build_icebin_lids()
@@ -588,5 +746,7 @@ if __name__ == "__main__":
     build_topping_station_frame()
     build_topping_station_cover()
     build_grill_elmich()
+    build_cake_tool_meshes()
+    build_ready_counter_plate()
     print("ALL equipment meshes generated successfully!")
 
