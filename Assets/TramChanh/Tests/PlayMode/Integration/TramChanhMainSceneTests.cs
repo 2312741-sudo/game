@@ -163,6 +163,19 @@ namespace TramChanh.Tests.PlayMode.Integration
             Assert.That(context.Hands.Current, Is.SameAs(_bootstrap.CakeStation.Cup));
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator MAIN_QA_CaptureStandardViews()
+        {
+            yield return null;
+            var asm = System.Reflection.Assembly.Load("TramChanh.Editor");
+            var type = asm.GetType("TramChanh.EditorTools.QA.CaptureStandardViews");
+            var method = type.GetMethod("Capture", new[] { typeof(string) });
+            int saved = (int)method.Invoke(null, new object[] { "QA/Screenshots/ART_FIX_017" });
+            Debug.Log($"[QA_CAPTURE] Captured {saved} standard views into QA/Screenshots/ART_FIX_017");
+            Assert.That(saved, Is.EqualTo(12), "Must save all 12 standard views.");
+            yield return null;
+        }
     }
 }
 #endif

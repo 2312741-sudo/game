@@ -44,8 +44,8 @@ namespace TramChanh.EditorTools.QA
             new View("08_Street_West240", new Vector3(-240f, EyeHeight, 2f), new Vector3(0f, -90f, 0f)),
             new View("09_Street_East240", new Vector3(240f, EyeHeight, 2f), new Vector3(0f, 90f, 0f)),
             new View("10_Street_Center0", new Vector3(0f, EyeHeight, 2.0f), new Vector3(5f, 75f, 0f)),
-            new View("11_People_Lineup_Outfits", new Vector3(0f, 1.35f, 2.7f), new Vector3(6f, 0f, 0f)),
-            new View("12_People_InGame_WalkingSitting", new Vector3(-2.2f, 1.4f, -0.2f), new Vector3(8f, -135f, 0f)),
+            new View("11_People_Lineup_Outfits", new Vector3(0f, 1.35f, 4.0f), new Vector3(2f, 0f, 0f)),
+            new View("12_People_InGame_WalkingSitting", new Vector3(-1.8f, 1.4f, 1.0f), new Vector3(4f, -90f, 0f)),
         };
 
         [MenuItem("Tram Chanh/QA/Capture Standard Views")]
@@ -109,14 +109,14 @@ namespace TramChanh.EditorTools.QA
                                 "Assets/TramChanh/Prefabs/People/PF_Person_05.prefab",
                                 "Assets/TramChanh/Prefabs/People/PF_Person_06.prefab"
                             };
-                            float[] xOffsets = new[] { -1.9f, -1.15f, -0.4f, 0.4f, 1.15f, 1.9f };
+                            float[] xOffsets = new[] { -2.1f, -1.25f, -0.4f, 0.45f, 1.3f, 2.15f };
                             for (int i = 0; i < personPaths.Length; i++)
                             {
                                 var pf = AssetDatabase.LoadAssetAtPath<GameObject>(personPaths[i]);
                                 if (pf != null)
                                 {
                                     var inst = UnityEngine.Object.Instantiate(pf);
-                                    inst.transform.position = stall.transform.TransformPoint(new Vector3(xOffsets[i], 0f, 5.2f));
+                                    inst.transform.position = stall.transform.TransformPoint(new Vector3(xOffsets[i], 0f, 6.0f));
                                     inst.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                                     tempSpawns.Add(inst);
                                 }
@@ -128,32 +128,32 @@ namespace TramChanh.EditorTools.QA
                             if (pfWalk != null)
                             {
                                 var instWalk = UnityEngine.Object.Instantiate(pfWalk);
-                                instWalk.transform.position = stall.transform.TransformPoint(new Vector3(-4.2f, 0f, 1.4f));
-                                instWalk.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 85f, 0f);
+                                instWalk.transform.position = stall.transform.TransformPoint(new Vector3(-4.5f, 0f, 1.2f));
+                                instWalk.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, -90f, 0f);
                                 tempSpawns.Add(instWalk);
                             }
                             var pfSit = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_02.prefab");
                             if (pfSit != null)
                             {
                                 var instSit = UnityEngine.Object.Instantiate(pfSit);
-                                instSit.transform.position = stall.transform.TransformPoint(new Vector3(-3.35f, 0f, 0.2f));
-                                instSit.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 0f, 0f);
+                                instSit.transform.position = stall.transform.TransformPoint(new Vector3(-3.8f, 0f, 0.1f));
+                                instSit.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 30f, 0f);
                                 tempSpawns.Add(instSit);
                             }
                             var pfWalk2 = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_03.prefab");
                             if (pfWalk2 != null)
                             {
                                 var instWalk2 = UnityEngine.Object.Instantiate(pfWalk2);
-                                instWalk2.transform.position = stall.transform.TransformPoint(new Vector3(-5.6f, 0f, 2.2f));
-                                instWalk2.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, -80f, 0f);
+                                instWalk2.transform.position = stall.transform.TransformPoint(new Vector3(-6.2f, 0f, 0.8f));
+                                instWalk2.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 90f, 0f);
                                 tempSpawns.Add(instWalk2);
                             }
                             var pfWorker = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TramChanh/Prefabs/People/PF_Person_05.prefab");
                             if (pfWorker != null)
                             {
                                 var instWorker = UnityEngine.Object.Instantiate(pfWorker);
-                                instWorker.transform.position = stall.transform.TransformPoint(new Vector3(-6.8f, 0f, 1.2f));
-                                instWorker.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, 30f, 0f);
+                                instWorker.transform.position = stall.transform.TransformPoint(new Vector3(-7.8f, 0f, 1.4f));
+                                instWorker.transform.rotation = stall.transform.rotation * Quaternion.Euler(0f, -90f, 0f);
                                 tempSpawns.Add(instWorker);
                             }
                         }
@@ -225,7 +225,15 @@ namespace TramChanh.EditorTools.QA
                         var mf = mr.GetComponent<MeshFilter>();
                         if (mf != null && mf.sharedMesh != null)
                         {
-                            triCount += mf.sharedMesh.triangles.Length / 3;
+                            var mesh = mf.sharedMesh;
+                            if (mesh.isReadable)
+                            {
+                                triCount += mesh.triangles.Length / 3;
+                            }
+                            else
+                            {
+                                triCount += mesh.vertexCount;
+                            }
                         }
                     }
                 }
@@ -236,7 +244,15 @@ namespace TramChanh.EditorTools.QA
                         visibleRenderers++;
                         if (smr.sharedMesh != null)
                         {
-                            triCount += smr.sharedMesh.triangles.Length / 3;
+                            var mesh = smr.sharedMesh;
+                            if (mesh.isReadable)
+                            {
+                                triCount += mesh.triangles.Length / 3;
+                            }
+                            else
+                            {
+                                triCount += mesh.vertexCount;
+                            }
                         }
                     }
                 }
