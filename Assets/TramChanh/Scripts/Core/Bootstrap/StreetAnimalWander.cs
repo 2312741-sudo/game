@@ -15,6 +15,7 @@ namespace TramChanh.App
         private const float HopHeight = 0.025f;
         private const float HopRate = 9f;
         private const float MinWalkMetres = 0.25f;
+        private const float FaceTargetDegrees = 20f;
         private const float ObstacleMargin = 0.4f;
 
         private Vector3 _home;
@@ -88,6 +89,9 @@ namespace TramChanh.App
 
             Quaternion look = Quaternion.LookRotation(toTarget.normalized, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, look, TurnDegreesPerSecond * seconds);
+            // Turn on the spot first: probing along the old heading while still turning made the animal stop whenever a
+            // neighbour stood behind it, even though the way to its target was free.
+            if (Quaternion.Angle(transform.rotation, look) > FaceTargetDegrees) { return; }
 
             Vector3 probe = transform.position + Vector3.up * 0.15f;
             if (Physics.Raycast(probe, transform.forward, out RaycastHit hit, ObstacleProbeDistance, ~0, QueryTriggerInteraction.Ignore)
