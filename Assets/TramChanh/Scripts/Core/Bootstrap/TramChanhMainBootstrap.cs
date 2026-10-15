@@ -582,7 +582,7 @@ namespace TramChanh.App
                 else { continue; }
                 if (t.GetComponent<StreetAnimalWander>() != null) { continue; }
                 var wander = t.gameObject.AddComponent<StreetAnimalWander>();
-                wander.Configure(1.4f, speed, seed++);
+                wander.Configure(1.0f, speed, seed++);
                 _animals.Add(wander);
             }
         }
