@@ -50,21 +50,48 @@ def generate_env_textures(output_dir="Assets/TramChanh/Art/Textures"):
     print(f"Generated: {crate_path}")
 
     # 3. Sidewalk Terrazzo Tile Pattern (1024x1024)
+    # Authentic Vietnamese sidewalk terrazzo pavers: warm buff/terrazzo tone (#C4BEB2)
+    # with subtle alternating block tones and multi-colored granite aggregate flecks
     tile_w, tile_h = 1024, 1024
-    tile_img = Image.new("RGB", (tile_w, tile_h), (180, 182, 185))
-    tile_draw = ImageDraw.Draw(tile_img)
-    # Grid of square sidewalk pavers (128x128 blocks)
     grid_size = 128
-    for x in range(0, tile_w, grid_size):
-        tile_draw.line([(x, 0), (x, tile_h)], fill=(120, 122, 125), width=4)
-    for y in range(0, tile_h, grid_size):
-        tile_draw.line([(0, y), (tile_w, y)], fill=(120, 122, 125), width=4)
+    tile_arr = np.zeros((tile_h, tile_w, 3), dtype=np.uint8)
+    
+    # Fill alternating paver blocks
+    for gy in range(0, tile_h, grid_size):
+        for gx in range(0, tile_w, grid_size):
+            is_alt = ((gx // grid_size) + (gy // grid_size)) % 2 == 0
+            base_col = np.array([198, 192, 180], dtype=np.int16) if is_alt else np.array([192, 186, 174], dtype=np.int16)
+            tile_arr[gy:gy+grid_size, gx:gx+grid_size] = base_col
+            
+    # Add subtle cement surface noise
+    np.random.seed(91)
+    cement_noise = np.random.randint(-8, 9, (tile_h, tile_w, 3))
+    tile_arr = np.clip(tile_arr.astype(int) + cement_noise, 0, 255).astype(np.uint8)
+    
+    # Multi-color granite aggregate flecks (quartz cream, terracotta red, charcoal basalt)
+    num_flecks = 4200
+    for _ in range(num_flecks):
+        fx = np.random.randint(0, tile_w)
+        fy = np.random.randint(0, tile_h)
+        f_type = np.random.randint(0, 3)
+        if f_type == 0:
+            col = [225, 222, 215] # Quartz
+        elif f_type == 1:
+            col = [175, 95, 75]   # Terracotta
+        else:
+            col = [65, 65, 70]    # Basalt
+        rad = np.random.randint(1, 3)
+        tile_arr[max(0, fy-rad):min(tile_h, fy+rad+1), max(0, fx-rad):min(tile_w, fx+rad+1)] = col
         
-    # Subtle terrazzo aggregate specks
-    tile_arr = np.array(tile_img)
-    specks = np.random.randint(-15, 16, (tile_h, tile_w, 3))
-    tile_arr = np.clip(tile_arr.astype(int) + specks, 0, 255).astype(np.uint8)
     tile_img = Image.fromarray(tile_arr)
+    tile_draw = ImageDraw.Draw(tile_img)
+    
+    # Recessed mortar grout lines (width 4)
+    for x in range(0, tile_w, grid_size):
+        tile_draw.line([(x, 0), (x, tile_h)], fill=(132, 128, 122), width=4)
+    for y in range(0, tile_h, grid_size):
+        tile_draw.line([(0, y), (tile_w, y)], fill=(132, 128, 122), width=4)
+        
     tile_path = os.path.join(output_dir, "T_Sidewalk_Tiles_BaseColor.png")
     tile_img.save(tile_path, "PNG")
     print(f"Generated: {tile_path}")
