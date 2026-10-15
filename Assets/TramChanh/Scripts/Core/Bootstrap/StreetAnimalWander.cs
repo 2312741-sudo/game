@@ -14,6 +14,8 @@ namespace TramChanh.App
         private const float TurnDegreesPerSecond = 220f;
         private const float HopHeight = 0.025f;
         private const float HopRate = 9f;
+        private const float MinWalkMetres = 0.25f;
+        private const float ObstacleMargin = 0.4f;
 
         private Vector3 _home;
         private float _homeY;
@@ -48,12 +50,34 @@ namespace TramChanh.App
         {
             _restSeconds -= seconds;
             if (_restSeconds > 0f) { return; }
-            WanderArea.Pick(_home.x, _home.z, _radius, _random.NextDouble(), _random.NextDouble(), out float x, out float z);
-            _target = new Vector3(x, _homeY, z);
-            float distance = Vector3.Distance(transform.position, _target);
+            // Try a few spots; each one is cut short in front of the first obstacle on the way (a wall or a neighbour).
+            float distance = 0f;
+            for (int attempt = 0; attempt < 6 && distance < MinWalkMetres; attempt++)
+            {
+                WanderArea.Pick(_home.x, _home.z, _radius, _random.NextDouble(), _random.NextDouble(), out float x, out float z);
+                _target = new Vector3(x, _homeY, z);
+                distance = ClearDistanceTo(_target);
+            }
+            _target = transform.position + (_target - transform.position).normalized * distance;
             _walkSecondsLeft = WanderArea.WalkSeconds(distance, _speed);
             _walking = _walkSecondsLeft > 0.05f;
             if (!_walking) { _restSeconds = 1f; }
+        }
+
+        /// <summary>How far toward <paramref name="target"/> the animal can walk before reaching an obstacle (margin kept), at most the full distance.</summary>
+        private float ClearDistanceTo(Vector3 target)
+        {
+            Vector3 flat = target - transform.position;
+            flat.y = 0f;
+            float full = flat.magnitude;
+            if (full < 0.01f) { return 0f; }
+            Vector3 probe = transform.position + Vector3.up * 0.15f;
+            if (Physics.Raycast(probe, flat / full, out RaycastHit hit, full + ObstacleMargin, ~0, QueryTriggerInteraction.Ignore)
+                && !hit.collider.transform.IsChildOf(transform))
+            {
+                return Mathf.Max(0f, Mathf.Min(full, hit.distance - ObstacleMargin));
+            }
+            return full;
         }
 
         private void Walk(float seconds)
