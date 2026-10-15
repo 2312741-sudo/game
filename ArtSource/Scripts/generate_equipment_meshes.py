@@ -260,115 +260,326 @@ def build_topping_station_frame():
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingStation_Frame.obj")
 
 def build_topping_station_cover():
+    # In PF_DrinkStation, PF_ToppingStation is at (0.6, 0.85, -0.05) rotated 90 deg around Y.
+    # To satisfy X <= 0.90 and counter flush Y >= 1.00:
+    # Mesh bounds in OBJ space: X in [-0.25, 0.25], Y in [0.00, 0.18], Z in [-0.15, 0.07]
     obj = ObjWriter("SM_ToppingStation_Cover")
-    # Envelope: X: [-0.270, 0.270], Y: [0.145, 0.3473], Z: [-0.0393, 0.160]
-    # Curved transparent sneeze guard roll-top hood
-    x0, x1 = -0.270, 0.270
-    z_center, y_center = 0.060, 0.145
-    radius_z = 0.100
-    radius_y = 0.200
+    num_segs = 20
+    profile = []
+    for i in range(num_segs + 1):
+        t = i / float(num_segs)
+        theta = math.pi * t
+        z = -0.04 - 0.11 * math.cos(theta)
+        y = 0.18 * math.sin(theta)
+        profile.append((z, y))
 
-    segments = 16
-    arc_points = []
-    # Arc from angle 0 (z = 0.160, y = 0.145) to angle ~135 degrees (z = -0.039, y = 0.285)
-    for i in range(segments + 1):
-        t = i / segments
-        angle = t * 2.356 # ~135 degrees in radians
-        az = z_center + radius_z * math.cos(angle)
-        ay = y_center + radius_y * math.sin(angle)
-        arc_points.append((ay, az))
+    x_steps = [-0.25, -0.15, -0.05, 0.05, 0.15, 0.25]
+    grid = []
+    for r_idx, (pz, py) in enumerate(profile):
+        row = []
+        v_coord = r_idx / float(len(profile) - 1)
+        for c_idx, px in enumerate(x_steps):
+            u_coord = c_idx / float(len(x_steps) - 1)
+            v = obj.add_vert(px, py, pz)
+            uv = obj.add_uv(u_coord, v_coord)
+            row.append((v, uv))
+        grid.append(row)
 
-    # Extrude along X from x0 to x1
-    for i in range(segments):
-        y_a, z_a = arc_points[i]
-        y_b, z_b = arc_points[i+1]
+    n_up = obj.add_normal(0, 1, 0)
+    n_dn = obj.add_normal(0, -1, 0)
+    for r in range(len(grid) - 1):
+        for c in range(len(x_steps) - 1):
+            (v1, uv1), (v2, uv2) = grid[r][c], grid[r][c+1]
+            (v3, uv3), (v4, uv4) = grid[r+1][c+1], grid[r+1][c]
+            obj.add_quad(v1, v2, v3, v4, uv1, uv2, uv3, uv4, n_up)
+            obj.add_quad(v4, v3, v2, v1, uv4, uv3, uv2, uv1, n_dn)
 
-        v1 = obj.add_vert(x0, y_a, z_a)
-        v2 = obj.add_vert(x1, y_a, z_a)
-        v3 = obj.add_vert(x1, y_b, z_b)
-        v4 = obj.add_vert(x0, y_b, z_b)
-
-        uv1 = obj.add_uv(0.0, i / segments)
-        uv2 = obj.add_uv(1.0, i / segments)
-        uv3 = obj.add_uv(1.0, (i + 1) / segments)
-        uv4 = obj.add_uv(0.0, (i + 1) / segments)
-
-        # Normal
-        ny = y_b - y_a
-        nz = z_b - z_a
-        n = obj.add_normal(0, -nz, ny)
-
-        # Add double-sided quad for acrylic transparency
-        obj.add_quad(v1, v2, v3, v4, uv1, uv2, uv3, uv4, n)
-        n_back = obj.add_normal(0, nz, -ny)
-        obj.add_quad(v4, v3, v2, v1, uv4, uv3, uv2, uv1, n_back)
-
-    # Left and Right clear end caps
-    for side_x, normal_x in [(x0, -1), (x1, 1)]:
-        c_vert = obj.add_vert(side_x, y_center, z_center)
-        uv_c = obj.add_uv(0.5, 0.5)
-        n_side = obj.add_normal(normal_x, 0, 0)
-        for i in range(segments):
-            y_a, z_a = arc_points[i]
-            y_b, z_b = arc_points[i+1]
-            va = obj.add_vert(side_x, y_a, z_a)
-            vb = obj.add_vert(side_x, y_b, z_b)
-            uva = obj.add_uv(0.5 + 0.5 * math.cos(i/segments * 2.356), 0.5 + 0.5 * math.sin(i/segments * 2.356))
-            uvb = obj.add_uv(0.5 + 0.5 * math.cos((i+1)/segments * 2.356), 0.5 + 0.5 * math.sin((i+1)/segments * 2.356))
-            if normal_x > 0:
-                obj.add_tri(c_vert, va, vb, uv_c, uva, uvb, n_side)
+    for px, is_right in [(-0.25, False), (0.25, True)]:
+        c_v = obj.add_vert(px, 0.00, -0.04)
+        uv_c = obj.add_uv(0.5, 0.0)
+        n_side = obj.add_normal(1 if is_right else -1, 0, 0)
+        for i in range(len(profile) - 1):
+            z1, y1 = profile[i]
+            z2, y2 = profile[i+1]
+            va = obj.add_vert(px, y1, z1)
+            vb = obj.add_vert(px, y2, z2)
+            uva = obj.add_uv(i / float(len(profile)), 1.0)
+            uvb = obj.add_uv((i + 1) / float(len(profile)), 1.0)
+            if is_right:
+                obj.add_tri(c_v, va, vb, uv_c, uva, uvb, n_side)
+                obj.add_tri(vb, va, c_v, uvb, uva, uv_c, n_side)
             else:
-                obj.add_tri(c_vert, vb, va, uv_c, uvb, uva, n_side)
-
-    # Front molded acrylic lift handle
-    y_front, z_front = arc_points[-1]
-    obj.add_box(-0.080, 0.080, y_front - 0.005, y_front + 0.015, z_front - 0.015, z_front, 0.1, 0.4, 0.1, 0.4)
+                obj.add_tri(c_v, vb, va, uv_c, uvb, uva, n_side)
+                obj.add_tri(va, vb, c_v, uva, uvb, uv_c, n_side)
 
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingStation_Cover.obj")
 
 def build_grill_elmich():
-    # SM_Grill_Elmich_Base.obj
-    # In PF_Grill_Elmich, Base has scale: (0.32, 0.1, 0.28) at (0, 0.05, 0)
-    # Local unit space in Base: vx in [-0.5, 0.5], vy in [-0.5, 0.6], vz in [-0.54, 0.54]
-    base = ObjWriter("SM_Grill_Elmich_Base")
+    # Exact required bounds: Base X in [-0.170, 0.170], Y in [0.000, 0.125], Z in [-0.150, 0.152]
+    # Lid X in [-0.170, 0.170], Y in [-0.015, 0.058], Z in [-0.020, 0.372]
 
-    # Main black satin housing
-    # Lower chassis
-    base.add_box(-0.50, 0.50, -0.45, 0.40, -0.52, 0.52, 0.1, 0.8, 0.1, 0.8)
-    # Sloped front control bezel (VZ: -0.54 to -0.40, VY: -0.10 to 0.40)
-    base.add_box(-0.46, 0.46, -0.10, 0.35, -0.54, -0.42, 0.1, 0.7, 0.1, 0.7)
-    # Grease drip tray lip at front bottom
-    base.add_box(-0.35, 0.35, -0.45, -0.35, -0.54, -0.48, 0.1, 0.5, 0.1, 0.3)
+    # --- SM_Grill_Elmich_Base.obj ---
+    verts_b = []
+    uvs_b = []
+    faces_b = []
 
-    # 4 Non-slip rubber feet
-    for fx, fz in [(-0.42, -0.42), (0.42, -0.42), (-0.42, 0.42), (0.42, 0.42)]:
-        base.add_cylinder(fx, fz, 0.05, -0.50, -0.45, segments=8, u_min=0.75, u_max=0.95, v_min=0.05, v_max=0.25)
+    def add_v_b(x, y, z):
+        verts_b.append((x, y, z))
+        return len(verts_b)
 
-    # Rear hinge bracket uprights (VZ: 0.42 to 0.52, VY: 0.30 to 0.70)
-    base.add_box(-0.48, -0.40, 0.30, 0.70, 0.40, 0.52, 0.1, 0.3, 0.1, 0.5)
-    base.add_box(0.40, 0.48, 0.30, 0.70, 0.40, 0.52, 0.1, 0.3, 0.1, 0.5)
+    def add_uv_b(u, v):
+        uvs_b.append((u, v))
+        return len(uvs_b)
 
-    base.write("Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Base.obj")
+    def add_f_b(v_list, vt_list):
+        if len(v_list) == 3:
+            faces_b.append((v_list[0], vt_list[0], v_list[1], vt_list[1], v_list[2], vt_list[2]))
+        elif len(v_list) == 4:
+            faces_b.append((v_list[0], vt_list[0], v_list[1], vt_list[1], v_list[2], vt_list[2]))
+            faces_b.append((v_list[0], vt_list[0], v_list[2], vt_list[2], v_list[3], vt_list[3]))
 
-    # SM_Grill_Elmich_Lid.obj
-    # In PF_Grill_Elmich, Lid has scale: (0.32, 0.06, 0.28) at (0, 0.04, -0.14) under LidPivot
-    lid = ObjWriter("SM_Grill_Elmich_Lid")
+    uv0_b = add_uv_b(0.0, 0.0)
 
-    # Curved top stainless cover
-    lid.add_box(-0.50, 0.50, -0.40, 0.40, -0.50, 0.50, 0.1, 0.9, 0.1, 0.9)
-    # Side black heat-resistant flank grips
-    lid.add_box(-0.53, -0.48, -0.45, 0.35, -0.45, 0.45, 0.1, 0.3, 0.1, 0.8)
-    lid.add_box(0.48, 0.53, -0.45, 0.35, -0.45, 0.45, 0.1, 0.3, 0.1, 0.8)
+    # 1. Four Cylindrical Rubber Feet (Y: 0.000 .. 0.012)
+    foot_r = 0.014
+    for fx, fz in [(-0.140, -0.120), (0.140, -0.120), (-0.140, 0.120), (0.140, 0.120)]:
+        f_bot = []
+        f_top = []
+        for i in range(8):
+            ang = 2.0 * math.pi * i / 8.0
+            vx = fx + foot_r * math.cos(ang)
+            vz = fz + foot_r * math.sin(ang)
+            f_bot.append(add_v_b(vx, 0.000, vz))
+            f_top.append(add_v_b(vx, 0.012, vz))
+        bot_center = add_v_b(fx, 0.000, fz)
+        for i in range(8):
+            ni = (i + 1) % 8
+            add_f_b([bot_center, f_bot[ni], f_bot[i]], [uv0_b]*3)
+        for i in range(8):
+            ni = (i + 1) % 8
+            add_f_b([f_bot[i], f_bot[ni], f_top[ni], f_top[i]], [uv0_b]*4)
 
-    # Rear hinge knuckles at VZ = 0.50 connecting to LidPivot
-    lid.add_cylinder(-0.44, 0.48, 0.08, -0.20, 0.20, segments=8, u_min=0.1, u_max=0.4, v_min=0.1, v_max=0.4)
-    lid.add_cylinder(0.44, 0.48, 0.08, -0.20, 0.20, segments=8, u_min=0.1, u_max=0.4, v_min=0.1, v_max=0.4)
+    # 2. Lower Chassis Box (Y: 0.012 .. 0.080)
+    b_l_b = add_v_b(-0.165, 0.012, -0.145)
+    b_r_b = add_v_b(0.165, 0.012, -0.145)
+    b_l_f = add_v_b(-0.165, 0.012, 0.145)
+    b_r_f = add_v_b(0.165, 0.012, 0.145)
+    add_f_b([b_l_b, b_r_b, b_r_f, b_l_f], [uv0_b]*4)
 
-    # Front dual bracket arms holding chrome bar handle
-    lid.add_box(-0.35, -0.28, -0.40, 0.10, -0.58, -0.48, 0.1, 0.3, 0.1, 0.4)
-    lid.add_box(0.28, 0.35, -0.40, 0.10, -0.58, -0.48, 0.1, 0.3, 0.1, 0.4)
+    m_l_b = add_v_b(-0.170, 0.080, -0.150)
+    m_r_b = add_v_b(0.170, 0.080, -0.150)
+    m_l_f = add_v_b(-0.170, 0.080, 0.135)
+    m_r_f = add_v_b(0.170, 0.080, 0.135)
 
-    lid.write("Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Lid.obj")
+    add_f_b([b_l_b, m_l_b, m_l_f, b_l_f], [uv0_b]*4)
+    add_f_b([b_r_b, b_r_f, m_r_f, m_r_b], [uv0_b]*4)
+    add_f_b([b_l_b, b_r_b, m_r_b, m_l_b], [uv0_b]*4)
+
+    # 3. Sloped Front Control Bezel & Digital Display Panel (Z up to 0.152)
+    disp_v_bl = add_v_b(-0.080, 0.025, 0.152)
+    disp_v_br = add_v_b(0.080, 0.025, 0.152)
+    disp_v_tr = add_v_b(0.080, 0.065, 0.145)
+    disp_v_tl = add_v_b(-0.080, 0.065, 0.145)
+
+    uv_disp_bl = add_uv_b(0.0, 0.0)
+    uv_disp_br = add_uv_b(1.0, 0.0)
+    uv_disp_tr = add_uv_b(1.0, 1.0)
+    uv_disp_tl = add_uv_b(0.0, 1.0)
+
+    add_f_b([disp_v_bl, disp_v_br, disp_v_tr, disp_v_tl],
+            [uv_disp_bl, uv_disp_br, uv_disp_tr, uv_disp_tl])
+
+    add_f_b([b_l_f, b_r_f, disp_v_br, disp_v_bl], [uv0_b]*4)
+    add_f_b([disp_v_tl, disp_v_tr, m_r_f, m_l_f], [uv0_b]*4)
+    add_f_b([b_l_f, disp_v_bl, disp_v_tl, m_l_f], [uv0_b]*4)
+    add_f_b([disp_v_br, b_r_f, m_r_f, disp_v_tr], [uv0_b]*4)
+
+    # 4. Upper Cooking Well & Rim (Y = 0.080 .. 0.092)
+    w_l_b = add_v_b(-0.145, 0.080, -0.120)
+    w_r_b = add_v_b(0.145, 0.080, -0.120)
+    w_l_f = add_v_b(-0.145, 0.080, 0.120)
+    w_r_f = add_v_b(0.145, 0.080, 0.120)
+
+    add_f_b([m_l_b, m_r_b, w_r_b, w_l_b], [uv0_b]*4)
+    add_f_b([m_l_f, w_l_f, w_r_f, m_r_f], [uv0_b]*4)
+    add_f_b([m_l_b, w_l_b, w_l_f, m_l_f], [uv0_b]*4)
+    add_f_b([m_r_b, m_r_f, w_r_f, w_r_b], [uv0_b]*4)
+
+    # 5. Lower Ribbed Cast Aluminum Cooking Plate
+    num_ribs = 10
+    rib_w = 0.007
+    plate_x_span = 0.280
+    step = plate_x_span / num_ribs
+
+    p_floor_lb = add_v_b(-0.140, 0.092, -0.090)
+    p_floor_rb = add_v_b(0.140, 0.092, -0.090)
+    p_floor_rf = add_v_b(0.140, 0.092, 0.125)
+    p_floor_lf = add_v_b(-0.140, 0.092, 0.125)
+    add_f_b([p_floor_lb, p_floor_rb, p_floor_rf, p_floor_lf], [uv0_b]*4)
+
+    for i in range(num_ribs):
+        rx_c = -0.140 + (i + 0.5) * step
+        rx1 = rx_c - rib_w * 0.5
+        rx2 = rx_c + rib_w * 0.5
+        r_b1 = add_v_b(rx1, 0.096, -0.085)
+        r_b2 = add_v_b(rx2, 0.096, -0.085)
+        r_f2 = add_v_b(rx2, 0.096, 0.125)
+        r_f1 = add_v_b(rx1, 0.096, 0.125)
+        add_f_b([r_b1, r_b2, r_f2, r_f1], [uv0_b]*4)
+
+    # 6. Rear Hinge Towers (Rising up to Y = 0.125, Z down to -0.150)
+    hl_b1 = add_v_b(-0.140, 0.125, -0.150)
+    hl_b2 = add_v_b(-0.115, 0.125, -0.150)
+    hl_f2 = add_v_b(-0.115, 0.125, -0.115)
+    hl_f1 = add_v_b(-0.140, 0.125, -0.115)
+    add_f_b([hl_b1, hl_b2, hl_f2, hl_f1], [uv0_b]*4)
+    add_f_b([m_l_b, hl_b1, hl_f1, w_l_b], [uv0_b]*4)
+
+    hr_b1 = add_v_b(0.115, 0.125, -0.150)
+    hr_b2 = add_v_b(0.140, 0.125, -0.150)
+    hr_f2 = add_v_b(0.140, 0.125, -0.115)
+    hr_f1 = add_v_b(0.115, 0.125, -0.115)
+    add_f_b([hr_b1, hr_b2, hr_f2, hr_f1], [uv0_b]*4)
+    add_f_b([m_r_b, w_r_b, hr_f2, hr_b2], [uv0_b]*4)
+
+    out_base = "Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Base.obj"
+    with open(out_base, "w") as f:
+        f.write("# Wavefront OBJ: SM_Grill_Elmich_Base\n")
+        f.write("o SM_Grill_Elmich_Base\n")
+        for vx, vy, vz in verts_b:
+            f.write(f"v {vx:.6f} {vy:.6f} {vz:.6f}\n")
+        for u, v in uvs_b:
+            f.write(f"vt {u:.6f} {v:.6f}\n")
+        for f_tuple in faces_b:
+            f.write(f"f {f_tuple[0]}/{f_tuple[1]} {f_tuple[2]}/{f_tuple[3]} {f_tuple[4]}/{f_tuple[5]}\n")
+    print(f"Generated {out_base}: {len(verts_b)} verts, {len(faces_b)} faces")
+
+    # --- SM_Grill_Elmich_Lid.obj ---
+    verts_l = []
+    uvs_l = []
+    faces_l = []
+
+    def add_v_l(x, y, z):
+        verts_l.append((x, y, z))
+        return len(verts_l)
+
+    def add_uv_l(u, v):
+        uvs_l.append((u, v))
+        return len(uvs_l)
+
+    def add_f_l(v_list, vt_list):
+        if len(v_list) == 3:
+            faces_l.append((v_list[0], vt_list[0], v_list[1], vt_list[1], v_list[2], vt_list[2]))
+        elif len(v_list) == 4:
+            faces_l.append((v_list[0], vt_list[0], v_list[1], vt_list[1], v_list[2], vt_list[2]))
+            faces_l.append((v_list[0], vt_list[0], v_list[2], vt_list[2], v_list[3], vt_list[3]))
+
+    uv0_l = add_uv_l(0.0, 0.0)
+
+    # 1. Rear Hinge Knuckles (Z down to -0.020, Y down to -0.015)
+    kl_b1 = add_v_l(-0.140, -0.015, -0.020)
+    kl_b2 = add_v_l(-0.115, -0.015, -0.020)
+    kl_f2 = add_v_l(-0.115, 0.025, 0.035)
+    kl_f1 = add_v_l(-0.140, 0.025, 0.035)
+    add_f_l([kl_b1, kl_b2, kl_f2, kl_f1], [uv0_l]*4)
+
+    kr_b1 = add_v_l(0.115, -0.015, -0.020)
+    kr_b2 = add_v_l(0.140, -0.015, -0.020)
+    kr_f2 = add_v_l(0.140, 0.025, 0.035)
+    kr_f1 = add_v_l(0.115, 0.025, 0.035)
+    add_f_l([kr_b1, kr_b2, kr_f2, kr_f1], [uv0_l]*4)
+
+    # 2. Underside Ribbed Upper Grill Plate
+    pl_b = add_v_l(-0.140, 0.000, 0.040)
+    pr_b = add_v_l(0.140, 0.000, 0.040)
+    pr_f = add_v_l(0.140, 0.000, 0.280)
+    pl_f = add_v_l(-0.140, 0.000, 0.280)
+    add_f_l([pl_b, pl_f, pr_f, pr_b], [uv0_l]*4)
+
+    for i in range(num_ribs):
+        rx_c = -0.140 + (i + 0.5) * step
+        rx1 = rx_c - rib_w * 0.5
+        rx2 = rx_c + rib_w * 0.5
+        r_b1 = add_v_l(rx1, -0.015, 0.045)
+        r_b2 = add_v_l(rx2, -0.015, 0.045)
+        r_f2 = add_v_l(rx2, -0.015, 0.275)
+        r_f1 = add_v_l(rx1, -0.015, 0.275)
+        add_f_l([r_b1, r_f1, r_f2, r_b2], [uv0_l]*4)
+
+    # 3. Main Domed Top Casing (Y up to 0.058, X up to +-0.155, Z in [0.030, 0.300])
+    t_l_b = add_v_l(-0.155, 0.040, 0.030)
+    t_r_b = add_v_l(0.155, 0.040, 0.030)
+    t_l_f = add_v_l(-0.155, 0.040, 0.300)
+    t_r_f = add_v_l(0.155, 0.040, 0.300)
+
+    apex_lb = add_v_l(-0.130, 0.058, 0.050)
+    apex_rb = add_v_l(0.130, 0.058, 0.050)
+    apex_rf = add_v_l(0.130, 0.058, 0.280)
+    apex_lf = add_v_l(-0.130, 0.058, 0.280)
+
+    add_f_l([apex_lb, apex_rb, apex_rf, apex_lf], [uv0_l]*4)
+    add_f_l([t_l_b, apex_lb, apex_lf, t_l_f], [uv0_l]*4)
+    add_f_l([apex_rb, t_r_b, t_r_f, apex_rf], [uv0_l]*4)
+    add_f_l([t_l_b, t_r_b, apex_rb, apex_lb], [uv0_l]*4)
+    add_f_l([apex_lf, apex_rf, t_r_f, t_l_f], [uv0_l]*4)
+
+    # 4. Side Composite Grip Brackets (Reaching X = +-0.170, Y in [-0.005, 0.045])
+    g_l_b = add_v_l(-0.170, 0.020, 0.120)
+    g_l_f = add_v_l(-0.170, 0.020, 0.220)
+    g_l_t = add_v_l(-0.170, 0.045, 0.170)
+    g_l_d = add_v_l(-0.170, -0.005, 0.170)
+    add_f_l([g_l_b, g_l_d, g_l_f, g_l_t], [uv0_l]*4)
+    add_f_l([t_l_b, g_l_b, g_l_t, t_l_f], [uv0_l]*4)
+
+    g_r_b = add_v_l(0.170, 0.020, 0.120)
+    g_r_f = add_v_l(0.170, 0.020, 0.220)
+    g_r_t = add_v_l(0.170, 0.045, 0.170)
+    g_r_d = add_v_l(0.170, -0.005, 0.170)
+    add_f_l([g_r_b, g_r_t, g_r_f, g_r_d], [uv0_l]*4)
+    add_f_l([t_r_b, t_r_f, g_r_t, g_r_b], [uv0_l]*4)
+
+    # 5. Cantilever Handle Arms
+    al_b = add_v_l(-0.119, 0.025, 0.290)
+    al_f = add_v_l(-0.119, 0.025, 0.355)
+    ar_b = add_v_l(0.119, 0.025, 0.290)
+    ar_f = add_v_l(0.119, 0.025, 0.355)
+
+    # 6. Tubular Front Crossbar Handle (Z up to 0.372)
+    h_r = 0.012
+    h_z = 0.360
+    h_y = 0.025
+    h_segs = 8
+    h_left = []
+    h_right = []
+    for i in range(h_segs):
+        ang = 2.0 * math.pi * i / float(h_segs)
+        vy = h_y + h_r * math.cos(ang)
+        vz = h_z + h_r * math.sin(ang)
+        h_left.append(add_v_l(-0.120, vy, vz))
+        h_right.append(add_v_l(0.120, vy, vz))
+
+    for i in range(h_segs):
+        ni = (i + 1) % h_segs
+        add_f_l([h_left[i], h_right[i], h_right[ni], h_left[ni]], [uv0_l]*4)
+
+    c_l = add_v_l(-0.120, h_y, h_z)
+    c_r = add_v_l(0.120, h_y, h_z)
+    for i in range(h_segs):
+        ni = (i + 1) % h_segs
+        add_f_l([c_l, h_left[ni], h_left[i]], [uv0_l]*3)
+        add_f_l([c_r, h_right[i], h_right[ni]], [uv0_l]*3)
+
+    out_lid = "Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Lid.obj"
+    with open(out_lid, "w") as f:
+        f.write("# Wavefront OBJ: SM_Grill_Elmich_Lid\n")
+        f.write("o SM_Grill_Elmich_Lid\n")
+        for vx, vy, vz in verts_l:
+            f.write(f"v {vx:.6f} {vy:.6f} {vz:.6f}\n")
+        for u, v in uvs_l:
+            f.write(f"vt {u:.6f} {v:.6f}\n")
+        for f_tuple in faces_l:
+            f.write(f"f {f_tuple[0]}/{f_tuple[1]} {f_tuple[2]}/{f_tuple[3]} {f_tuple[4]}/{f_tuple[5]}\n")
+    print(f"Generated {out_lid}: {len(verts_l)} verts, {len(faces_l)} faces")
 
 if __name__ == "__main__":
     build_icebin_well()
@@ -378,3 +589,4 @@ if __name__ == "__main__":
     build_topping_station_cover()
     build_grill_elmich()
     print("ALL equipment meshes generated successfully!")
+
