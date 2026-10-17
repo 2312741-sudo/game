@@ -21,16 +21,16 @@ import os
 
 TABLE_SPECS = [
     # id, pos_x, pos_z, stool_count
-    ("TABLE_01", -2.20,  1.40, 4),
-    ("TABLE_02", -3.70,  1.40, 3),
-    ("TABLE_03", -5.20,  1.40, 4),
-    ("TABLE_04", -6.70,  1.40, 2),
-    ("TABLE_05", -2.20, -1.40, 3),
-    ("TABLE_06", -4.45, -1.40, 4),
-    ("TABLE_07", -6.70, -1.40, 3),
-    ("TABLE_08",  4.50,  1.40, 4),
-    ("TABLE_09",  4.50,  0.00, 3),
-    ("TABLE_10",  4.50, -1.40, 2),
+    ("TABLE_01", -2.10,  1.70, 2),
+    ("TABLE_02", -3.35,  0.20, 2),
+    ("TABLE_03", -4.60,  1.70, 2),
+    ("TABLE_04", -5.85,  0.20, 2),
+    ("TABLE_05", -7.10,  1.70, 2),
+    ("TABLE_06", -3.35, -1.80, 2),
+    ("TABLE_07", -5.85, -1.80, 2),
+    ("TABLE_08",  4.20,  0.60, 2),
+    ("TABLE_09",  5.60, -0.90, 2),
+    ("TABLE_10",  4.20, -2.20, 2),
 ]
 
 SIGN_GUIDS = [
@@ -327,7 +327,7 @@ Transform:
   m_GameObject: {{fileID: {bill_go_id}}}
   serializedVersion: 2
   m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
-  m_LocalPosition: {{x: 0, y: 0.85, z: 0}}
+  m_LocalPosition: {{x: -0.05, y: 0.342, z: -0.08}}
   m_LocalScale: {{x: 1, y: 1, z: 1}}
   m_ConstrainProportionsScale: 0
   m_Children: []
