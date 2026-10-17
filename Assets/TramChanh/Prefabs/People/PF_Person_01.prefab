@@ -88,12 +88,12 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8569bb2b4ef944809b2930089ce9b01e, type: 2}
-  - {fileID: 2100000, guid: 1e22c548edd947db8259cab20f7740d4, type: 2}
-  - {fileID: 2100000, guid: 4308b09022f4481cb1cf7ff188766359, type: 2}
-  - {fileID: 2100000, guid: ca2eeb145e45447abd9bd8be154d6bf9, type: 2}
-  - {fileID: 2100000, guid: ae118f2bf17f4eb78dc39b1b3aeeb150, type: 2}
-  - {fileID: 2100000, guid: c1d009893f5c44f0b811e55d8964b3f1, type: 2}
+  - {fileID: 2100000, guid: f8e93e16283b348698c4290a7ccaf13e, type: 2}
+  - {fileID: 2100000, guid: 948ce5f8503274bdfafe9e6d7479694b, type: 2}
+  - {fileID: 2100000, guid: 70f53a03113044205a6ae37f01e549a7, type: 2}
+  - {fileID: 2100000, guid: 72eccc283b18b432fa994ab58eb2ccc1, type: 2}
+  - {fileID: 2100000, guid: d0ddb4c2fb7ca45aca5a02c6b1642422, type: 2}
+  - {fileID: 2100000, guid: 62a9d9904ac5f4f4299c8ca71e8052f2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -177,8 +177,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.11794281, z: 0.015}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: 
-  - {fileID: 7770000000000000001}
+  m_Children: []
   m_Father: {fileID: 9200539209846682001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1310783555758317037
@@ -772,12 +771,12 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8569bb2b4ef944809b2930089ce9b01e, type: 2}
-  - {fileID: 2100000, guid: 1e22c548edd947db8259cab20f7740d4, type: 2}
-  - {fileID: 2100000, guid: 4308b09022f4481cb1cf7ff188766359, type: 2}
-  - {fileID: 2100000, guid: ca2eeb145e45447abd9bd8be154d6bf9, type: 2}
-  - {fileID: 2100000, guid: ae118f2bf17f4eb78dc39b1b3aeeb150, type: 2}
-  - {fileID: 2100000, guid: c1d009893f5c44f0b811e55d8964b3f1, type: 2}
+  - {fileID: 2100000, guid: f8e93e16283b348698c4290a7ccaf13e, type: 2}
+  - {fileID: 2100000, guid: 948ce5f8503274bdfafe9e6d7479694b, type: 2}
+  - {fileID: 2100000, guid: 70f53a03113044205a6ae37f01e549a7, type: 2}
+  - {fileID: 2100000, guid: 72eccc283b18b432fa994ab58eb2ccc1, type: 2}
+  - {fileID: 2100000, guid: d0ddb4c2fb7ca45aca5a02c6b1642422, type: 2}
+  - {fileID: 2100000, guid: 62a9d9904ac5f4f4299c8ca71e8052f2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1020,12 +1019,12 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8569bb2b4ef944809b2930089ce9b01e, type: 2}
-  - {fileID: 2100000, guid: 1e22c548edd947db8259cab20f7740d4, type: 2}
-  - {fileID: 2100000, guid: 4308b09022f4481cb1cf7ff188766359, type: 2}
-  - {fileID: 2100000, guid: ca2eeb145e45447abd9bd8be154d6bf9, type: 2}
-  - {fileID: 2100000, guid: ae118f2bf17f4eb78dc39b1b3aeeb150, type: 2}
-  - {fileID: 2100000, guid: c1d009893f5c44f0b811e55d8964b3f1, type: 2}
+  - {fileID: 2100000, guid: f8e93e16283b348698c4290a7ccaf13e, type: 2}
+  - {fileID: 2100000, guid: 948ce5f8503274bdfafe9e6d7479694b, type: 2}
+  - {fileID: 2100000, guid: 70f53a03113044205a6ae37f01e549a7, type: 2}
+  - {fileID: 2100000, guid: 72eccc283b18b432fa994ab58eb2ccc1, type: 2}
+  - {fileID: 2100000, guid: d0ddb4c2fb7ca45aca5a02c6b1642422, type: 2}
+  - {fileID: 2100000, guid: 62a9d9904ac5f4f4299c8ca71e8052f2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1113,90 +1112,3 @@ Transform:
   - {fileID: 5091179177740396193}
   m_Father: {fileID: 7446158687914849683}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-
---- !u!1 &7770000000000000000
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7770000000000000001}
-  - component: {fileID: 7770000000000000002}
-  - component: {fileID: 7770000000000000003}
-  m_Layer: 0
-  m_Name: Hair_TwoBlockCurtains
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7770000000000000001
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7770000000000000000}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.045, z: 0.01}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2254614606816677899}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7770000000000000002
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7770000000000000000}
-  m_Mesh: {fileID: -2432090755550338912, guid: 2e6b0995f3e441019d98caa586c8b23b, type: 3}
---- !u!23 &7770000000000000003
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7770000000000000000}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: c1d009893f5c44f0b811e55d8964b3f1, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}

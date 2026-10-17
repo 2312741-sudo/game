@@ -614,6 +614,15 @@ def build_ready_counter_plate():
     os.makedirs("Assets/TramChanh/Art/Models/Props", exist_ok=True)
     plate.write("Assets/TramChanh/Art/Models/Props/SM_ReadyCounter_Plate.obj")
 
+def build_plastic_stool():
+    try:
+        from generate_stool_mesh import generate_plastic_stool
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_stool_mesh import generate_plastic_stool
+    generate_plastic_stool("Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj")
+
 if __name__ == "__main__":
     build_icebin_well()
     build_icebin_lids()
@@ -625,4 +634,5 @@ if __name__ == "__main__":
     build_cake_food_meshes()
     build_cake_tool_meshes()
     build_ready_counter_plate()
+    build_plastic_stool()
     print("ALL equipment and prop meshes generated successfully!")
