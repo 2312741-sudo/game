@@ -47,6 +47,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Elmich Grill Digital LED Interface** (`T_Grill_Display`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Textures/T_Grill_Display_BaseColor.png`<br>`Assets/TramChanh/Art/Textures/T_Grill_Display_Emission.png` |
 | **Vietnamese Shophouse Facades A, B, C, D, E, F** (`T_Shopfront_A..F`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Textures/T_Shopfront_A..F_BaseColor.png`<br>`Assets/TramChanh/Art/Models/Environment/SM_Shopfront_A..F.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_VietnameseShopfront_A..F.prefab` |
 | **Vietnamese Concrete Utility Pole** (`T_UtilityPole`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-15 | `Assets/TramChanh/Art/Textures/T_UtilityPole_BaseColor.png` |
+| **Street Roadside Props (10 Variants across 5 Categories)** (`SM_TrashBin_Municipal`, `SM_TrashBin_Dual`, `SM_UtilityPole_Cables`, `SM_UtilityPole_Transformer`, `SM_PottedPlant_Ceramic`, `SM_PottedPlant_Square`, `SM_StoneBench_Classic`, `SM_StoneBench_Flat`, `SM_Signpost_StreetName`, `SM_Signpost_Wayfinding`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_*.obj`<br>`Assets/TramChanh/Art/Textures/T_Street_RoadsideProps_Atlas.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_*.prefab` |
 
 ---
 
@@ -83,6 +84,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Female Pedestrian (Dress)** | $\le 8,000$ tris | Female Dress Rigged Pedestrian | 2,192 tris | $\le 2048 \times 2048$ | Material colors / URP Lit | **PASS** |
 | **Sidewalk Pavers** | $\le 10,000$ tris | Tiled Sidewalk Meshes | 216 tris (SM_Sidewalk_Extended_80m) | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_Sidewalk_Tiles_BaseColor) | **PASS** |
 | **Asphalt Roadway** | $\le 10,000$ tris | Asphalt Road Meshes | 36 tris (SM_Asphalt_Road_80m) | $\le 2048 \times 2048$ | $2048 \times 1024$ PNG (T_Asphalt_Night_BaseColor) | **PASS** |
+| **Street Roadside Props (10 Variants)** | $\le 3,000$ tris each | Municipal & Dual Bins, Cable & Transformer Poles, Ceramic & Terrazzo Planters, Classic & Slab Benches, Street & Tourist Signs | 24 - 72 tris each | $\le 2048 \times 2048$ | $2048 \times 2048$ PNG (T_Street_RoadsideProps_Atlas) | **PASS** |
 
 ---
 
