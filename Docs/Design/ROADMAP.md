@@ -18,3 +18,8 @@ Order of work: finish the whole look (UI + art) and every function first. Rich g
 - Economy and progression, customer variety, difficulty, events, goals.
 
 Rule: no Phase 3 work starts until Phase 1 and 2 acceptance is signed off by the product owner.
+
+## Remaining look and UI list (final sweep, one or two rounds)
+Round A (art, Anti; lead reviews): ART-FIX-021 (stool under 1,500 triangles, drop VIP_Real), table rows, bar mat and cake props verified in Play; tea rack model when the owner supplies the file.
+Round B (UI, lead; Mac session verifies): HUD and menu in brand style (fonts, colours, icons), menu board and shop sign, order toast style, day-summary art, title-screen background (stall at night), cursor and prompt icons, lighting budget at x = 0 (12 lights vs 8).
+After Round B: owner plays `PLAYTEST_CHECKLIST.md`, signs off Phases 1-2, then `GAMEPLAY_DESIGN.md` is approved and steps G1-G6 start.
