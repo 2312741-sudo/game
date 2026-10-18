@@ -45,6 +45,15 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] Ice is 0 after the night (it melted); jelly, batter and wrap stay.
 - [ ] Stop and Play again: stock and cash are kept.
 
+## Reputation, upgrades, nights, goal, difficulty (G4-G6, new)
+- [ ] Under the stock line a third line reads e.g. "Trời quang  |  ★☆☆☆☆  |  Mục tiêu 0/6" and the goal count goes up as you serve.
+- [ ] End-of-day card ends with the goal result ("Đạt mục tiêu! Thưởng ..." or "Chưa đạt mục tiêu") and "Uy tín: ★..." with the point change.
+- [ ] The shop shows stars, five upgrades (price, or "cần N sao", or "đã có"), a difficulty button, and tomorrow's night plus its goal.
+- [ ] Buying an upgrade takes the money: bigger ice bin raises the ice capacity by 20, pantry raises the others by 20, wholesale deal makes packs 10 percent cheaper, golden board makes orders pay 10 percent more, string lights make customers wait 15 percent longer.
+- [ ] Difficulty button cycles Thư thả / Bình thường / Cao điểm; the choice is kept after restarting.
+- [ ] Day 1 and 2 are "Trời quang". Later nights vary: Rain (fewer customers), Hot night (more customers, 2 ice per drink), Power cut 21:00 to 21:20 (no customers arrive), Festival 20:00 to 21:00 (a rush), Inspector from day 4 (reward or fine at the end of the day).
+- [ ] More stars bring customers a little faster.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 

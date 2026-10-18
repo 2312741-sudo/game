@@ -72,6 +72,14 @@ namespace TramChanh.Core
             Money += sale.Amount;
         }
 
+        /// <summary>Adds a bonus (goal reward, inspector reward) or takes a fine. A fine never takes more than the cash in hand. Returns the real change.</summary>
+        public int AddBonus(int amount)
+        {
+            int before = Money;
+            Money = Math.Max(0, Money + amount);
+            return Money - before;
+        }
+
         /// <summary>Takes money out of the cash in hand. Returns false and changes nothing when there is not enough.</summary>
         public bool TrySpend(int amount)
         {

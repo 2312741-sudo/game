@@ -133,5 +133,16 @@ namespace TramChanh.Tests.EditMode.Core
         {
             Assert.That(new DaySummary(1, 0, 2).AverageQuality, Is.EqualTo(0));
         }
+
+        [Test]
+        public void AddBonus_AddsAndAFineNeverTakesMoreThanTheCash()
+        {
+            var p = new GameProgress();
+            Assert.That(p.AddBonus(50000), Is.EqualTo(50000));
+            Assert.That(p.Money, Is.EqualTo(50000));
+            Assert.That(p.AddBonus(-20000), Is.EqualTo(-20000));
+            Assert.That(p.AddBonus(-999999), Is.EqualTo(-30000));
+            Assert.That(p.Money, Is.EqualTo(0));
+        }
     }
 }

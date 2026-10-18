@@ -24,5 +24,14 @@ namespace TramChanh.Tests.EditMode.UI
             wallet.RecordSale(new Sale(40500, QualityTier.Good, 80));
             Assert.That(SupplierPanel.DescribeCash(wallet), Is.EqualTo("Tiền đang có: 40.500đ"));
         }
+
+        [Test]
+        public void DescribeUpgrade_ShowsPriceStarsOrOwned()
+        {
+            UpgradeInfo info = UpgradeBook.Info(UpgradeId.StringLights);
+            Assert.That(SupplierPanel.DescribeUpgrade(info, UpgradeStatus.Available), Does.Contain("250.000đ"));
+            Assert.That(SupplierPanel.DescribeUpgrade(info, UpgradeStatus.NeedsStars), Does.Contain("cần 2 sao"));
+            Assert.That(SupplierPanel.DescribeUpgrade(info, UpgradeStatus.Owned), Does.Contain("đã có"));
+        }
     }
 }

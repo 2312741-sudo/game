@@ -100,7 +100,7 @@ namespace TramChanh.UI.Menu
         public bool IsVisible => _panel.style.display.value == DisplayStyle.Flex;
 
         /// <summary>Text of the summary card for one finished day.</summary>
-        public static string Describe(DaySummary summary, GameProgress progress)
+        public static string Describe(DaySummary summary, GameProgress progress, string extra = null)
         {
             string text = "Đã phục vụ: " + summary.Served + "\nKhách bỏ đi: " + summary.Failed
                 + "\nTỉ lệ phục vụ: " + summary.ServedPercent + "%";
@@ -114,13 +114,14 @@ namespace TramChanh.UI.Menu
                 text += "\n\nTổng cộng: " + progress.TotalServed + " đơn  |  Ngày tốt nhất: " + progress.BestServedInADay + " đơn";
                 text += "\nTiền đang có: " + PriceList.Format(progress.Money);
             }
+            if (!string.IsNullOrEmpty(extra)) { text += "\n\n" + extra; }
             return text;
         }
 
-        public void Show(DaySummary summary, GameProgress progress)
+        public void Show(DaySummary summary, GameProgress progress, string extra = null)
         {
             _title.text = "Hết ngày " + summary.Day;
-            _body.text = Describe(summary, progress);
+            _body.text = Describe(summary, progress, extra);
             _panel.style.display = DisplayStyle.Flex;
         }
 

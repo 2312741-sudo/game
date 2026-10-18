@@ -288,30 +288,23 @@ namespace TramChanh.UI.Prompt
         }
 
         /// <summary>Shows the end-of-day card. <paramref name="onContinue"/> runs when the player presses the button.</summary>
-        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue)
+        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null)
         {
             _summary?.Hide();
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
-            _summary.Show(summary, progress);
+            _summary.Show(summary, progress, extra);
         }
 
         /// <summary>
-        /// Shows the shop between days. <paramref name="buy"/> runs when a Buy button is pressed and returns false when the
-        /// purchase was refused; <paramref name="onDone"/> runs on the open-the-stall button.
+        /// Shows the shop between days (stock, upgrades, difficulty). <paramref name="onDone"/> runs on the open-the-stall button.
         /// </summary>
-        public void ShowSupplier(StockBook stock, GameProgress wallet, Supplier supplier, Action onBuyDone, Action onDone)
+        public void ShowSupplier(SupplierContext context, Action onDone)
         {
             _supplier?.Hide();
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
-            _supplier = new SupplierPanel(root, ingredient =>
-            {
-                bool bought = supplier.TryBuyPack(stock, wallet, ingredient);
-                _supplier.Refresh(stock, wallet, supplier, bought ? string.Empty : "Không đủ tiền hoặc kho đã đầy.");
-                if (bought) { onBuyDone?.Invoke(); }
-                return bought;
-            }, () => { _supplier.Hide(); onDone?.Invoke(); });
-            _supplier.Show(stock, wallet, supplier);
+            _supplier = new SupplierPanel(root, context, () => { _supplier.Hide(); onDone?.Invoke(); });
+            _supplier.Show();
         }
 
         private void BuildTitle(VisualElement root)

@@ -6,6 +6,22 @@ using UnityEngine.UIElements;
 
 namespace TramChanh.UI.Menu
 {
+    /// <summary>Everything the between-days shop shows and changes. The owner (the game) applies the effects.</summary>
+    public sealed class SupplierContext
+    {
+        public StockBook Stock;
+        public GameProgress Wallet;
+        public Supplier Supplier;
+        public UpgradeBook Upgrades;
+        public Reputation Reputation;
+        public Func<Difficulty> GetDifficulty;
+        public Action CycleDifficulty;
+        /// <summary>Runs after anything was bought or changed, so the game can apply the effects and save.</summary>
+        public Action Changed;
+        /// <summary>Text under the lists, for example what tomorrow night brings.</summary>
+        public string Forecast = string.Empty;
+    }
+
     /// <summary>
     /// Between-days shop: shows the stock and the cash, one "Mua" button per ingredient pack and a button to open the
     /// stall. Pure view; the owner decides what a purchase does and pauses and resumes the game.
@@ -17,9 +33,22 @@ namespace TramChanh.UI.Menu
         private readonly Label _message;
         private readonly Dictionary<Ingredient, Label> _rowLabels = new Dictionary<Ingredient, Label>();
         private readonly Dictionary<Ingredient, Button> _buyButtons = new Dictionary<Ingredient, Button>();
+        private readonly Dictionary<UpgradeId, Label> _upgradeLabels = new Dictionary<UpgradeId, Label>();
+        private readonly Dictionary<UpgradeId, Button> _upgradeButtons = new Dictionary<UpgradeId, Button>();
+        private readonly SupplierContext _context;
+        private Label _stars;
+        private Button _difficulty;
 
-        public SupplierPanel(VisualElement root, Func<Ingredient, bool> onBuy, Action onDone)
+        public SupplierPanel(VisualElement root, SupplierContext context, Action onDone)
         {
+            _context = context;
+            Func<Ingredient, bool> onBuy = ingredient =>
+            {
+                bool bought = context.Supplier.TryBuyPack(context.Stock, context.Wallet, ingredient);
+                Refresh(bought ? string.Empty : "Không đủ tiền hoặc kho đã đầy.");
+                if (bought) { context.Changed?.Invoke(); }
+                return bought;
+            };
             _panel = new VisualElement { name = "Supplier" };
             _panel.style.position = Position.Absolute;
             _panel.style.left = 0f;
@@ -32,7 +61,7 @@ namespace TramChanh.UI.Menu
             _panel.style.display = DisplayStyle.None;
 
             var box = new VisualElement();
-            box.style.width = 520f;
+            box.style.width = 560f;
             box.style.paddingTop = 22f;
             box.style.paddingBottom = 22f;
             box.style.paddingLeft = 26f;
@@ -79,6 +108,49 @@ namespace TramChanh.UI.Menu
                 _buyButtons[ingredient] = buy;
             }
 
+            _stars = new Label();
+            _stars.style.fontSize = 18f;
+            _stars.style.color = new Color(0.99f, 0.78f, 0.15f, 1f);
+            _stars.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _stars.style.marginTop = 12f;
+            box.Add(_stars);
+
+            foreach (UpgradeInfo info in UpgradeBook.All)
+            {
+                UpgradeId captured = info.Id;
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.marginTop = 3f;
+                var label = new Label();
+                label.style.flexGrow = 1f;
+                label.style.fontSize = 15f;
+                label.style.whiteSpace = WhiteSpace.Normal;
+                label.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
+                var buy = new Button(() =>
+                {
+                    bool bought = context.Upgrades.TryBuy(captured, context.Wallet, context.Reputation);
+                    Refresh(bought ? "Đã mua: " + UpgradeBook.Info(captured).Name : "Chưa mua được.");
+                    if (bought) { context.Changed?.Invoke(); }
+                }) { text = "Mua" };
+                buy.style.width = 96f;
+                buy.style.height = 30f;
+                buy.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f);
+                buy.style.color = Color.white;
+                row.Add(label);
+                row.Add(buy);
+                box.Add(row);
+                _upgradeLabels[info.Id] = label;
+                _upgradeButtons[info.Id] = buy;
+            }
+
+            _difficulty = new Button(() => { context.CycleDifficulty?.Invoke(); Refresh(string.Empty); context.Changed?.Invoke(); });
+            _difficulty.style.height = 32f;
+            _difficulty.style.marginTop = 12f;
+            _difficulty.style.backgroundColor = new Color(0.2f, 0.45f, 0.32f, 1f);
+            _difficulty.style.color = Color.white;
+            box.Add(_difficulty);
+
             _message = new Label();
             _message.style.fontSize = 15f;
             _message.style.color = new Color(1f, 0.85f, 0.4f);
@@ -110,21 +182,42 @@ namespace TramChanh.UI.Menu
 
         public static string DescribeCash(GameProgress wallet) => "Tiền đang có: " + PriceList.Format(wallet.Money);
 
-        public void Show(StockBook stock, GameProgress wallet, Supplier supplier, string message = "")
+        public static string DescribeUpgrade(UpgradeInfo info, UpgradeStatus status)
         {
-            Refresh(stock, wallet, supplier, message);
+            string state;
+            switch (status)
+            {
+                case UpgradeStatus.Owned: state = "đã có"; break;
+                case UpgradeStatus.NeedsStars: state = "cần " + info.RequiredStars + " sao"; break;
+                default: state = PriceList.Format(info.Cost); break;
+            }
+            return info.Name + ": " + info.Effect + " (" + state + ")";
+        }
+
+        public void Show(string message = "")
+        {
+            Refresh(message);
             _panel.style.display = DisplayStyle.Flex;
         }
 
-        public void Refresh(StockBook stock, GameProgress wallet, Supplier supplier, string message = "")
+        public void Refresh(string message = "")
         {
-            _cash.text = DescribeCash(wallet);
+            SupplierContext c = _context;
+            _cash.text = DescribeCash(c.Wallet);
             foreach (Ingredient ingredient in StockBook.Ingredients)
             {
-                _rowLabels[ingredient].text = DescribeRow(ingredient, stock, supplier);
-                _buyButtons[ingredient].SetEnabled(stock.Space(ingredient) >= Supplier.PackSize && wallet.Money >= supplier.PackPrice(ingredient));
+                _rowLabels[ingredient].text = DescribeRow(ingredient, c.Stock, c.Supplier);
+                _buyButtons[ingredient].SetEnabled(c.Stock.Space(ingredient) >= Supplier.PackSize && c.Wallet.Money >= c.Supplier.PackPrice(ingredient));
             }
-            _message.text = message ?? string.Empty;
+            _stars.text = "Uy tín: " + Reputation.StarText(c.Reputation.Stars);
+            foreach (UpgradeInfo info in UpgradeBook.All)
+            {
+                UpgradeStatus status = c.Upgrades.StatusOf(info.Id, c.Wallet, c.Reputation);
+                _upgradeLabels[info.Id].text = DescribeUpgrade(info, status);
+                _upgradeButtons[info.Id].SetEnabled(status == UpgradeStatus.Available);
+            }
+            _difficulty.text = "Độ khó: " + Difficulties.Profile(c.GetDifficulty()).Name + "  (bấm để đổi)";
+            _message.text = string.IsNullOrEmpty(message) ? c.Forecast : message + "\n" + c.Forecast;
         }
 
         public void Hide() { _panel.style.display = DisplayStyle.None; }

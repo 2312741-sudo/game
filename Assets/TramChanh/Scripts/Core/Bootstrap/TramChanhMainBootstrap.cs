@@ -13,6 +13,7 @@ using TramChanh.Lobby;
 using TramChanh.Orders;
 using TramChanh.Stall.Anchors;
 using TramChanh.Stall.Runtime;
+using TramChanh.UI.Menu;
 using TramChanh.UI.Orders;
 using TramChanh.UI.Prompt;
 using UnityEngine;
@@ -180,6 +181,13 @@ namespace TramChanh.App
             _progress.Load(new PlayerPrefsSettingsStore());
             // Tests start from the day-one stock so an empty saved stock on a developer machine cannot fail their orders.
             if (SuppressTitleScreen) { _stock.FillStart(); } else { _stock.Load(new PlayerPrefsSettingsStore()); }
+            if (!SuppressTitleScreen)
+            {
+                _reputation.Load(new PlayerPrefsSettingsStore());
+                _upgrades.Load(new PlayerPrefsSettingsStore());
+                _difficulty = Difficulties.Load(new PlayerPrefsSettingsStore());
+            }
+            BeginNight();
             SetUpSound();
             _orderSubscription = _events.Subscribe<OrderStatusChanged>(OnOrderStatus);
             if (_showTitleScreen && !SuppressTitleScreen)
@@ -484,18 +492,21 @@ namespace TramChanh.App
             double hour = _dayClock.HourOfDay;
             bool open = _dayClock.IsOpen;
             int clockMinute = GameClockText.MinuteOfDay(hour);
-            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen || _progress.Money != _shownMoney || StockHash() != _shownStockHash))
+            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen || _progress.Money != _shownMoney || StockHash() != _shownStockHash || StatusKey() != _shownStatusKey))
             {
                 _shownClockMinute = clockMinute;
                 _shownClockOpen = open;
                 _shownMoney = _progress.Money;
                 _shownStockHash = StockHash();
+                _shownStatusKey = StatusKey();
                 _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open)
-                    + "  |  " + PriceList.Format(_progress.Money) + "\n" + StockLine());
+                    + "  |  " + PriceList.Format(_progress.Money) + "\n" + StockLine() + "\n" + NightLine());
             }
             foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
-            Customers.ArrivalsEnabled = open;
-            Customers.ArrivalIntervalScale = ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak);
+            Customers.ArrivalsEnabled = open && !NightPlan.ArrivalsBlocked(_night, hour);
+            Customers.ArrivalIntervalScale = Math.Min(4d, Math.Max(0.2d,
+                ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak) * _reputation.ArrivalFactor
+                * NightPlan.ArrivalScaleAt(_night, hour) * Difficulties.Profile(_difficulty).ArrivalIntervalScale));
             if (open) { TickPatience(); }
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
@@ -547,6 +558,12 @@ namespace TramChanh.App
         private readonly System.Random _kindRandom = new System.Random(20260101);
         private readonly StockBook _stock = new StockBook();
         private readonly Supplier _supplier = new Supplier();
+        private readonly Reputation _reputation = new Reputation();
+        private readonly UpgradeBook _upgrades = new UpgradeBook();
+        private Difficulty _difficulty = Difficulty.Normal;
+        private NightEvent _night = NightEvent.Clear;
+        private DailyGoal _goal;
+        private int _shownStatusKey = -1;
         private readonly List<OrderId> _noStock = new List<OrderId>();
         private readonly Dictionary<Ingredient, int> _need = new Dictionary<Ingredient, int>();
         private int _shownStockHash = -1;
@@ -637,7 +654,7 @@ namespace TramChanh.App
             if (change.Status == OrderStatus.WaitingForLobby && !_patience.Has(change.OrderId))
             {
                 CustomerProfile profile = _customerKinds.Pick(_kindRandom.NextDouble());
-                _patience.Add(change.OrderId, profile.Kind, _patienceNow, profile.PatienceSeconds);
+                _patience.Add(change.OrderId, profile.Kind, _patienceNow, profile.PatienceSeconds * _upgrades.PatienceMultiplier * Difficulties.Profile(_difficulty).PatienceScale);
             }
             else if (change.Status == OrderStatus.PickedUpByLobby || change.Status == OrderStatus.Delivered)
             {
@@ -655,7 +672,7 @@ namespace TramChanh.App
             IReadOnlyOrder order = Orders?.Get(change.OrderId);
             if (order == null) { return; }
             _need.Clear();
-            foreach (IReadOnlyOrderItem item in order.Items) { IngredientUse.Add(item.Kind, _need); }
+            foreach (IReadOnlyOrderItem item in order.Items) { IngredientUse.Add(item.Kind, _need, NightPlan.IceUsePerDrink(_night)); }
             if (!_stock.TryTake(_need)) { _noStock.Add(change.OrderId); }
         }
 
@@ -683,7 +700,43 @@ namespace TramChanh.App
             int quality = kinds.Count == 0 ? 0 : (int)Math.Round((double)qualitySum / kinds.Count, MidpointRounding.AwayFromZero);
             float payMultiplier = 1f;
             if (_patience.TryGetKind(id, out CustomerKind kind)) { payMultiplier = _customerKinds.Profile(kind).PayMultiplier; }
+            payMultiplier *= 1f + _upgrades.PriceBonusPercent / 100f;
             return _prices.Price(kinds, quality, _patience.LeftFraction(id, _patienceNow), payMultiplier);
+        }
+
+        /// <summary>Third status line: tonight's event, stars and how far the daily goal is.</summary>
+        private string NightLine()
+        {
+            string line = NightPlan.Name(_night) + "  |  " + Reputation.StarText(_reputation.Stars);
+            if (_goal.ServedTarget > 0) { line += "  |  Mục tiêu " + _progress.ServedToday + "/" + _goal.ServedTarget; }
+            return line;
+        }
+
+        private int StatusKey() => (_progress.ServedToday * 31 + _reputation.Stars) * 31 + (int)_night;
+
+        /// <summary>Picks tonight's event and goal for the current day.</summary>
+        private void BeginNight()
+        {
+            _night = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
+            _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
+            ApplyUpgrades();
+        }
+
+        private void ApplyUpgrades()
+        {
+            _stock.SetCapacityBonus(_upgrades.IceCapacityBonus, _upgrades.OtherCapacityBonus);
+            _supplier.DiscountPercent = _upgrades.SupplierDiscountPercent;
+            _supplier.PriceScale = Difficulties.Profile(_difficulty).SupplierPriceScale;
+        }
+
+        private void SaveAll()
+        {
+            var store = new PlayerPrefsSettingsStore();
+            _progress.Save(store);
+            _stock.Save(store);
+            _reputation.Save(store);
+            _upgrades.Save(store);
+            Difficulties.Save(store, _difficulty);
         }
 
         private string StockLine()
@@ -708,15 +761,57 @@ namespace TramChanh.App
         {
             DaySummary summary = _progress.EndDay();
             _stock.Overnight();
-            _progress.Save(new PlayerPrefsSettingsStore());
-            _stock.Save(new PlayerPrefsSettingsStore());
+            var notes = new System.Text.StringBuilder();
+            int points = _reputation.ApplyDay(summary);
+            bool goalMet = _goal.IsMet(summary);
+            if (goalMet)
+            {
+                _progress.AddBonus(_goal.BonusMoney);
+                points += _reputation.AddPoints(DailyGoal.BonusPoints);
+                notes.Append("Đạt mục tiêu! Thưởng ").Append(PriceList.Format(_goal.BonusMoney)).Append('\n');
+            }
+            else if (_goal.ServedTarget > 0)
+            {
+                notes.Append("Chưa đạt mục tiêu (").Append(_goal.ServedTarget).Append(" khách).\n");
+            }
+            if (_night == NightEvent.Inspector)
+            {
+                NightPlan.Inspect(summary, out int money, out int inspectorPoints);
+                int realMoney = _progress.AddBonus(money);
+                points += _reputation.AddPoints(inspectorPoints);
+                notes.Append(money > 0 ? "Thanh tra hài lòng: +" + PriceList.Format(realMoney) : "Thanh tra phạt: " + PriceList.Format(-realMoney)).Append('\n');
+            }
+            notes.Append("Uy tín: ").Append(Reputation.StarText(_reputation.Stars)).Append(" (").Append(points >= 0 ? "+" : "").Append(points).Append(" điểm)");
+            SaveAll();
             _input.ModalOpen = true;
             _input.SetCaptured(false);
-            _prompt.ShowDaySummary(summary, _progress, () =>
+            _prompt.ShowDaySummary(summary, _progress, () => ShowShop(), notes.ToString());
+        }
+
+        private void ShowShop()
+        {
+            ApplyUpgrades();
+            NightEvent tomorrow = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
+            DailyGoal goal = DailyGoal.ForDay(_progress.Day, _difficulty);
+            var context = new SupplierContext
             {
-                _prompt.ShowSupplier(_stock, _progress, _supplier,
-                    () => { _progress.Save(new PlayerPrefsSettingsStore()); _stock.Save(new PlayerPrefsSettingsStore()); },
-                    () => { _input.ModalOpen = false; _input.SetCaptured(true); });
+                Stock = _stock,
+                Wallet = _progress,
+                Supplier = _supplier,
+                Upgrades = _upgrades,
+                Reputation = _reputation,
+                GetDifficulty = () => _difficulty,
+                CycleDifficulty = () => { _difficulty = Difficulties.Next(_difficulty); },
+                Changed = () => { ApplyUpgrades(); SaveAll(); },
+            };
+            context.Forecast = "Ngày " + _progress.Day + ": " + NightPlan.Name(tomorrow) + " - " + NightPlan.Announcement(tomorrow) + "\n" + goal.Describe();
+            _prompt.ShowSupplier(context, () =>
+            {
+                BeginNight();
+                SaveAll();
+                _shownStatusKey = -1;
+                _input.ModalOpen = false;
+                _input.SetCaptured(true);
             });
         }
 
