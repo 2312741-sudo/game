@@ -29,6 +29,7 @@ Report anything that fails with a screenshot and the Console text.
 ## Customers: patience and rush (G2, new)
 - [ ] 18:00 to 19:00 customers arrive slowly; around 19:30 to 21:30 they come faster; after 23:00 it calms down.
 - [ ] A customer you ignore leaves by themselves after roughly 1.5 to 3 minutes (Student 120 s, Family 180 s, Office 90 s, Regular 150 s). The failed buzz plays and the order disappears.
+- [ ] Every order in the top-left list has a thin bar under it: green above half, orange below half, red below a quarter; it drains while you wait.
 - [ ] While the pause menu or the order window is open nobody leaves.
 - [ ] Once you pick the order up to carry it to the customer, they stop losing patience.
 - [ ] Serve fast (while at least two thirds of the patience is left): the order pays 15 percent more.

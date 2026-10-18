@@ -36,6 +36,7 @@ namespace TramChanh.UI.Prompt
         private bool _hudEnabled;
         private IOrderService _orders;
         private PlayerHudPresenter _hud;
+        private Func<OrderId, double> _patienceProvider;
         private Label _hint;
         private Label _heldHint;
         private Label _status;
@@ -59,6 +60,13 @@ namespace TramChanh.UI.Prompt
         /// <summary>True after the player HUD overload of Initialize; legacy scenes keep the prompt-only view.</summary>
         public bool IsHudEnabled => _hudEnabled;
         public PlayerHudPresenter Hud => _hud;
+
+        /// <summary>Gives the order list a way to read each order's patience (share left, negative when not tracked).</summary>
+        public void SetPatienceProvider(Func<OrderId, double> provider)
+        {
+            _patienceProvider = provider;
+            if (_hud != null) { _hud.PatienceProvider = provider; }
+        }
         public string HeldItemText => _hud != null ? _hud.HeldText : string.Empty;
         public string OrderListText => _hud != null ? _hud.OrdersText : string.Empty;
         public string ToastText => _hud != null ? _hud.ToastText : string.Empty;
@@ -250,6 +258,7 @@ namespace TramChanh.UI.Prompt
             _heldPanel.Add(_heldHint);
             IHeldItemSlot hands = _source != null && _source.Context != null ? _source.Context.Hands : null;
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
+            _hud.PatienceProvider = _patienceProvider;
         }
 
         /// <summary>

@@ -171,6 +171,7 @@ namespace TramChanh.App
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
             _heldView.Initialize(context.Hands, _events);
             _prompt.Initialize(_events, _interactor, Orders);
+            _prompt.SetPatienceProvider(id => _patience.Has(id) ? _patience.LeftFraction(id, _patienceNow) : -1d);
             _settings = new GameSettings();
             _settings.Load(new PlayerPrefsSettingsStore());
             ApplySettings();
