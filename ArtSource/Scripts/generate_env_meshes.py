@@ -148,38 +148,13 @@ class ObjMesh:
 # 1. Authentic Vietnamese Plastic Stool (IMG_5228.JPG)
 # ==============================================================================
 def generate_plastic_stool(out_path):
-    mesh = ObjMesh("SM_PlasticStool")
-    w = 0.30
-    d = 0.30
-    h = 0.30
-    seat_t = 0.018
-    
-    # Seat plate (recessed center, ventilation cutout hole)
-    mesh.add_box(-w/2, w/2, h - seat_t, h, d/2 - 0.03, d/2)
-    mesh.add_box(-w/2, w/2, h - seat_t, h, -d/2, -d/2 + 0.03)
-    mesh.add_box(-w/2, -w/2 + 0.03, h - seat_t, h, -d/2 + 0.03, d/2 - 0.03)
-    mesh.add_box(w/2 - 0.03, w/2, h - seat_t, h, -d/2 + 0.03, d/2 - 0.03)
-    
-    # Seat inner webbing panel with center oval handle/vent hole
-    mesh.add_box(-w/2 + 0.03, -0.04, h - seat_t, h - 0.006, -d/2 + 0.03, d/2 - 0.03)
-    mesh.add_box(0.04, w/2 - 0.03, h - seat_t, h - 0.006, -d/2 + 0.03, d/2 - 0.03)
-    mesh.add_box(-0.04, 0.04, h - seat_t, h - 0.006, 0.04, d/2 - 0.03)
-    mesh.add_box(-0.04, 0.04, h - seat_t, h - 0.006, -d/2 + 0.03, -0.04)
-    
-    # 4 Flared Stacking Legs
-    leg_r_top = 0.016
-    leg_r_bot = 0.012
-    for sx in [-1, 1]:
-        for sz in [-1, 1]:
-            p_top = (sx * (w/2 - 0.03), h - seat_t, sz * (d/2 - 0.03))
-            p_bot = (sx * (w/2 - 0.015), 0.000, sz * (d/2 - 0.015))
-            mesh.add_cylinder(p_bot, p_top, radius=leg_r_bot, segments=10)
-            
-    # Cross-bracing reinforcement ribs under seat
-    mesh.add_cylinder((-w/2 + 0.03, h - 0.08, 0), (w/2 - 0.03, h - 0.08, 0), radius=0.007, segments=8)
-    mesh.add_cylinder((0, h - 0.08, -d/2 + 0.03), (0, h - 0.08, d/2 - 0.03), radius=0.007, segments=8)
-
-    mesh.write_obj(out_path)
+    try:
+        from generate_stool_mesh import generate_plastic_stool as gen_stool
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_stool_mesh import generate_plastic_stool as gen_stool
+    gen_stool(out_path)
 
 # ==============================================================================
 # 2. Inverted Yellow Beverage Crate Table (IMG_5231.JPG)
