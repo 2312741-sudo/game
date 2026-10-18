@@ -36,6 +36,8 @@ namespace TramChanh.UI.Prompt
         private bool _hudEnabled;
         private IOrderService _orders;
         private PlayerHudPresenter _hud;
+        private SupplierPanel _supplier;
+        private Func<OrderId, double> _patienceProvider;
         private Label _hint;
         private Label _heldHint;
         private Label _status;
@@ -59,6 +61,13 @@ namespace TramChanh.UI.Prompt
         /// <summary>True after the player HUD overload of Initialize; legacy scenes keep the prompt-only view.</summary>
         public bool IsHudEnabled => _hudEnabled;
         public PlayerHudPresenter Hud => _hud;
+
+        /// <summary>Gives the order list a way to read each order's patience (share left, negative when not tracked).</summary>
+        public void SetPatienceProvider(Func<OrderId, double> provider)
+        {
+            _patienceProvider = provider;
+            if (_hud != null) { _hud.PatienceProvider = provider; }
+        }
         public string HeldItemText => _hud != null ? _hud.HeldText : string.Empty;
         public string OrderListText => _hud != null ? _hud.OrdersText : string.Empty;
         public string ToastText => _hud != null ? _hud.ToastText : string.Empty;
@@ -117,8 +126,8 @@ namespace TramChanh.UI.Prompt
             _status.style.position = Position.Absolute;
             _status.style.top = 14f;
             _status.style.left = Length.Percent(50f);
-            _status.style.width = 360f;
-            _status.style.marginLeft = -180f;
+            _status.style.width = 580f;
+            _status.style.marginLeft = -290f;
             _status.style.fontSize = 20f;
             _status.style.unityFontStyleAndWeight = FontStyle.Bold;
             _status.style.color = new Color(0.99f, 0.85f, 0.35f, 1f); // Lime gold
@@ -250,6 +259,7 @@ namespace TramChanh.UI.Prompt
             _heldPanel.Add(_heldHint);
             IHeldItemSlot hands = _source != null && _source.Context != null ? _source.Context.Hands : null;
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
+            _hud.PatienceProvider = _patienceProvider;
         }
 
         /// <summary>
@@ -278,12 +288,23 @@ namespace TramChanh.UI.Prompt
         }
 
         /// <summary>Shows the end-of-day card. <paramref name="onContinue"/> runs when the player presses the button.</summary>
-        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue)
+        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null)
         {
             _summary?.Hide();
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
-            _summary.Show(summary, progress);
+            _summary.Show(summary, progress, extra);
+        }
+
+        /// <summary>
+        /// Shows the shop between days (stock, upgrades, difficulty). <paramref name="onDone"/> runs on the open-the-stall button.
+        /// </summary>
+        public void ShowSupplier(SupplierContext context, Action onDone)
+        {
+            _supplier?.Hide();
+            VisualElement root = GetComponent<UIDocument>().rootVisualElement;
+            _supplier = new SupplierPanel(root, context, () => { _supplier.Hide(); onDone?.Invoke(); });
+            _supplier.Show();
         }
 
         private void BuildTitle(VisualElement root)

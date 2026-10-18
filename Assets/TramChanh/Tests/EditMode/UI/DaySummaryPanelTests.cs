@@ -32,5 +32,18 @@ namespace TramChanh.Tests.EditMode.UI
         {
             Assert.That(DaySummaryPanel.Describe(new DaySummary(1, 0, 0), null), Does.Contain("0%"));
         }
+
+        [Test]
+        public void Describe_ShowsEarningsAndCash()
+        {
+            var progress = new GameProgress();
+            progress.RecordSale(new Sale(32500, QualityTier.Perfect, 100));
+            DaySummary summary = progress.EndDay();
+            string text = DaySummaryPanel.Describe(summary, progress);
+            Assert.That(text, Does.Contain("Doanh thu: 32.500đ"));
+            Assert.That(text, Does.Contain("Chất lượng trung bình: 100"));
+            Assert.That(text, Does.Contain("Hoàn hảo: 1"));
+            Assert.That(text, Does.Contain("Tiền đang có: 32.500đ"));
+        }
     }
 }

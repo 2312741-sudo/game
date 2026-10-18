@@ -34,6 +34,7 @@ namespace TramChanh.UI.Hud
         private VisualElement _ordersRows;
         private Label _ordersMore;
         private Label _toastLabel;
+        private readonly System.Collections.Generic.Dictionary<OrderId, VisualElement> _patienceFills = new System.Collections.Generic.Dictionary<OrderId, VisualElement>();
         private bool _heldDirty = true;
         private bool _ordersDirty = true;
         private bool _toastDirty = true;
@@ -66,6 +67,12 @@ namespace TramChanh.UI.Hud
             Tick();
         }
 
+        /// <summary>
+        /// Returns the share of patience left (0 to 1) for an order, or a negative number when it is not tracked.
+        /// Set by the game; the HUD only reads it.
+        /// </summary>
+        public Func<OrderId, double> PatienceProvider { get; set; }
+
         public HeldItemFeedbackModel Held => _held;
         public ActiveOrderListModel Orders => _orders;
         public OrderToastModel Toast => _toast;
@@ -97,6 +104,7 @@ namespace TramChanh.UI.Hud
             {
                 _nextPoll = now + PollInterval;
                 _held.Refresh();
+                UpdatePatienceBars();
             }
             _toast?.Tick();
             if (_heldDirty) { _heldDirty = false; RenderHeld(); }
@@ -187,6 +195,7 @@ namespace TramChanh.UI.Hud
             _ordersTitle.text = Text(_orders.Title);
             _ordersNext.text = Text(_orders.PrimaryNextStep);
             _ordersRows.Clear();
+            _patienceFills.Clear();
             foreach (OrderRow row in _orders.Rows)
             {
                 Label header = NewLabel(16f, row.IsPrimary ? HintColor : Color.white);
@@ -205,9 +214,43 @@ namespace TramChanh.UI.Hud
                 Label next = NewLabel(14f, row.IsPrimary ? HintColor : DimColor);
                 next.text = Text(row.NextStep);
                 _ordersRows.Add(next);
+                _ordersRows.Add(NewPatienceBar(row.Id));
             }
+            UpdatePatienceBars();
             _ordersMore.text = _orders.HiddenCount > 0 ? Text(HudText.Of(HudKeys.OrdersMore, _orders.HiddenCount)) : string.Empty;
             SetVisible(_ordersMore, _orders.HiddenCount > 0);
+        }
+
+        private VisualElement NewPatienceBar(OrderId id)
+        {
+            var track = new VisualElement();
+            track.pickingMode = PickingMode.Ignore;
+            track.name = "PatienceTrack";
+            track.style.height = 6f;
+            track.style.marginTop = 2f;
+            track.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
+            var fill = new VisualElement();
+            fill.pickingMode = PickingMode.Ignore;
+            fill.name = "PatienceFill";
+            fill.style.height = Length.Percent(100f);
+            track.Add(fill);
+            _patienceFills[id] = fill;
+            return track;
+        }
+
+        private void UpdatePatienceBars()
+        {
+            foreach (System.Collections.Generic.KeyValuePair<OrderId, VisualElement> pair in _patienceFills)
+            {
+                PatienceBar bar = PatienceBar.For(PatienceProvider != null ? PatienceProvider(pair.Key) : -1d);
+                VisualElement fill = pair.Value;
+                VisualElement track = fill.parent;
+                if (track != null) { SetVisible(track, bar.IsVisible); }
+                if (!bar.IsVisible) { continue; }
+                fill.style.width = Length.Percent(bar.WidthPercent);
+                fill.style.backgroundColor = bar.Level == PatienceLevel.Danger ? new Color(0.9f, 0.2f, 0.15f, 0.95f)
+                    : (bar.Level == PatienceLevel.Warning ? new Color(0.98f, 0.65f, 0.1f, 0.95f) : new Color(0.3f, 0.8f, 0.35f, 0.95f));
+            }
         }
 
         private void RenderToast()

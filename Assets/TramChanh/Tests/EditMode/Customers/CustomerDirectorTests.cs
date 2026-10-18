@@ -316,6 +316,35 @@ namespace TramChanh.Tests.EditMode.Customers
             Assert.That(director.SpawnNow(), Is.GreaterThanOrEqualTo(0));
         }
 
+        [Test]
+        public void ArrivalIntervalScale_StretchesAndShrinksTheTimeBetweenArrivals()
+        {
+            // Default interval is 6 s. At scale 2 nobody arrives after 7 s; at scale 0.5 somebody does after 3.5 s.
+            CustomerDirector slow = Director(FakeCustomerSeat.Tables());
+            slow.ArrivalIntervalScale = 2d;
+            slow.Tick(7d);
+            Assert.That(slow.ActiveCustomers, Is.EqualTo(0));
+            slow.Tick(6d);
+            Assert.That(slow.ActiveCustomers, Is.EqualTo(1));
+
+            CustomerDirector fast = Director(FakeCustomerSeat.Tables());
+            fast.ArrivalIntervalScale = 0.5d;
+            fast.Tick(3.5d);
+            Assert.That(fast.ActiveCustomers, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ArrivalIntervalScale_IgnoresZeroNegativeAndNaN()
+        {
+            foreach (double bad in new[] { 0d, -3d, double.NaN })
+            {
+                CustomerDirector director = Director(FakeCustomerSeat.Tables());
+                director.ArrivalIntervalScale = bad;
+                director.Tick(7d);
+                Assert.That(director.ActiveCustomers, Is.EqualTo(1), "Scale " + bad + " behaves like 1.");
+            }
+        }
+
         private static int Spawned(CustomerDirector director)
         {
             int count = 0;
