@@ -9,7 +9,10 @@ namespace TramChanh.Core
     public static class IngredientUse
     {
         /// <summary>Appends what one item of this kind needs to <paramref name="into"/> (ingredient, amount).</summary>
-        public static void Add(ItemKind kind, IDictionary<Ingredient, int> into)
+        public static void Add(ItemKind kind, IDictionary<Ingredient, int> into) { Add(kind, into, 1); }
+
+        /// <summary>Same as <see cref="Add(ItemKind, IDictionary{Ingredient,int})"/>, with <paramref name="icePerDrink"/> ice for each drink.</summary>
+        public static void Add(ItemKind kind, IDictionary<Ingredient, int> into, int icePerDrink)
         {
             if (into == null) { throw new ArgumentNullException(nameof(into)); }
             if (kind == ItemKind.Cake)
@@ -19,7 +22,7 @@ namespace TramChanh.Core
             }
             else
             {
-                Bump(into, Ingredient.Ice, 1);
+                Bump(into, Ingredient.Ice, Math.Max(1, icePerDrink));
                 Bump(into, Ingredient.Jelly, 1);
             }
         }
@@ -52,6 +55,8 @@ namespace TramChanh.Core
         private static readonly Ingredient[] All = { Ingredient.Ice, Ingredient.Jelly, Ingredient.Batter, Ingredient.Wrap };
         private readonly int[] _level = new int[4];
         private readonly int[] _capacity;
+        private int _iceBonus;
+        private int _otherBonus;
 
         public StockBook(int iceCapacity = 40, int jellyCapacity = 40, int batterCapacity = 30, int wrapCapacity = 40)
         {
@@ -60,7 +65,15 @@ namespace TramChanh.Core
 
         public static IReadOnlyList<Ingredient> Ingredients => All;
         public int Level(Ingredient ingredient) => _level[(int)ingredient];
-        public int Capacity(Ingredient ingredient) => _capacity[(int)ingredient];
+        public int Capacity(Ingredient ingredient) => _capacity[(int)ingredient] + (ingredient == Ingredient.Ice ? _iceBonus : _otherBonus);
+
+        /// <summary>Extra room from upgrades. Levels above a lowered capacity are cut down.</summary>
+        public void SetCapacityBonus(int iceBonus, int otherBonus)
+        {
+            _iceBonus = Math.Max(0, iceBonus);
+            _otherBonus = Math.Max(0, otherBonus);
+            foreach (Ingredient ingredient in All) { _level[(int)ingredient] = Math.Min(_level[(int)ingredient], Capacity(ingredient)); }
+        }
         public int Space(Ingredient ingredient) => Capacity(ingredient) - Level(ingredient);
 
         /// <summary>The first stock of day one.</summary>
@@ -153,7 +166,16 @@ namespace TramChanh.Core
             }
         }
 
-        public int PackPrice(Ingredient ingredient) => UnitPrice(ingredient) * PackSize;
+        /// <summary>Discount from an upgrade, in percent.</summary>
+        public int DiscountPercent { get; set; }
+        /// <summary>Price level of the chosen difficulty.</summary>
+        public double PriceScale { get; set; } = 1d;
+
+        public int PackPrice(Ingredient ingredient)
+        {
+            double price = UnitPrice(ingredient) * PackSize * (100 - Math.Min(100, Math.Max(0, DiscountPercent))) / 100.0 * (PriceScale > 0d ? PriceScale : 1d);
+            return Math.Max(0, (int)(Math.Round(price / 100.0 + 1e-9, MidpointRounding.AwayFromZero) * 100));
+        }
 
         /// <summary>Buys one pack: needs money and room for the whole pack. Returns false and changes nothing otherwise.</summary>
         public bool TryBuyPack(StockBook stock, GameProgress wallet, Ingredient ingredient)
