@@ -71,5 +71,15 @@ namespace TramChanh.Tests.EditMode.Core
             Assert.That(PriceList.Format(25000), Is.EqualTo("25.000đ"));
             Assert.That(PriceList.Format(1234500), Is.EqualTo("1.234.500đ"));
         }
+
+        [Test]
+        public void FastService_AddsTheSpeedBonus_AndTheKindMultiplierApplies()
+        {
+            var prices = new PriceList();
+            Assert.That(prices.Price(Drink, 75, 0.9d, 1f).Amount, Is.EqualTo(29000));   // 25000 * 1.15 = 28750 -> 29000
+            Assert.That(prices.Price(Drink, 75, 0.5d, 1f).Amount, Is.EqualTo(25000));   // too slow for the bonus
+            Assert.That(prices.Price(Drink, 75, 0.5d, 1.2f).Amount, Is.EqualTo(30000)); // regular customer tip
+            Assert.That(prices.Price(Drink, 75).Amount, Is.EqualTo(25000), "The short overload has no bonus.");
+        }
     }
 }

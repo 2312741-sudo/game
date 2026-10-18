@@ -26,6 +26,15 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] The end-of-day card shows "Doanh thu", "Chất lượng trung bình", "Hoàn hảo" and "Tiền đang có".
 - [ ] Stop and Play again: the cash in hand is still there.
 
+## Customers: patience and rush (G2, new)
+- [ ] 18:00 to 19:00 customers arrive slowly; around 19:30 to 21:30 they come faster; after 23:00 it calms down.
+- [ ] A customer you ignore leaves by themselves after roughly 1.5 to 3 minutes (Student 120 s, Family 180 s, Office 90 s, Regular 150 s). The failed buzz plays and the order disappears.
+- [ ] While the pause menu or the order window is open nobody leaves.
+- [ ] Once you pick the order up to carry it to the customer, they stop losing patience.
+- [ ] Serve fast (while at least two thirds of the patience is left): the order pays 15 percent more.
+- [ ] After three failed orders in a row, new customers come noticeably slower for a while.
+- [ ] Day 2 and later are a little busier than day 1.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 

@@ -75,7 +75,7 @@ Keep E / F / hold actions. Add: audio cues per step, ticket pile that grows phys
 | Step | Content | Code area | Tests |
 |---|---|---|---|
 | G1 (done, awaiting owner playtest) | Money, price, quality score, day revenue in summary | Core + Bootstrap + UI Menu | EditMode: pricing, quality tiers, progress money |
-| G2 | Patience curve + customer types + arrival curve | PeopleController, Orders | EditMode: curve, patience |
+| G2 (done, awaiting owner playtest) | Patience, customer kinds, arrival curve, speed bonus, failure assist | Core + Customers + Bootstrap | EditMode: patience book, kinds, arrival plan, price bonus, director scale |
 | G3 | Stock for all ingredients + supplier screen + save | Core + UI | EditMode: stock, save round-trip |
 | G4 | Reputation stars + unlocks + upgrades | Core + UI | EditMode: star maths, unlock rules |
 | G5 | Weather + events (data driven) | Core Bootstrap | EditMode: event schedule |

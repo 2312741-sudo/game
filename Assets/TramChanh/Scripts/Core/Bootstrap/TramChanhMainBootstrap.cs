@@ -491,6 +491,8 @@ namespace TramChanh.App
             }
             foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
             Customers.ArrivalsEnabled = open;
+            Customers.ArrivalIntervalScale = ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak);
+            if (open) { TickPatience(); }
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
             if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
@@ -535,6 +537,12 @@ namespace TramChanh.App
         private readonly List<StreetAnimalWander> _animals = new List<StreetAnimalWander>();
         private GameProgress _progress;
         private readonly PriceList _prices = new PriceList();
+        private readonly CustomerKinds _customerKinds = CustomerKinds.Default;
+        private readonly PatienceBook _patience = new PatienceBook();
+        private readonly List<OrderId> _expired = new List<OrderId>();
+        private readonly System.Random _kindRandom = new System.Random(20260101);
+        private double _patienceNow;
+        private int _failureStreak;
         private int _shownMoney = -1;
         private IDisposable _orderSubscription;
         private bool _wasOpen = true;
@@ -604,13 +612,35 @@ namespace TramChanh.App
         private void OnOrderStatus(OrderStatusChanged change)
         {
             AudioClip clip = null;
+            TrackPatience(change);
             switch (change.Status)
             {
                 case OrderStatus.Ready: clip = _readyClip; break;
-                case OrderStatus.Completed: _progress.RecordSale(PriceOrder(change.OrderId)); clip = _servedClip; break;
-                case OrderStatus.Failed: _progress.RecordFailed(); clip = _failedClip; break;
+                case OrderStatus.Completed: _progress.RecordSale(PriceOrder(change.OrderId)); _failureStreak = 0; _patience.Remove(change.OrderId); clip = _servedClip; break;
+                case OrderStatus.Failed: _progress.RecordFailed(); _failureStreak++; _patience.Remove(change.OrderId); clip = _failedClip; break;
             }
             if (clip != null && _sfx != null) { _sfx.PlayOneShot(clip); }
+        }
+
+        private void TrackPatience(OrderStatusChanged change)
+        {
+            if (change.Status == OrderStatus.WaitingForLobby && !_patience.Has(change.OrderId))
+            {
+                CustomerProfile profile = _customerKinds.Pick(_kindRandom.NextDouble());
+                _patience.Add(change.OrderId, profile.Kind, _patienceNow, profile.PatienceSeconds);
+            }
+            else if (change.Status == OrderStatus.PickedUpByLobby || change.Status == OrderStatus.Delivered)
+            {
+                _patience.Freeze(change.OrderId, _patienceNow);
+            }
+        }
+
+        private void TickPatience()
+        {
+            _patienceNow += _clock.DeltaTime;
+            _expired.Clear();
+            _patience.CollectExpired(_patienceNow, _expired);
+            foreach (OrderId id in _expired) { Orders.Fail(id, FailureReason.CustomerLeft); }
         }
 
         private Sale PriceOrder(OrderId id)
@@ -621,7 +651,9 @@ namespace TramChanh.App
             long qualitySum = 0;
             foreach (IReadOnlyOrderItem item in order.Items) { kinds.Add(item.Kind); qualitySum += item.Quality; }
             int quality = kinds.Count == 0 ? 0 : (int)Math.Round((double)qualitySum / kinds.Count, MidpointRounding.AwayFromZero);
-            return _prices.Price(kinds, quality);
+            float payMultiplier = 1f;
+            if (_patience.TryGetKind(id, out CustomerKind kind)) { payMultiplier = _customerKinds.Profile(kind).PayMultiplier; }
+            return _prices.Price(kinds, quality, _patience.LeftFraction(id, _patienceNow), payMultiplier);
         }
 
         private void EndOfDay()
