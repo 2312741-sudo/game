@@ -481,11 +481,13 @@ namespace TramChanh.App
             double hour = _dayClock.HourOfDay;
             bool open = _dayClock.IsOpen;
             int clockMinute = GameClockText.MinuteOfDay(hour);
-            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen))
+            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen || _progress.Money != _shownMoney))
             {
                 _shownClockMinute = clockMinute;
                 _shownClockOpen = open;
-                _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open));
+                _shownMoney = _progress.Money;
+                _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open)
+                    + "  |  " + PriceList.Format(_progress.Money));
             }
             foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
             Customers.ArrivalsEnabled = open;
@@ -532,6 +534,8 @@ namespace TramChanh.App
         private GameSettings _settings;
         private readonly List<StreetAnimalWander> _animals = new List<StreetAnimalWander>();
         private GameProgress _progress;
+        private readonly PriceList _prices = new PriceList();
+        private int _shownMoney = -1;
         private IDisposable _orderSubscription;
         private bool _wasOpen = true;
         private AudioSource _sfx;
@@ -603,10 +607,21 @@ namespace TramChanh.App
             switch (change.Status)
             {
                 case OrderStatus.Ready: clip = _readyClip; break;
-                case OrderStatus.Completed: _progress.RecordServed(); clip = _servedClip; break;
+                case OrderStatus.Completed: _progress.RecordSale(PriceOrder(change.OrderId)); clip = _servedClip; break;
                 case OrderStatus.Failed: _progress.RecordFailed(); clip = _failedClip; break;
             }
             if (clip != null && _sfx != null) { _sfx.PlayOneShot(clip); }
+        }
+
+        private Sale PriceOrder(OrderId id)
+        {
+            IReadOnlyOrder order = Orders?.Get(id);
+            if (order == null) { return new Sale(0, QualityTier.Poor, 0); }
+            var kinds = new List<ItemKind>(order.Items.Count);
+            long qualitySum = 0;
+            foreach (IReadOnlyOrderItem item in order.Items) { kinds.Add(item.Kind); qualitySum += item.Quality; }
+            int quality = kinds.Count == 0 ? 0 : (int)Math.Round((double)qualitySum / kinds.Count, MidpointRounding.AwayFromZero);
+            return _prices.Price(kinds, quality);
         }
 
         private void EndOfDay()

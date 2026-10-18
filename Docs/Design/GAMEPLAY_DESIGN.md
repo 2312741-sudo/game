@@ -74,7 +74,7 @@ Keep E / F / hold actions. Add: audio cues per step, ticket pile that grows phys
 ## 11. Build plan (when approved)
 | Step | Content | Code area | Tests |
 |---|---|---|---|
-| G1 | Money, price, quality score, day profit in summary | Core + Orders + UI Menu | EditMode: pricing, quality tiers |
+| G1 (done, awaiting owner playtest) | Money, price, quality score, day revenue in summary | Core + Bootstrap + UI Menu | EditMode: pricing, quality tiers, progress money |
 | G2 | Patience curve + customer types + arrival curve | PeopleController, Orders | EditMode: curve, patience |
 | G3 | Stock for all ingredients + supplier screen + save | Core + UI | EditMode: stock, save round-trip |
 | G4 | Reputation stars + unlocks + upgrades | Core + UI | EditMode: star maths, unlock rules |

@@ -104,9 +104,15 @@ namespace TramChanh.UI.Menu
         {
             string text = "Đã phục vụ: " + summary.Served + "\nKhách bỏ đi: " + summary.Failed
                 + "\nTỉ lệ phục vụ: " + summary.ServedPercent + "%";
+            if (summary.Earned > 0 || summary.Served > 0)
+            {
+                text += "\nDoanh thu: " + PriceList.Format(summary.Earned)
+                    + "\nChất lượng trung bình: " + summary.AverageQuality + "  |  Hoàn hảo: " + summary.Perfect;
+            }
             if (progress != null)
             {
                 text += "\n\nTổng cộng: " + progress.TotalServed + " đơn  |  Ngày tốt nhất: " + progress.BestServedInADay + " đơn";
+                text += "\nTiền đang có: " + PriceList.Format(progress.Money);
             }
             return text;
         }

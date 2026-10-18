@@ -19,6 +19,13 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] At 18:00 it reads "Ngày 2  Mở cửa" and customers arrive again.
 - [ ] Sky and light change between day and night.
 
+## Money (G1, new)
+- [ ] Top centre reads "Ngày 1  18:00  Mở cửa  |  0đ".
+- [ ] Serving a drink adds about 25.000đ, a cake about 20.000đ, a drink plus cake 40.500đ (10 percent combo discount) at Good quality.
+- [ ] A wrongly prepared or ruined item pays less (Poor x0.6); a perfect one pays more (x1.3).
+- [ ] The end-of-day card shows "Doanh thu", "Chất lượng trung bình", "Hoàn hảo" and "Tiền đang có".
+- [ ] Stop and Play again: the cash in hand is still there.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 

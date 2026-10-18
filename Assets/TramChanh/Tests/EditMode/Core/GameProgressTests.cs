@@ -81,5 +81,57 @@ namespace TramChanh.Tests.EditMode.Core
             Assert.That(p.Day, Is.EqualTo(1));
             Assert.That(p.TotalServed, Is.EqualTo(0));
         }
+
+        [Test]
+        public void RecordSale_AddsMoneyQualityAndPerfectCount()
+        {
+            var p = new GameProgress();
+            p.RecordSale(new Sale(32500, QualityTier.Perfect, 100));
+            p.RecordSale(new Sale(15000, QualityTier.Poor, 40));
+            Assert.That(p.ServedToday, Is.EqualTo(2));
+            Assert.That(p.EarnedToday, Is.EqualTo(47500));
+            Assert.That(p.Money, Is.EqualTo(47500));
+            DaySummary s = p.EndDay();
+            Assert.That(s.Earned, Is.EqualTo(47500));
+            Assert.That(s.AverageQuality, Is.EqualTo(70));
+            Assert.That(s.Perfect, Is.EqualTo(1));
+            Assert.That(p.EarnedToday, Is.EqualTo(0));
+            Assert.That(p.Money, Is.EqualTo(47500));
+            Assert.That(p.TotalEarned, Is.EqualTo(47500));
+            Assert.That(p.BestEarnedInADay, Is.EqualTo(47500));
+        }
+
+        [Test]
+        public void TrySpend_RefusesMoreThanYouHave()
+        {
+            var p = new GameProgress();
+            p.RecordSale(new Sale(10000, QualityTier.Good, 80));
+            Assert.That(p.TrySpend(10500), Is.False);
+            Assert.That(p.Money, Is.EqualTo(10000));
+            Assert.That(p.TrySpend(4000), Is.True);
+            Assert.That(p.Money, Is.EqualTo(6000));
+            Assert.That(p.TrySpend(-1), Is.False);
+        }
+
+        [Test]
+        public void SaveThenLoad_RoundTripsMoney()
+        {
+            var store = new MemoryStore();
+            var p = new GameProgress();
+            p.RecordSale(new Sale(40500, QualityTier.Good, 75));
+            p.EndDay();
+            p.Save(store);
+            var loaded = new GameProgress();
+            loaded.Load(store);
+            Assert.That(loaded.Money, Is.EqualTo(40500));
+            Assert.That(loaded.TotalEarned, Is.EqualTo(40500));
+            Assert.That(loaded.BestEarnedInADay, Is.EqualTo(40500));
+        }
+
+        [Test]
+        public void AverageQuality_IsZeroWithNoServedOrders()
+        {
+            Assert.That(new DaySummary(1, 0, 2).AverageQuality, Is.EqualTo(0));
+        }
     }
 }
