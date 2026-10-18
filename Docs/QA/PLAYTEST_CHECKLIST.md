@@ -36,6 +36,15 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] After three failed orders in a row, new customers come noticeably slower for a while.
 - [ ] Day 2 and later are a little busier than day 1.
 
+## Stock and supplier (G3, new)
+- [ ] Under the clock a second line reads "Kho: Đá 30  Thạch 30  Bột bánh 20  Giấy gói 30" on day 1.
+- [ ] Each drink sent to the stall takes 1 ice and 1 jelly; each cake takes 1 batter and 1 wrap. The numbers go down.
+- [ ] When something runs out, the next order that needs it makes the customer leave at once (failed buzz).
+- [ ] At the end of the day the summary card is followed by "Nhà cung cấp": cash, stock per ingredient, a "Mua 10" button each, and "Mở hàng".
+- [ ] Buying takes the money and adds 10 units; the button is disabled when you lack money or the stock would overflow.
+- [ ] Ice is 0 after the night (it melted); jelly, batter and wrap stay.
+- [ ] Stop and Play again: stock and cash are kept.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 
