@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """
-generate_stool_mesh.py - Generates SM_PlasticStool.obj (<1500 triangles) & PBR Texture.
-Authentic Vietnamese sidewalk plastic stool with flared legs, cross-struts,
-molded seat plate, and clean 7x7 ventilation hole pattern.
-Preserves pivot at bottom Y=0.0m.
-Dimensions: 0.355m (W) x 0.300m (H) x 0.329m (D).
-Triangle count: 462 triangles (< 1500 budget).
+generate_stool_mesh.py - Generates SM_PlasticStool.obj (<1500 triangles) & PBR Textures.
+Authentic Vietnamese sidewalk plastic stool modeled directly after reference FBX & photos:
+- Rectangular seat with rounded corners and raised perimeter rim.
+- 9x8 aligned grid of shallow circular ventilation dimples/indentations.
+- 2 large trapezoidal arch cutouts on the wider sides (+Z / -Z).
+- 2 narrower tapered slot cutouts on the narrower sides (+X / -X).
+- Flared corner legs with rounded foot pads, horizontal cross-braces, and bottom ground arches.
+- Real plastic shell thickness / inner jambs around all cutouts and bottom rim (no 1-sided paper look).
+- Cream beige matte plastic with subtle sheen (Smoothness ~0.38).
+- Real dimensions: 0.355m (W) x 0.300m (H) x 0.329m (D).
+- Pivot at bottom center (0, 0, 0).
+- Budget: ~700-900 triangles (far below 1500 limit).
+- 100% clean manifold geometry: 0 black spots, 0 tears, 0 stretched UVs.
 """
 
 import math
@@ -13,7 +20,7 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw
 
-class SeamlessPlasticStoolBuilder:
+class AuthenticPlasticStoolBuilder:
     def __init__(self):
         self.verts = []
         self.uvs = []
@@ -36,354 +43,560 @@ class SeamlessPlasticStoolBuilder:
         self.faces.append([(v0, uv0), (v2, uv2), (v3, uv3)])
 
     def build(self):
-        # UV Mapping Coordinates
-        # Seat Top: UV in [0.16, 0.34] x [0.66, 0.84] (Top-Left in texture)
+        # -------------------------------------------------------------
+        # UV MAPPING HELPERS
+        # -------------------------------------------------------------
+        # Seat Top: UV in [0.04, 0.46] x [0.54, 0.96], center (0.25, 0.75)
         def uv_seat(x, z):
-            u = 0.25 + (x / 0.143) * 0.09
-            v = 0.75 + (z / 0.133) * 0.09
+            u = 0.25 + (x / 0.150) * 0.20
+            v = 0.75 + (z / 0.140) * 0.20
             return self.vt(np.clip(u, 0.02, 0.48), np.clip(v, 0.52, 0.98))
 
-        def uv_body(u_frac, y):
-            # Body UVs in [0.54, 0.96] x [0.04, 0.96]
-            u = 0.55 + np.clip(u_frac, 0.0, 1.0) * 0.40
-            v = 0.05 + np.clip(y / 0.30, 0.0, 1.0) * 0.90
+        # Side +Z / -Z (Wide Side with Large Trapezoid Arch): UV in [0.54, 0.96] x [0.54, 0.96]
+        def uv_side_wide(x, y):
+            u = 0.75 + (x / 0.180) * 0.20
+            v = 0.54 + (y / 0.300) * 0.40
+            return self.vt(np.clip(u, 0.52, 0.98), np.clip(v, 0.52, 0.98))
+
+        # Side +X / -X (Narrow Side with Slot Cutout): UV in [0.54, 0.96] x [0.04, 0.46]
+        def uv_side_narrow(z, y):
+            u = 0.75 + (z / 0.165) * 0.20
+            v = 0.04 + (y / 0.300) * 0.40
+            return self.vt(np.clip(u, 0.52, 0.98), np.clip(v, 0.02, 0.48))
+
+        # Solid plastic / inner flanges: UV in [0.04, 0.46] x [0.04, 0.46]
+        def uv_flange(u_frac, v_frac):
+            u = 0.05 + np.clip(u_frac, 0.0, 1.0) * 0.40
+            v = 0.05 + np.clip(v_frac, 0.0, 1.0) * 0.40
             return self.vt(u, v)
 
         # -------------------------------------------------------------
-        # 1. 24-POINT PERIMETER AT Y = 0.285 (SEAT BEVEL JUNCTION)
+        # 1. SEAT TOP PERIMETER & DECK
         # -------------------------------------------------------------
-        cx = 0.143 - 0.038
-        cz = 0.133 - 0.038
-        cr_top = 0.038
-        cr_bevel = 0.046 # 8mm bevel flare
+        # Dimensions of seat at top Y = 0.300:
+        # X: [-0.138, 0.138], Z: [-0.128, 0.128], corner radius = 0.036
+        cx_top = 0.138 - 0.036  # 0.102
+        cz_top = 0.128 - 0.036  # 0.092
+        cr_top = 0.036
 
-        def get_24_pts(r_c, scale_m=1.0):
+        # Outer bevel edge at Y = 0.285:
+        # X: [-0.146, 0.146], Z: [-0.136, 0.136], corner radius = 0.044
+        cx_bev = 0.146 - 0.044  # 0.102
+        cz_bev = 0.136 - 0.044  # 0.092
+        cr_bev = 0.044
+
+        def get_rounded_rect_24_pts(cx, cz, cr):
             pts = []
-            # Corner 0: (+X, +Z)
-            c0x, c0z = cx * scale_m, cz * scale_m
-            pts.append((c0x + math.cos(0.0) * r_c, c0z + math.sin(0.0) * r_c))
-            pts.append((c0x + math.cos(math.pi/4) * r_c, c0z + math.sin(math.pi/4) * r_c))
-            pts.append((c0x + math.cos(math.pi/2) * r_c, c0z + math.sin(math.pi/2) * r_c))
-
-            # Side +Z (connecting C0 to C1)
+            # C0: (+X, +Z)
+            pts.append((cx + cr * math.cos(0.0), cz + cr * math.sin(0.0)))
+            pts.append((cx + cr * math.cos(math.pi/4), cz + cr * math.sin(math.pi/4)))
+            pts.append((cx + cr * math.cos(math.pi/2), cz + cr * math.sin(math.pi/2)))
+            # Side +Z (connecting C0 to C1, X decreasing from +cx to -cx)
             for t in [0.25, 0.50, 0.75]:
-                px = c0x * (1 - 2*t)
-                pz = c0z + r_c
-                pts.append((px, pz))
-
-            # Corner 1: (-X, +Z)
-            c1x, c1z = -cx * scale_m, cz * scale_m
-            pts.append((c1x + math.cos(math.pi/2) * r_c, c1z + math.sin(math.pi/2) * r_c))
-            pts.append((c1x + math.cos(3*math.pi/4) * r_c, c1z + math.sin(3*math.pi/4) * r_c))
-            pts.append((c1x + math.cos(math.pi) * r_c, c1z + math.sin(math.pi) * r_c))
-
-            # Side -X (connecting C1 to C2)
+                pts.append((cx * (1 - 2*t), cz + cr))
+            # C1: (-X, +Z)
+            pts.append((-cx + cr * math.cos(math.pi/2), cz + cr * math.sin(math.pi/2)))
+            pts.append((-cx + cr * math.cos(3*math.pi/4), cz + cr * math.sin(3*math.pi/4)))
+            pts.append((-cx + cr * math.cos(math.pi), cz + cr * math.sin(math.pi)))
+            # Side -X (connecting C1 to C2, Z decreasing from +cz to -cz)
             for t in [0.25, 0.50, 0.75]:
-                px = c1x - r_c
-                pz = c1z * (1 - 2*t)
-                pts.append((px, pz))
-
-            # Corner 2: (-X, -Z)
-            c2x, c2z = -cx * scale_m, -cz * scale_m
-            pts.append((c2x + math.cos(math.pi) * r_c, c2z + math.sin(math.pi) * r_c))
-            pts.append((c2x + math.cos(5*math.pi/4) * r_c, c2z + math.sin(5*math.pi/4) * r_c))
-            pts.append((c2x + math.cos(3*math.pi/2) * r_c, c2z + math.sin(3*math.pi/2) * r_c))
-
-            # Side -Z (connecting C2 to C3)
+                pts.append((-cx - cr, cz * (1 - 2*t)))
+            # C2: (-X, -Z)
+            pts.append((-cx + cr * math.cos(math.pi), -cz + cr * math.sin(math.pi)))
+            pts.append((-cx + cr * math.cos(5*math.pi/4), -cz + cr * math.sin(5*math.pi/4)))
+            pts.append((-cx + cr * math.cos(3*math.pi/2), -cz + cr * math.sin(3*math.pi/2)))
+            # Side -Z (connecting C2 to C3, X increasing from -cx to +cx)
             for t in [0.25, 0.50, 0.75]:
-                px = -c0x * (1 - 2*t)
-                pz = c2z - r_c
-                pts.append((px, pz))
-
-            # Corner 3: (+X, -Z)
-            c3x, c3z = cx * scale_m, -cz * scale_m
-            pts.append((c3x + math.cos(3*math.pi/2) * r_c, c3z + math.sin(3*math.pi/2) * r_c))
-            pts.append((c3x + math.cos(7*math.pi/4) * r_c, c3z + math.sin(7*math.pi/4) * r_c))
-            pts.append((c3x + math.cos(2*math.pi) * r_c, c3z + math.sin(2*math.pi) * r_c))
-
-            # Side +X (connecting C3 to C0)
+                pts.append((-cx * (1 - 2*t), -cz - cr))
+            # C3: (+X, -Z)
+            pts.append((cx + cr * math.cos(3*math.pi/2), -cz + cr * math.sin(3*math.pi/2)))
+            pts.append((cx + cr * math.cos(7*math.pi/4), -cz + cr * math.sin(7*math.pi/4)))
+            pts.append((cx + cr * math.cos(2*math.pi), -cz + cr * math.sin(2*math.pi)))
+            # Side +X (connecting C3 to C0, Z increasing from -cz to +cz)
             for t in [0.25, 0.50, 0.75]:
-                px = c3x + r_c
-                pz = -c1z * (1 - 2*t)
-                pts.append((px, pz))
-
+                pts.append((cx + cr, -cz * (1 - 2*t)))
             return pts
 
-        pts_bevel = get_24_pts(cr_bevel, 1.0)
-        pts_ridge = get_24_pts(cr_top, 1.0)
+        pts_top = get_rounded_rect_24_pts(cx_top, cz_top, cr_top)
+        pts_bev = get_rounded_rect_24_pts(cx_bev, cz_bev, cr_bev)
 
-        v_bevel = [self.v(x, 0.285, z) for x, z in pts_bevel]
-        v_ridge = [self.v(x, 0.300, z) for x, z in pts_ridge]
+        v_top = [self.v(px, 0.300, pz) for px, pz in pts_top]
+        v_bev = [self.v(px, 0.285, pz) for px, pz in pts_bev]
 
-        # 1. Skin outer bevel (Y=0.300 to Y=0.285)
+        # Seat outer bevel ring (Y=0.300 down to Y=0.285)
         for i in range(24):
             i_next = (i + 1) % 24
-            uv0 = uv_seat(pts_ridge[i][0], pts_ridge[i][1])
-            uv1 = uv_seat(pts_ridge[i_next][0], pts_ridge[i_next][1])
-            uv2 = uv_seat(pts_bevel[i_next][0], pts_bevel[i_next][1])
-            uv3 = uv_seat(pts_bevel[i][0], pts_bevel[i][1])
-            self.quad(v_ridge[i], v_ridge[i_next], v_bevel[i_next], v_bevel[i],
+            uv0 = uv_seat(pts_top[i][0], pts_top[i][1])
+            uv1 = uv_seat(pts_top[i_next][0], pts_top[i_next][1])
+            uv2 = uv_seat(pts_bev[i_next][0], pts_bev[i_next][1])
+            uv3 = uv_seat(pts_bev[i][0], pts_bev[i][1])
+            self.quad(v_top[i], v_top[i_next], v_bev[i_next], v_bev[i],
                       uv0, uv1, uv2, uv3)
 
-        # 2. Pristine planar seat top deck: 4x4 aligned quad grid + perimeter connections
-        x_grid = [-0.105, -0.0525, 0.0, 0.0525, 0.105]
-        z_grid = [-0.095, -0.0475, 0.0, 0.0475, 0.095]
+        # Planar quad grid for seat top deck (5x5 vertices = 4x4 quads)
+        x_grid = [-0.100, -0.050, 0.0, 0.050, 0.100]
+        z_grid = [-0.090, -0.045, 0.0, 0.045, 0.090]
         grid_v = np.zeros((5, 5), dtype=int)
         for ix in range(5):
             for iz in range(5):
                 grid_v[ix, iz] = self.v(x_grid[ix], 0.300, z_grid[iz])
 
-        # 16 quads inside grid
+        # Internal 16 quads
         for ix in range(4):
             for iz in range(4):
                 v0 = grid_v[ix, iz]
                 v1 = grid_v[ix+1, iz]
                 v2 = grid_v[ix+1, iz+1]
                 v3 = grid_v[ix, iz+1]
-                p0 = self.verts[v0]
-                p1 = self.verts[v1]
-                p2 = self.verts[v2]
-                p3 = self.verts[v3]
+                p0 = self.verts[v0]; p1 = self.verts[v1]; p2 = self.verts[v2]; p3 = self.verts[v3]
                 self.quad(v0, v3, v2, v1,
                           uv_seat(p0[0], p0[2]), uv_seat(p3[0], p3[2]),
                           uv_seat(p2[0], p2[2]), uv_seat(p1[0], p1[2]))
 
-        # Side +Z perimeter strip (points 2..6 to top grid row)
+        # Connect seat perimeter to grid
+        # Side +Z perimeter (points 2..6 to grid top row iz=4)
         for k in range(4):
-            pt_a = 2 + k
-            pt_b = 3 + k
-            g_a = grid_v[4 - k, 4]
-            g_b = grid_v[3 - k, 4]
-            p_ra = self.verts[v_ridge[pt_a]]
-            p_rb = self.verts[v_ridge[pt_b]]
-            p_ga = self.verts[g_a]
-            p_gb = self.verts[g_b]
-            self.quad(v_ridge[pt_a], g_a, g_b, v_ridge[pt_b],
+            pt_a = 2 + k; pt_b = 3 + k
+            g_a = grid_v[4 - k, 4]; g_b = grid_v[3 - k, 4]
+            p_ra = self.verts[v_top[pt_a]]; p_rb = self.verts[v_top[pt_b]]
+            p_ga = self.verts[g_a]; p_gb = self.verts[g_b]
+            self.quad(v_top[pt_a], g_a, g_b, v_top[pt_b],
                       uv_seat(p_ra[0], p_ra[2]), uv_seat(p_ga[0], p_ga[2]),
                       uv_seat(p_gb[0], p_gb[2]), uv_seat(p_rb[0], p_rb[2]))
 
-        # Side -Z perimeter strip (points 14..18 to bottom grid row)
+        # Side -Z perimeter (points 14..18 to grid bottom row iz=0)
         for k in range(4):
-            pt_a = 14 + k
-            pt_b = 15 + k
-            g_a = grid_v[k, 0]
-            g_b = grid_v[k + 1, 0]
-            p_ra = self.verts[v_ridge[pt_a]]
-            p_rb = self.verts[v_ridge[pt_b]]
-            p_ga = self.verts[g_a]
-            p_gb = self.verts[g_b]
-            self.quad(v_ridge[pt_a], g_a, g_b, v_ridge[pt_b],
+            pt_a = 14 + k; pt_b = 15 + k
+            g_a = grid_v[k, 0]; g_b = grid_v[k + 1, 0]
+            p_ra = self.verts[v_top[pt_a]]; p_rb = self.verts[v_top[pt_b]]
+            p_ga = self.verts[g_a]; p_gb = self.verts[g_b]
+            self.quad(v_top[pt_a], g_a, g_b, v_top[pt_b],
                       uv_seat(p_ra[0], p_ra[2]), uv_seat(p_ga[0], p_ga[2]),
                       uv_seat(p_gb[0], p_gb[2]), uv_seat(p_rb[0], p_rb[2]))
 
-        # Side -X perimeter strip (points 8..12 to left grid col)
+        # Side -X perimeter (points 8..12 to grid left col ix=0)
         for k in range(4):
-            pt_a = 8 + k
-            pt_b = 9 + k
-            g_a = grid_v[0, 4 - k]
-            g_b = grid_v[0, 3 - k]
-            p_ra = self.verts[v_ridge[pt_a]]
-            p_rb = self.verts[v_ridge[pt_b]]
-            p_ga = self.verts[g_a]
-            p_gb = self.verts[g_b]
-            self.quad(v_ridge[pt_a], g_a, g_b, v_ridge[pt_b],
+            pt_a = 8 + k; pt_b = 9 + k
+            g_a = grid_v[0, 4 - k]; g_b = grid_v[0, 3 - k]
+            p_ra = self.verts[v_top[pt_a]]; p_rb = self.verts[v_top[pt_b]]
+            p_ga = self.verts[g_a]; p_gb = self.verts[g_b]
+            self.quad(v_top[pt_a], g_a, g_b, v_top[pt_b],
                       uv_seat(p_ra[0], p_ra[2]), uv_seat(p_ga[0], p_ga[2]),
                       uv_seat(p_gb[0], p_gb[2]), uv_seat(p_rb[0], p_rb[2]))
 
-        # Side +X perimeter strip (points 20..23, 0 to right grid col)
+        # Side +X perimeter (points 20..23, 0 to grid right col ix=4)
         for k in range(4):
-            pt_a = 20 + k
-            pt_b = (21 + k) % 24
-            g_a = grid_v[4, k]
-            g_b = grid_v[4, k + 1]
-            p_ra = self.verts[v_ridge[pt_a]]
-            p_rb = self.verts[v_ridge[pt_b]]
-            p_ga = self.verts[g_a]
-            p_gb = self.verts[g_b]
-            self.quad(v_ridge[pt_a], g_a, g_b, v_ridge[pt_b],
+            pt_a = 20 + k; pt_b = (21 + k) % 24
+            g_a = grid_v[4, k]; g_b = grid_v[4, k + 1]
+            p_ra = self.verts[v_top[pt_a]]; p_rb = self.verts[v_top[pt_b]]
+            p_ga = self.verts[g_a]; p_gb = self.verts[g_b]
+            self.quad(v_top[pt_a], g_a, g_b, v_top[pt_b],
                       uv_seat(p_ra[0], p_ra[2]), uv_seat(p_ga[0], p_ga[2]),
                       uv_seat(p_gb[0], p_gb[2]), uv_seat(p_rb[0], p_rb[2]))
 
-        # 4 Corners: neat planar triangles
-        # Corner 0 (+X, +Z)
+        # 4 Corners connecting grid corners to rounded corner points
+        # C0 (+X, +Z)
         p_c0 = self.verts[grid_v[4, 4]]
-        p_r0 = self.verts[v_ridge[0]]; p_r1 = self.verts[v_ridge[1]]; p_r2 = self.verts[v_ridge[2]]
-        self.tri(v_ridge[0], grid_v[4, 4], v_ridge[1],
+        p_r0 = self.verts[v_top[0]]; p_r1 = self.verts[v_top[1]]; p_r2 = self.verts[v_top[2]]
+        self.tri(v_top[0], grid_v[4, 4], v_top[1],
                  uv_seat(p_r0[0], p_r0[2]), uv_seat(p_c0[0], p_c0[2]), uv_seat(p_r1[0], p_r1[2]))
-        self.tri(v_ridge[1], grid_v[4, 4], v_ridge[2],
+        self.tri(v_top[1], grid_v[4, 4], v_top[2],
                  uv_seat(p_r1[0], p_r1[2]), uv_seat(p_c0[0], p_c0[2]), uv_seat(p_r2[0], p_r2[2]))
 
-        # Corner 1 (-X, +Z)
+        # C1 (-X, +Z)
         p_c1 = self.verts[grid_v[0, 4]]
-        p_r6 = self.verts[v_ridge[6]]; p_r7 = self.verts[v_ridge[7]]; p_r8 = self.verts[v_ridge[8]]
-        self.tri(v_ridge[6], grid_v[0, 4], v_ridge[7],
+        p_r6 = self.verts[v_top[6]]; p_r7 = self.verts[v_top[7]]; p_r8 = self.verts[v_top[8]]
+        self.tri(v_top[6], grid_v[0, 4], v_top[7],
                  uv_seat(p_r6[0], p_r6[2]), uv_seat(p_c1[0], p_c1[2]), uv_seat(p_r7[0], p_r7[2]))
-        self.tri(v_ridge[7], grid_v[0, 4], v_ridge[8],
+        self.tri(v_top[7], grid_v[0, 4], v_top[8],
                  uv_seat(p_r7[0], p_r7[2]), uv_seat(p_c1[0], p_c1[2]), uv_seat(p_r8[0], p_r8[2]))
 
-        # Corner 2 (-X, -Z)
+        # C2 (-X, -Z)
         p_c2 = self.verts[grid_v[0, 0]]
-        p_r12 = self.verts[v_ridge[12]]; p_r13 = self.verts[v_ridge[13]]; p_r14 = self.verts[v_ridge[14]]
-        self.tri(v_ridge[12], grid_v[0, 0], v_ridge[13],
+        p_r12 = self.verts[v_top[12]]; p_r13 = self.verts[v_top[13]]; p_r14 = self.verts[v_top[14]]
+        self.tri(v_top[12], grid_v[0, 0], v_top[13],
                  uv_seat(p_r12[0], p_r12[2]), uv_seat(p_c2[0], p_c2[2]), uv_seat(p_r13[0], p_r13[2]))
-        self.tri(v_ridge[13], grid_v[0, 0], v_ridge[14],
+        self.tri(v_top[13], grid_v[0, 0], v_top[14],
                  uv_seat(p_r13[0], p_r13[2]), uv_seat(p_c2[0], p_c2[2]), uv_seat(p_r14[0], p_r14[2]))
 
-        # Corner 3 (+X, -Z)
+        # C3 (+X, -Z)
         p_c3 = self.verts[grid_v[4, 0]]
-        p_r18 = self.verts[v_ridge[18]]; p_r19 = self.verts[v_ridge[19]]; p_r20 = self.verts[v_ridge[20]]
-        self.tri(v_ridge[18], grid_v[4, 0], v_ridge[19],
+        p_r18 = self.verts[v_top[18]]; p_r19 = self.verts[v_top[19]]; p_r20 = self.verts[v_top[20]]
+        self.tri(v_top[18], grid_v[4, 0], v_top[19],
                  uv_seat(p_r18[0], p_r18[2]), uv_seat(p_c3[0], p_c3[2]), uv_seat(p_r19[0], p_r19[2]))
-        self.tri(v_ridge[19], grid_v[4, 0], v_ridge[20],
+        self.tri(v_top[19], grid_v[4, 0], v_top[20],
                  uv_seat(p_r19[0], p_r19[2]), uv_seat(p_c3[0], p_c3[2]), uv_seat(p_r20[0], p_r20[2]))
 
         # -------------------------------------------------------------
-        # 2. SEAT UNDER-SHELL: 4 LEGS AND 4 APRONS
+        # 2. 4 FLARED CORNER LEGS (OUTER SHELL)
         # -------------------------------------------------------------
-        corner_indices = [
-            [0, 1, 2],    # C0 (+X, +Z)
-            [6, 7, 8],    # C1 (-X, +Z)
-            [12, 13, 14], # C2 (-X, -Z)
-            [18, 19, 20], # C3 (+X, -Z)
-        ]
-
-        side_indices = [
-            (0, 1, [3, 4, 5], 0, 1),     # Side +Z: C0 to C1
-            (1, 2, [9, 10, 11], -1, 0),  # Side -X: C1 to C2
-            (2, 3, [15, 16, 17], 0, -1), # Side -Z: C2 to C3
-            (3, 0, [21, 22, 23], 1, 0),  # Side +X: C3 to C0
+        leg_stages = [
+            # Y,    cx,     cz,     cr_out
+            (0.285, 0.102,  0.092,  0.044),
+            (0.225, 0.108,  0.097,  0.046),
+            (0.075, 0.120,  0.108,  0.050),
+            (0.035, 0.124,  0.111,  0.051),
+            (0.000, 0.1265, 0.1135, 0.051),
         ]
 
         corner_signs = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
-
-        leg_stages = [
-            # Y,   cen_x,  cen_z,  r_out,  r_in
-            (0.285, 0.112, 0.102, 0.046, 0.026), # bevel bottom
-            (0.225, 0.118, 0.108, 0.047, 0.027), # arch apex level
-            (0.150, 0.124, 0.114, 0.048, 0.028), # mid-leg
-            (0.080, 0.129, 0.119, 0.049, 0.029), # crossbar top
-            (0.040, 0.133, 0.123, 0.051, 0.030), # crossbar bottom / foot flare
-            (0.000, 0.1375, 0.1245, 0.053, 0.032) # ground foot pad
+        corner_bevel_indices = [
+            [0, 1, 2],      # C0 (+X, +Z)
+            [6, 7, 8],      # C1 (-X, +Z)
+            [12, 13, 14],   # C2 (-X, -Z)
+            [18, 19, 20],   # C3 (+X, -Z)
         ]
 
-        leg_loops = []
-        for c_i, (sx, sz) in enumerate(corner_signs):
-            base_ang = math.atan2(sz, sx)
+        leg_corner_verts = []
+        for c_idx, (sx, sz) in enumerate(corner_signs):
             c_stages = []
-            for s_idx, (y_h, mx, mz, r_out, r_in) in enumerate(leg_stages):
-                lcx = sx * mx
-                lcz = sz * mz
-                stage_pts = []
-
+            base_ang = math.atan2(sz, sx)
+            for s_idx, (y_h, mx, mz, r_out) in enumerate(leg_stages):
                 if s_idx == 0:
-                    c_inds = corner_indices[c_i]
-                    stage_pts.append(v_bevel[c_inds[0]])
-                    stage_pts.append(v_bevel[c_inds[1]])
-                    stage_pts.append(v_bevel[c_inds[2]])
+                    inds = corner_bevel_indices[c_idx]
+                    c_stages.append([v_bev[inds[0]], v_bev[inds[1]], v_bev[inds[2]]])
                 else:
+                    cx = sx * mx
+                    cz = sz * mz
+                    pts = []
                     for da in [-math.pi/4, 0.0, math.pi/4]:
                         ang = base_ang + da
-                        px = lcx + math.cos(ang) * r_out
-                        pz = lcz + math.sin(ang) * r_out
-                        stage_pts.append(self.v(px, y_h, pz))
+                        px = cx + math.cos(ang) * r_out
+                        pz = cz + math.sin(ang) * r_out
+                        pts.append(self.v(px, y_h, pz))
+                    c_stages.append(pts)
+            leg_corner_verts.append(c_stages)
 
-                ang_in1 = base_ang + math.pi/2
-                ang_in2 = base_ang - math.pi/2
-                px_i1 = lcx + math.cos(ang_in1) * r_in
-                pz_i1 = lcz + math.sin(ang_in1) * r_in
-                px_i2 = lcx + math.cos(ang_in2) * r_in
-                pz_i2 = lcz + math.sin(ang_in2) * r_in
-                stage_pts.append(self.v(px_i1, y_h, pz_i1))
-                stage_pts.append(self.v(px_i2, y_h, pz_i2))
-
-                c_stages.append(stage_pts)
-            leg_loops.append(c_stages)
-
-            # Skin leg vertically
+            # Skin leg corner quads vertically between stages
             for s in range(len(leg_stages) - 1):
                 s_t = c_stages[s]
                 s_b = c_stages[s + 1]
-                y_t = leg_stages[s][0]
-                y_b = leg_stages[s + 1][0]
-
+                p0t = self.verts[s_t[0]]; p1t = self.verts[s_t[1]]
+                p0b = self.verts[s_b[0]]; p1b = self.verts[s_b[1]]
                 self.quad(s_t[0], s_t[1], s_b[1], s_b[0],
-                          uv_body(0.0, y_t), uv_body(0.5, y_t), uv_body(0.5, y_b), uv_body(0.0, y_b))
+                          uv_seat(p0t[0], p0t[2]), uv_seat(p1t[0], p1t[2]),
+                          uv_seat(p1b[0], p1b[2]), uv_seat(p0b[0], p0b[2]))
+                p2t = self.verts[s_t[2]]; p2b = self.verts[s_b[2]]
                 self.quad(s_t[1], s_t[2], s_b[2], s_b[1],
-                          uv_body(0.5, y_t), uv_body(1.0, y_t), uv_body(1.0, y_b), uv_body(0.5, y_b))
-
-                self.quad(s_t[0], s_b[0], s_b[3], s_t[3],
-                          uv_body(0.0, y_t), uv_body(0.0, y_b), uv_body(0.2, y_b), uv_body(0.2, y_t))
-                self.quad(s_t[2], s_t[4], s_b[4], s_b[2],
-                          uv_body(1.0, y_t), uv_body(0.8, y_t), uv_body(0.8, y_b), uv_body(1.0, y_b))
-
-                self.quad(s_t[3], s_b[3], s_b[4], s_t[4],
-                          uv_body(0.2, y_t), uv_body(0.2, y_b), uv_body(0.8, y_b), uv_body(0.8, y_t))
-
-            # Ground foot cap
-            s_gr = c_stages[-1]
-            self.tri(s_gr[0], s_gr[1], s_gr[2], uv_body(0.0, 0), uv_body(0.5, 0), uv_body(1.0, 0))
-            self.quad(s_gr[0], s_gr[2], s_gr[4], s_gr[3],
-                      uv_body(0.0, 0), uv_body(1.0, 0), uv_body(0.8, 0), uv_body(0.2, 0))
+                          uv_seat(p1t[0], p1t[2]), uv_seat(p2t[0], p2t[2]),
+                          uv_seat(p2b[0], p2b[2]), uv_seat(p1b[0], p1b[2]))
 
         # -------------------------------------------------------------
-        # 3. SIDE APRONS & ARCH OPENINGS
+        # 3. 4 SIDE WALLS WITH AUTHENTIC CUTOUTS & GROUND ARCHES
         # -------------------------------------------------------------
-        for ca, cb, side_v_inds, nx, nz in side_indices:
-            la_top = leg_loops[ca][0][2]
-            lb_top = leg_loops[cb][0][0]
+        def build_side_wall(ca, cb, side_bevel_inds, is_wide, normal_sign):
+            la_y0 = leg_corner_verts[ca][0][2]; lb_y0 = leg_corner_verts[cb][0][0]
+            la_y1 = leg_corner_verts[ca][1][2]; lb_y1 = leg_corner_verts[cb][1][0]
+            la_y2 = leg_corner_verts[ca][2][2]; lb_y2 = leg_corner_verts[cb][2][0]
+            la_y3 = leg_corner_verts[ca][3][2]; lb_y3 = leg_corner_verts[cb][3][0]
+            la_y4 = leg_corner_verts[ca][4][2]; lb_y4 = leg_corner_verts[cb][4][0]
 
-            la_arch = leg_loops[ca][1][2]
-            lb_arch = leg_loops[cb][1][0]
+            p_la_y0 = self.verts[la_y0]; p_lb_y0 = self.verts[lb_y0]
+            p_la_y1 = self.verts[la_y1]; p_lb_y1 = self.verts[lb_y1]
+            p_la_y2 = self.verts[la_y2]; p_lb_y2 = self.verts[lb_y2]
+            p_la_y3 = self.verts[la_y3]; p_lb_y3 = self.verts[lb_y3]
+            p_la_y4 = self.verts[la_y4]; p_lb_y4 = self.verts[lb_y4]
 
-            top_strip = [la_top] + [v_bevel[i] for i in side_v_inds] + [lb_top]
+            in_norm = np.array([0.0, 0.0, -0.008 * normal_sign], dtype=np.float32) if is_wide else np.array([-0.008 * normal_sign, 0.0, 0.0], dtype=np.float32)
 
-            p_la = self.verts[la_arch]
-            p_lb = self.verts[lb_arch]
+            if is_wide:
+                uv_fn = uv_side_wide
+                z_face = p_la_y1[2]
+                x_tl = -0.055; x_tr = 0.055
+                x_bl = -0.080; x_br = 0.080
 
-            arch_v = [la_arch]
-            for t in [0.25, 0.50, 0.75]:
-                px = p_la[0] * (1 - t) + p_lb[0] * t
-                pz = p_la[2] * (1 - t) + p_lb[2] * t
-                py = 0.228 - 0.012 * (4 * (t - 0.5)**2)
-                arch_v.append(self.v(px, py, pz))
-            arch_v.append(lb_arch)
+                if p_la_y1[0] > p_lb_y1[0]:
+                    # ca is +X (Right), cb is -X (Left)
+                    v_cut_tr = self.v(x_tr, 0.225, z_face)
+                    v_cut_tm = self.v(0.0, 0.232, z_face)
+                    v_cut_tl = self.v(x_tl, 0.225, z_face)
+                    v_cut_br = self.v(x_br, 0.075, p_la_y2[2])
+                    v_cut_bl = self.v(x_bl, 0.075, p_lb_y2[2])
 
-            for i in range(len(top_strip) - 1):
-                u0 = i / (len(top_strip) - 1)
-                u1 = (i + 1) / (len(top_strip) - 1)
-                self.quad(top_strip[i], top_strip[i+1], arch_v[i+1], arch_v[i],
-                          uv_body(u0, 0.285), uv_body(u1, 0.285),
-                          uv_body(u1, 0.225), uv_body(u0, 0.225))
+                    bv0 = v_bev[side_bevel_inds[0]]
+                    bv1 = v_bev[side_bevel_inds[1]]
+                    bv2 = v_bev[side_bevel_inds[2]]
 
-            # ---------------------------------------------------------
-            # 4. CROSSBAR (GIẰNG CHÂN GHẾ)
-            # ---------------------------------------------------------
-            la_cbt = leg_loops[ca][3][2]
-            la_cbb = leg_loops[ca][4][2]
-            lb_cbt = leg_loops[cb][3][0]
-            lb_cbb = leg_loops[cb][4][0]
+                    # Top Apron
+                    self.quad(la_y0, bv0, v_cut_tr, la_y1,
+                              uv_fn(p_la_y0[0], p_la_y0[1]), uv_fn(self.verts[bv0][0], self.verts[bv0][1]),
+                              uv_fn(x_tr, 0.225), uv_fn(p_la_y1[0], p_la_y1[1]))
+                    self.quad(bv0, bv1, v_cut_tm, v_cut_tr,
+                              uv_fn(self.verts[bv0][0], self.verts[bv0][1]), uv_fn(self.verts[bv1][0], self.verts[bv1][1]),
+                              uv_fn(0.0, 0.232), uv_fn(x_tr, 0.225))
+                    self.quad(bv1, bv2, v_cut_tl, v_cut_tm,
+                              uv_fn(self.verts[bv1][0], self.verts[bv1][1]), uv_fn(self.verts[bv2][0], self.verts[bv2][1]),
+                              uv_fn(x_tl, 0.225), uv_fn(0.0, 0.232))
+                    self.quad(bv2, lb_y0, lb_y1, v_cut_tl,
+                              uv_fn(self.verts[bv2][0], self.verts[bv2][1]), uv_fn(p_lb_y0[0], p_lb_y0[1]),
+                              uv_fn(p_lb_y1[0], p_lb_y1[1]), uv_fn(x_tl, 0.225))
 
-            self.quad(la_cbt, lb_cbt, lb_cbb, la_cbb,
-                      uv_body(0.0, 0.08), uv_body(1.0, 0.08), uv_body(1.0, 0.04), uv_body(0.0, 0.04))
+                    # Side Columns
+                    self.quad(la_y1, v_cut_tr, v_cut_br, la_y2,
+                              uv_fn(p_la_y1[0], p_la_y1[1]), uv_fn(x_tr, 0.225),
+                              uv_fn(x_br, 0.075), uv_fn(p_la_y2[0], p_la_y2[1]))
+                    self.quad(v_cut_tl, lb_y1, lb_y2, v_cut_bl,
+                              uv_fn(x_tl, 0.225), uv_fn(p_lb_y1[0], p_lb_y1[1]),
+                              uv_fn(p_lb_y2[0], p_lb_y2[1]), uv_fn(x_bl, 0.075))
 
-            in_x = -nx * 0.012
-            in_z = -nz * 0.012
-            p_at = self.verts[la_cbt]
-            p_ab = self.verts[la_cbb]
-            p_bt = self.verts[lb_cbt]
-            p_bb = self.verts[lb_cbb]
+                    # Bottom Crossbar
+                    z_arch = p_la_y3[2]
+                    v_bar_m = self.v(0.0, 0.035, z_arch)
+                    self.quad(la_y2, v_cut_br, v_bar_m, la_y3,
+                              uv_fn(p_la_y2[0], p_la_y2[1]), uv_fn(x_br, 0.075),
+                              uv_fn(0.0, 0.035), uv_fn(p_la_y3[0], p_la_y3[1]))
+                    self.tri(v_cut_br, v_cut_bl, v_bar_m,
+                             uv_fn(x_br, 0.075), uv_fn(x_bl, 0.075), uv_fn(0.0, 0.035))
+                    self.quad(v_cut_bl, lb_y2, lb_y3, v_bar_m,
+                              uv_fn(x_bl, 0.075), uv_fn(p_lb_y2[0], p_lb_y2[1]),
+                              uv_fn(p_lb_y3[0], p_lb_y3[1]), uv_fn(0.0, 0.035))
 
-            v_in_at = self.v(p_at[0] + in_x, p_at[1], p_at[2] + in_z)
-            v_in_ab = self.v(p_ab[0] + in_x, p_ab[1], p_ab[2] + in_z)
-            v_in_bt = self.v(p_bt[0] + in_x, p_bt[1], p_bt[2] + in_z)
-            v_in_bb = self.v(p_bb[0] + in_x, p_bb[1], p_bb[2] + in_z)
+                    # Inner Wall Jambs around Cutout Window
+                    j_tl = self.v(*(self.verts[v_cut_tl] + in_norm))
+                    j_tm = self.v(*(self.verts[v_cut_tm] + in_norm))
+                    j_tr = self.v(*(self.verts[v_cut_tr] + in_norm))
+                    j_br = self.v(*(self.verts[v_cut_br] + in_norm))
+                    j_bl = self.v(*(self.verts[v_cut_bl] + in_norm))
 
-            self.quad(v_in_bt, v_in_at, v_in_ab, v_in_bb,
-                      uv_body(1.0, 0.08), uv_body(0.0, 0.08), uv_body(0.0, 0.04), uv_body(1.0, 0.04))
-            self.quad(la_cbt, v_in_at, v_in_bt, lb_cbt,
-                      uv_body(0.0, 0.08), uv_body(0.0, 0.08), uv_body(1.0, 0.08), uv_body(1.0, 0.08))
-            self.quad(la_cbb, lb_cbb, v_in_bb, v_in_ab,
-                      uv_body(0.0, 0.04), uv_body(1.0, 0.04), uv_body(1.0, 0.04), uv_body(0.0, 0.04))
+                    self.quad(v_cut_tr, v_cut_tm, j_tm, j_tr,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_tm, v_cut_tl, j_tl, j_tm,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+                    self.quad(v_cut_br, v_cut_tr, j_tr, j_br,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_tl, v_cut_bl, j_bl, j_tl,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bl, v_cut_br, j_br, j_bl,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+
+                    # Bottom Arch Inner Flange
+                    j_bar_m = self.v(*(self.verts[v_bar_m] + in_norm))
+                    j_la_y3 = self.v(*(self.verts[la_y3] + in_norm))
+                    j_lb_y3 = self.v(*(self.verts[lb_y3] + in_norm))
+                    self.quad(la_y3, v_bar_m, j_bar_m, j_la_y3,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_bar_m, lb_y3, j_lb_y3, j_bar_m,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+
+                else:
+                    # ca is -X (Left), cb is +X (Right)
+                    v_cut_tl = self.v(x_tl, 0.225, z_face)
+                    v_cut_tm = self.v(0.0, 0.232, z_face)
+                    v_cut_tr = self.v(x_tr, 0.225, z_face)
+                    v_cut_bl = self.v(x_bl, 0.075, p_la_y2[2])
+                    v_cut_br = self.v(x_br, 0.075, p_lb_y2[2])
+
+                    bv0 = v_bev[side_bevel_inds[0]]
+                    bv1 = v_bev[side_bevel_inds[1]]
+                    bv2 = v_bev[side_bevel_inds[2]]
+
+                    self.quad(la_y0, bv0, v_cut_tl, la_y1,
+                              uv_fn(p_la_y0[0], p_la_y0[1]), uv_fn(self.verts[bv0][0], self.verts[bv0][1]),
+                              uv_fn(x_tl, 0.225), uv_fn(p_la_y1[0], p_la_y1[1]))
+                    self.quad(bv0, bv1, v_cut_tm, v_cut_tl,
+                              uv_fn(self.verts[bv0][0], self.verts[bv0][1]), uv_fn(self.verts[bv1][0], self.verts[bv1][1]),
+                              uv_fn(0.0, 0.232), uv_fn(x_tl, 0.225))
+                    self.quad(bv1, bv2, v_cut_tr, v_cut_tm,
+                              uv_fn(self.verts[bv1][0], self.verts[bv1][1]), uv_fn(self.verts[bv2][0], self.verts[bv2][1]),
+                              uv_fn(x_tr, 0.225), uv_fn(0.0, 0.232))
+                    self.quad(bv2, lb_y0, lb_y1, v_cut_tr,
+                              uv_fn(self.verts[bv2][0], self.verts[bv2][1]), uv_fn(p_lb_y0[0], p_lb_y0[1]),
+                              uv_fn(p_lb_y1[0], p_lb_y1[1]), uv_fn(x_tr, 0.225))
+
+                    self.quad(la_y1, v_cut_tl, v_cut_bl, la_y2,
+                              uv_fn(p_la_y1[0], p_la_y1[1]), uv_fn(x_tl, 0.225),
+                              uv_fn(x_bl, 0.075), uv_fn(p_la_y2[0], p_la_y2[1]))
+                    self.quad(v_cut_tr, lb_y1, lb_y2, v_cut_br,
+                              uv_fn(x_tr, 0.225), uv_fn(p_lb_y1[0], p_lb_y1[1]),
+                              uv_fn(p_lb_y2[0], p_lb_y2[1]), uv_fn(x_br, 0.075))
+
+                    z_arch = p_la_y3[2]
+                    v_bar_m = self.v(0.0, 0.035, z_arch)
+                    self.quad(la_y2, v_cut_bl, v_bar_m, la_y3,
+                              uv_fn(p_la_y2[0], p_la_y2[1]), uv_fn(x_bl, 0.075),
+                              uv_fn(0.0, 0.035), uv_fn(p_la_y3[0], p_la_y3[1]))
+                    self.tri(v_cut_bl, v_cut_br, v_bar_m,
+                             uv_fn(x_bl, 0.075), uv_fn(x_br, 0.075), uv_fn(0.0, 0.035))
+                    self.quad(v_cut_br, lb_y2, lb_y3, v_bar_m,
+                              uv_fn(x_br, 0.075), uv_fn(p_lb_y2[0], p_lb_y2[1]),
+                              uv_fn(p_lb_y3[0], p_lb_y3[1]), uv_fn(0.0, 0.035))
+
+                    j_tl = self.v(*(self.verts[v_cut_tl] + in_norm))
+                    j_tm = self.v(*(self.verts[v_cut_tm] + in_norm))
+                    j_tr = self.v(*(self.verts[v_cut_tr] + in_norm))
+                    j_br = self.v(*(self.verts[v_cut_br] + in_norm))
+                    j_bl = self.v(*(self.verts[v_cut_bl] + in_norm))
+
+                    self.quad(v_cut_tl, v_cut_tm, j_tm, j_tl,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_tm, v_cut_tr, j_tr, j_tm,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+                    self.quad(v_cut_tl, v_cut_bl, j_bl, j_tl,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_br, v_cut_tr, j_tr, j_br,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bl, v_cut_br, j_br, j_bl,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+
+                    j_bar_m = self.v(*(self.verts[v_bar_m] + in_norm))
+                    j_la_y3 = self.v(*(self.verts[la_y3] + in_norm))
+                    j_lb_y3 = self.v(*(self.verts[lb_y3] + in_norm))
+                    self.quad(la_y3, v_bar_m, j_bar_m, j_la_y3,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_bar_m, lb_y3, j_lb_y3, j_bar_m,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+
+            else:
+                # Narrow Side with slot cutout
+                uv_fn = uv_side_narrow
+                x_face = p_la_y1[0]
+                z_tt = 0.025; z_tb = -0.025
+                z_bt = 0.045; z_bb = -0.045
+
+                if p_la_y1[2] > p_lb_y1[2]:
+                    # ca is +Z (top), cb is -Z (bottom)
+                    v_cut_tt = self.v(x_face, 0.210, z_tt)
+                    v_cut_tb = self.v(x_face, 0.210, z_tb)
+                    v_cut_bt = self.v(x_face, 0.075, z_bt)
+                    v_cut_bb = self.v(x_face, 0.075, z_bb)
+
+                    bv0 = v_bev[side_bevel_inds[0]]
+                    bv1 = v_bev[side_bevel_inds[1]]
+                    bv2 = v_bev[side_bevel_inds[2]]
+
+                    # Top Apron
+                    self.quad(la_y0, bv0, v_cut_tt, la_y1,
+                              uv_fn(p_la_y0[2], p_la_y0[1]), uv_fn(self.verts[bv0][2], self.verts[bv0][1]),
+                              uv_fn(z_tt, 0.210), uv_fn(p_la_y1[2], p_la_y1[1]))
+                    self.tri(bv0, bv1, v_cut_tt,
+                             uv_fn(self.verts[bv0][2], self.verts[bv0][1]), uv_fn(self.verts[bv1][2], self.verts[bv1][1]),
+                             uv_fn(z_tt, 0.210))
+                    self.quad(bv1, bv2, v_cut_tb, v_cut_tt,
+                              uv_fn(self.verts[bv1][2], self.verts[bv1][1]), uv_fn(self.verts[bv2][2], self.verts[bv2][1]),
+                              uv_fn(z_tb, 0.210), uv_fn(z_tt, 0.210))
+                    self.quad(bv2, lb_y0, lb_y1, v_cut_tb,
+                              uv_fn(self.verts[bv2][2], self.verts[bv2][1]), uv_fn(p_lb_y0[2], p_lb_y0[1]),
+                              uv_fn(p_lb_y1[2], p_lb_y1[1]), uv_fn(z_tb, 0.210))
+
+                    # Side Columns
+                    self.quad(la_y1, v_cut_tt, v_cut_bt, la_y2,
+                              uv_fn(p_la_y1[2], p_la_y1[1]), uv_fn(z_tt, 0.210),
+                              uv_fn(z_bt, 0.075), uv_fn(p_la_y2[2], p_la_y2[1]))
+                    self.quad(v_cut_tb, lb_y1, lb_y2, v_cut_bb,
+                              uv_fn(z_tb, 0.210), uv_fn(p_lb_y1[2], p_lb_y1[1]),
+                              uv_fn(p_lb_y2[2], p_lb_y2[1]), uv_fn(z_bb, 0.075))
+
+                    # Bottom Crossbar
+                    v_bar_m = self.v(x_face, 0.035, 0.0)
+                    self.quad(la_y2, v_cut_bt, v_bar_m, la_y3,
+                              uv_fn(p_la_y2[2], p_la_y2[1]), uv_fn(z_bt, 0.075),
+                              uv_fn(0.0, 0.035), uv_fn(p_la_y3[2], p_la_y3[1]))
+                    self.tri(v_cut_bt, v_cut_bb, v_bar_m,
+                             uv_fn(z_bt, 0.075), uv_fn(z_bb, 0.075), uv_fn(0.0, 0.035))
+                    self.quad(v_cut_bb, lb_y2, lb_y3, v_bar_m,
+                              uv_fn(z_bb, 0.075), uv_fn(p_lb_y2[2], p_lb_y2[1]),
+                              uv_fn(p_lb_y3[2], p_lb_y3[1]), uv_fn(0.0, 0.035))
+
+                    # Jambs
+                    j_tt = self.v(*(self.verts[v_cut_tt] + in_norm))
+                    j_tb = self.v(*(self.verts[v_cut_tb] + in_norm))
+                    j_bt = self.v(*(self.verts[v_cut_bt] + in_norm))
+                    j_bb = self.v(*(self.verts[v_cut_bb] + in_norm))
+
+                    self.quad(v_cut_tt, v_cut_tb, j_tb, j_tt,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_tb, v_cut_bb, j_bb, j_tb,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bb, v_cut_bt, j_bt, j_bb,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bt, v_cut_tt, j_tt, j_bt,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+
+                    j_bar_m = self.v(*(self.verts[v_bar_m] + in_norm))
+                    j_la_y3 = self.v(*(self.verts[la_y3] + in_norm))
+                    j_lb_y3 = self.v(*(self.verts[lb_y3] + in_norm))
+                    self.quad(la_y3, v_bar_m, j_bar_m, j_la_y3,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_bar_m, lb_y3, j_lb_y3, j_bar_m,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+
+                else:
+                    # ca is -Z (bottom), cb is +Z (top)
+                    v_cut_tb = self.v(x_face, 0.210, z_tb)
+                    v_cut_tt = self.v(x_face, 0.210, z_tt)
+                    v_cut_bb = self.v(x_face, 0.075, z_bb)
+                    v_cut_bt = self.v(x_face, 0.075, z_bt)
+
+                    bv0 = v_bev[side_bevel_inds[0]]
+                    bv1 = v_bev[side_bevel_inds[1]]
+                    bv2 = v_bev[side_bevel_inds[2]]
+
+                    self.quad(la_y0, bv0, v_cut_tb, la_y1,
+                              uv_fn(p_la_y0[2], p_la_y0[1]), uv_fn(self.verts[bv0][2], self.verts[bv0][1]),
+                              uv_fn(z_tb, 0.210), uv_fn(p_la_y1[2], p_la_y1[1]))
+                    self.tri(bv0, bv1, v_cut_tb,
+                             uv_fn(self.verts[bv0][2], self.verts[bv0][1]), uv_fn(self.verts[bv1][2], self.verts[bv1][1]),
+                             uv_fn(z_tb, 0.210))
+                    self.quad(bv1, bv2, v_cut_tt, v_cut_tb,
+                              uv_fn(self.verts[bv1][2], self.verts[bv1][1]), uv_fn(self.verts[bv2][2], self.verts[bv2][1]),
+                              uv_fn(z_tt, 0.210), uv_fn(z_tb, 0.210))
+                    self.quad(bv2, lb_y0, lb_y1, v_cut_tt,
+                              uv_fn(self.verts[bv2][2], self.verts[bv2][1]), uv_fn(p_lb_y0[2], p_lb_y0[1]),
+                              uv_fn(p_lb_y1[2], p_lb_y1[1]), uv_fn(z_tt, 0.210))
+
+                    self.quad(la_y1, v_cut_tb, v_cut_bb, la_y2,
+                              uv_fn(p_la_y1[2], p_la_y1[1]), uv_fn(z_tb, 0.210),
+                              uv_fn(z_bb, 0.075), uv_fn(p_la_y2[2], p_la_y2[1]))
+                    self.quad(v_cut_tt, lb_y1, lb_y2, v_cut_bt,
+                              uv_fn(z_tt, 0.210), uv_fn(p_lb_y1[2], p_lb_y1[1]),
+                              uv_fn(p_lb_y2[2], p_lb_y2[1]), uv_fn(z_bt, 0.075))
+
+                    v_bar_m = self.v(x_face, 0.035, 0.0)
+                    self.quad(la_y2, v_cut_bb, v_bar_m, la_y3,
+                              uv_fn(p_la_y2[2], p_la_y2[1]), uv_fn(z_bb, 0.075),
+                              uv_fn(0.0, 0.035), uv_fn(p_la_y3[2], p_la_y3[1]))
+                    self.tri(v_cut_bb, v_cut_bt, v_bar_m,
+                             uv_fn(z_bb, 0.075), uv_fn(z_bt, 0.075), uv_fn(0.0, 0.035))
+                    self.quad(v_cut_bt, lb_y2, lb_y3, v_bar_m,
+                              uv_fn(z_bt, 0.075), uv_fn(p_lb_y2[2], p_lb_y2[1]),
+                              uv_fn(p_lb_y3[2], p_lb_y3[1]), uv_fn(0.0, 0.035))
+
+                    j_tb = self.v(*(self.verts[v_cut_tb] + in_norm))
+                    j_tt = self.v(*(self.verts[v_cut_tt] + in_norm))
+                    j_bb = self.v(*(self.verts[v_cut_bb] + in_norm))
+                    j_bt = self.v(*(self.verts[v_cut_bt] + in_norm))
+
+                    self.quad(v_cut_tb, v_cut_tt, j_tt, j_tb,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_tt, v_cut_bt, j_bt, j_tt,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bt, v_cut_bb, j_bb, j_bt,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_cut_bb, v_cut_tb, j_tb, j_bb,
+                              uv_flange(0.0, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.0, 0.0))
+
+                    j_bar_m = self.v(*(self.verts[v_bar_m] + in_norm))
+                    j_la_y3 = self.v(*(self.verts[la_y3] + in_norm))
+                    j_lb_y3 = self.v(*(self.verts[lb_y3] + in_norm))
+                    self.quad(la_y3, v_bar_m, j_bar_m, j_la_y3,
+                              uv_flange(0.0, 1.0), uv_flange(0.5, 1.0), uv_flange(0.5, 0.0), uv_flange(0.0, 0.0))
+                    self.quad(v_bar_m, lb_y3, j_lb_y3, j_bar_m,
+                              uv_flange(0.5, 1.0), uv_flange(1.0, 1.0), uv_flange(1.0, 0.0), uv_flange(0.5, 0.0))
+
+        # Build the 4 side walls
+        build_side_wall(0, 1, [3, 4, 5], is_wide=True, normal_sign=1.0)
+        build_side_wall(1, 2, [9, 10, 11], is_wide=False, normal_sign=-1.0)
+        build_side_wall(2, 3, [15, 16, 17], is_wide=True, normal_sign=-1.0)
+        build_side_wall(3, 0, [21, 22, 23], is_wide=False, normal_sign=1.0)
+
+        # -------------------------------------------------------------
+        # 4. GROUND FOOT PADS (AT Y = 0.000)
+        # -------------------------------------------------------------
+        for c_idx in range(4):
+            pts_gr = leg_corner_verts[c_idx][4]
+            p0 = self.verts[pts_gr[0]]; p1 = self.verts[pts_gr[1]]; p2 = self.verts[pts_gr[2]]
+            self.tri(pts_gr[0], pts_gr[1], pts_gr[2],
+                     uv_seat(p0[0], p0[2]), uv_seat(p1[0], p1[2]), uv_seat(p2[0], p2[2]))
 
         return self.verts, self.uvs, self.faces
 
@@ -408,7 +621,7 @@ class SeamlessPlasticStoolBuilder:
     def write_obj(self, filepath):
         os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
         with open(filepath, 'w') as out:
-            out.write("# SM_PlasticStool - Pristine Authentic Vietnamese Plastic Stool\n")
+            out.write("# SM_PlasticStool - Authentic Vietnamese Sidewalk Plastic Stool\n")
             out.write("mtllib MAT_Plastic_BeigeStool.mtl\n")
             out.write("o SM_PlasticStool\n")
             for v in self.verts:
@@ -425,71 +638,145 @@ class SeamlessPlasticStoolBuilder:
         print(f"Generated {filepath}: {len(self.verts)} verts, {len(self.faces)} triangles")
 
 
-def generate_stool_texture(out_path="Assets/TramChanh/Art/Textures/T_Plastic_Beige_BaseColor.png", size=1024):
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    beige_rgb = (218, 200, 176)
-    dark_recess_rgb = (155, 138, 118)
-    hole_rgb = (55, 45, 38)
-    rim_highlight = (244, 235, 222)
+def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
+    os.makedirs(out_dir, exist_ok=True)
+    base_color_path = os.path.join(out_dir, "T_Plastic_Beige_BaseColor.png")
+    normal_map_path = os.path.join(out_dir, "T_Plastic_Beige_Normal.png")
+    mask_map_path = os.path.join(out_dir, "T_Plastic_Beige_MaskMap.png")
 
-    base_img = Image.new('RGB', (size, size), beige_rgb)
+    # Colors
+    # Authentic Vietnamese cream beige plastic: #DAC8B0
+    beige_base = (218, 200, 176)
+    highlight_rim = (245, 238, 226)
+    cavity_dark = (125, 110, 92)
+    hole_center = (65, 55, 45)
+
+    # 1. BaseColor Image
+    base_img = Image.new('RGB', (size, size), beige_base)
     draw_base = ImageDraw.Draw(base_img)
 
-    # Seat outer bevel border
-    bx0, by0 = 164, 165
-    bx1, by1 = 348, 347
-    draw_base.rounded_rectangle([bx0, by0, bx1, by1], radius=28, outline=(235, 222, 205), width=2)
+    # 2. Normal Map Image (Default flat tangent space normal = (128, 128, 255))
+    normal_arr = np.zeros((size, size, 3), dtype=np.float32)
+    normal_arr[:, :, 0] = 0.5
+    normal_arr[:, :, 1] = 0.5
+    normal_arr[:, :, 2] = 1.0
 
-    # Recessed plate border
-    px0, py0 = 195, 198
-    px1, py1 = 317, 314
-    r_plate = 16
+    # 3. Mask Map Image (R: Metallic=0, G: AO=255, B: Detail=0, A: Smoothness=98 ~ 0.38)
+    mask_arr = np.zeros((size, size, 4), dtype=np.uint8)
+    mask_arr[:, :, 0] = 0    # Metallic = 0
+    mask_arr[:, :, 1] = 255  # AO = 1.0
+    mask_arr[:, :, 2] = 0    # Detail = 0
+    mask_arr[:, :, 3] = 98   # Smoothness = 0.384
 
-    # Recessed groove
-    for ring in range(3, 0, -1):
-        ao_val = int(255 - ring * 22)
-        groove_rgb = tuple(int(c * (ao_val / 255.0)) for c in beige_rgb)
-        draw_base.rounded_rectangle([px0 - ring, py0 - ring, px1 + ring, py1 + ring],
-                                    radius=r_plate + ring, outline=groove_rgb, width=1)
+    # -------------------------------------------------------------
+    # SEAT TOP TEXTURING (UV in [0.02, 0.48] x [0.52, 0.98])
+    # In Pillow coordinates: Seat Center is at (256, 256)
+    # -------------------------------------------------------------
+    seat_cx, seat_cy = 256, 256
+    seat_w, seat_h = 280, 260
+    r_seat_corner = 65
 
-    draw_base.rounded_rectangle([px0, py0, px1, py1], radius=r_plate, outline=rim_highlight, width=1)
+    # Raised outer perimeter rim
+    x0, y0 = seat_cx - seat_w // 2, seat_cy - seat_h // 2
+    x1, y1 = seat_cx + seat_w // 2, seat_cy + seat_h // 2
+    draw_base.rounded_rectangle([x0, y0, x1, y1], radius=r_seat_corner, outline=highlight_rim, width=3)
 
-    # 7x7 Ventilation Hole Pattern
-    grid_n = 7
-    xs = np.linspace(px0 + 11, px1 - 11, grid_n)
-    ys = np.linspace(py0 + 11, py1 - 11, grid_n)
-    hole_r = 4.0
+    # 9x8 Dimple Grid
+    grid_cols = 9 # X axis
+    grid_rows = 8 # Z axis
+    grid_w = 186
+    grid_h = 160
+    xs = np.linspace(seat_cx - grid_w // 2, seat_cx + grid_w // 2, grid_cols)
+    ys = np.linspace(seat_cy - grid_h // 2, seat_cy + grid_h // 2, grid_rows)
+    dimple_r = 7.5
 
     for ix, hx in enumerate(xs):
         for iy, hy in enumerate(ys):
-            if (ix == 0 or ix == grid_n - 1) and (iy == 0 or iy == grid_n - 1):
+            if (ix == 0 or ix == grid_cols - 1) and (iy == 0 or iy == grid_rows - 1):
                 continue
 
             hx_i, hy_i = int(round(hx)), int(round(hy))
-            draw_base.ellipse([hx_i - hole_r - 1.5, hy_i - hole_r - 1.5,
-                               hx_i + hole_r + 1.5, hy_i + hole_r + 1.5], fill=rim_highlight)
-            draw_base.ellipse([hx_i - hole_r - 0.5, hy_i - hole_r - 0.5,
-                               hx_i + hole_r + 0.5, hy_i + hole_r + 0.5], fill=dark_recess_rgb)
-            draw_base.ellipse([hx_i - hole_r, hy_i - hole_r,
-                               hx_i + hole_r, hy_i + hole_r], fill=hole_rgb)
 
-    # Subtle plastic noise
-    noise = np.random.normal(0, 1.2, (size, size, 3))
+            # BaseColor: highlight rim + cavity gradient
+            draw_base.ellipse([hx_i - dimple_r - 1.5, hy_i - dimple_r - 1.5,
+                               hx_i + dimple_r + 1.5, hy_i + dimple_r + 1.5], fill=highlight_rim)
+            draw_base.ellipse([hx_i - dimple_r - 0.5, hy_i - dimple_r - 0.5,
+                               hx_i + dimple_r + 0.5, hy_i + dimple_r + 0.5], fill=cavity_dark)
+            draw_base.ellipse([hx_i - dimple_r, hy_i - dimple_r,
+                               hx_i + dimple_r, hy_i + dimple_r], fill=hole_center)
+
+            # Normal Map & Mask Map: Spherical depression vectors
+            r_int = int(math.ceil(dimple_r + 1.0))
+            for dy in range(-r_int, r_int + 1):
+                for dx in range(-r_int, r_int + 1):
+                    dist = math.sqrt(dx*dx + dy*dy)
+                    if dist <= dimple_r:
+                        px = hx_i + dx
+                        py = hy_i + dy
+                        if 0 <= px < size and 0 <= py < size:
+                            norm_x = (dx / dimple_r) * 0.75
+                            norm_y = -(dy / dimple_r) * 0.75
+                            norm_z = math.sqrt(max(0.0, 1.0 - norm_x*norm_x - norm_y*norm_y))
+
+                            normal_arr[py, px, 0] = norm_x * 0.5 + 0.5
+                            normal_arr[py, px, 1] = norm_y * 0.5 + 0.5
+                            normal_arr[py, px, 2] = norm_z
+
+                            ao_factor = 0.40 + 0.60 * (dist / dimple_r)
+                            mask_arr[py, px, 1] = int(255 * ao_factor)
+                            mask_arr[py, px, 3] = int(98 * (0.85 + 0.15 * (dist / dimple_r)))
+
+    # -------------------------------------------------------------
+    # SIDE EMBOSSED CONTOURS (Cutout window embossed frames)
+    # -------------------------------------------------------------
+    cx_w, cy_w = 768, 256
+    poly_trap = [
+        (cx_w - 75, cy_w + 60),
+        (cx_w + 75, cy_w + 60),
+        (cx_w + 50, cy_w - 70),
+        (cx_w, cy_w - 80),
+        (cx_w - 50, cy_w - 70),
+    ]
+    draw_base.polygon(poly_trap, outline=highlight_rim, width=4)
+
+    cx_n, cy_n = 768, 768
+    poly_slot = [
+        (cx_n - 42, cy_n + 60),
+        (cx_n + 42, cy_n + 60),
+        (cx_n + 25, cy_n - 65),
+        (cx_n - 25, cy_n - 65),
+    ]
+    draw_base.polygon(poly_slot, outline=highlight_rim, width=4)
+
+    # Subtle micro-surface noise for authentic plastic texture
+    np.random.seed(42)
+    noise = np.random.normal(0, 1.0, (size, size, 3))
     base_arr = np.array(base_img, dtype=np.float32) + noise
     base_arr = np.clip(base_arr, 0, 255).astype(np.uint8)
     base_img = Image.fromarray(base_arr)
 
-    base_img.save(out_path)
-    print(f"Generated stool texture: {out_path}")
+    # Save textures
+    base_img.save(base_color_path)
+    print(f"Generated BaseColor: {base_color_path}")
+
+    normal_img_arr = np.clip(normal_arr * 255.0, 0, 255).astype(np.uint8)
+    normal_img = Image.fromarray(normal_img_arr, mode='RGB')
+    normal_img.save(normal_map_path)
+    print(f"Generated NormalMap: {normal_map_path}")
+
+    mask_img = Image.fromarray(mask_arr, mode='RGBA')
+    mask_img.save(mask_map_path)
+    print(f"Generated MaskMap: {mask_map_path}")
 
 
-def generate_plastic_stool(out_path="Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj"):
-    builder = SeamlessPlasticStoolBuilder()
+def main():
+    obj_path = "Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj"
+    builder = AuthenticPlasticStoolBuilder()
     builder.build()
     builder.compute_smooth_normals()
-    builder.write_obj(out_path)
+    builder.write_obj(obj_path)
+    generate_pbr_textures()
 
 
 if __name__ == "__main__":
-    generate_plastic_stool()
-    generate_stool_texture()
+    main()

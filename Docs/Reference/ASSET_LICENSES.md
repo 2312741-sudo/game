@@ -13,6 +13,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Metal Sheet Roof "New" & "Old" \| Part-1** | CHEESE ARG 3D | https://sketchfab.com/3d-models/metal-sheet-roof-new-old-part-1-c7c46bf23a7e41068ab302cbc8152046 | CC-BY 4.0 | 2026-10-14 | `Assets/TramChanh/Art/Textures/T_CorrugatedMetal_BaseColor.png`<br>`Assets/TramChanh/Art/Textures/T_CorrugatedMetal_Normal.png`<br>`Assets/TramChanh/Art/Textures/T_CorrugatedMetal_MaskMap.png` |
 | **Urban Commuter Scooter** (`CUPIC_SCOOTER`) | Poly by Google | https://poly.pizza/m/9RqkkBOPNtd | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_Motorbike.obj`<br>`Assets/TramChanh/Art/Textures/T_Motorbike_BaseColor.png` |
 | **Plastic Stool** (`Stool`) | Poly by Google | https://poly.pizza/m/2UeLZTX5nHr | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj` |
+| **Authentic Vietnamese Plastic Stool** (`SM_PlasticStool`) | Game Owner Reference / Trạm Chanh Procedural Reconstruction (`ArtSource/Scripts/generate_stool_mesh.py`) | Provided by Game Owner (`47851875f5b35d81faa5f5067f2f70f4.fbx`) | CC0 1.0 (Game Production Asset) | 2026-10-18 | `Assets/TramChanh/Art/Models/Furniture/SM_PlasticStool.obj`<br>`Assets/TramChanh/Art/Textures/T_Plastic_Beige_*`<br>`Assets/TramChanh/Prefabs/CustomerArea/PF_PlasticStool.prefab` |
 | **Tropical Planter Plant** (`Birds of paradise potted plant`) | Poly by Google | https://poly.pizza/m/folDA1yLeEF | CC-BY 3.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_PottedPlant.obj`<br>`Assets/TramChanh/Art/Textures/T_Plant_BirdsOfParadise_BaseColor.png` |
 | **Urban Street Light** (`Street Light`) | Quaternius | https://poly.pizza/m/nFwrlcLvM5 | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_StreetLamp.obj` |
 | **Curbside Trash Bin** (`Trashcan Small`) | Quaternius | https://poly.pizza/m/i7HDuYDLkx | CC0 1.0 | 2026-10-13 | `Assets/TramChanh/Art/Models/Environment/SM_TrashBin.obj` |
@@ -60,7 +61,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 |---|---|---|---|---|---|---|
 | **Motorbike** | $\le 4,000$ tris | Urban Commuter Scooter | 2,116 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG | **PASS** |
 | **Road Vehicle** | $\le 4,000$ tris | Low-Poly Sedan Car | 2,216 tris | $\le 2048 \times 2048$ | Palette material | **PASS** |
-| **Plastic Stool** | $\le 1,500$ tris | Low Plastic Stool | 448 tris | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
+| **Plastic Stool** | $\le 1,500$ tris | Authentic Vietnamese Sidewalk Plastic Stool (`SM_PlasticStool`) | 306 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (BaseColor, Normal, MaskMap) | **PASS** |
 | **Street Lamp** | $\le 1,500$ tris | Urban Curved Mast Lamp | 292 tris | $\le 2048 \times 2048$ | Material colors | **PASS** |
 | **Street Tree (Trunk + Canopy)** | $\le 1,500$ tris | Tropical Street Tree (2 separate meshes) | 165 tris (79 trunk + 86 canopy) | $\le 2048 \times 2048$ | $512 \times 512$ PNG | **PASS** |
 | **Trash Bin** | $\le 1,500$ tris | Curbside Green Bin | 432 tris | $\le 2048 \times 2048$ | Material colors | **PASS** |
