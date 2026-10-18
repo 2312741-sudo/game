@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: dd52ca6f50a44b4ca57463880b2c771f
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 1
+  globalScale: 1
+  addCollider: 0

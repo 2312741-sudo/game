@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 852f25e70af443519b9dc173d6270f50
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 1
+  migrations:
+    version: 0
+  importCameras: 0
+  importLights: 0
+  globalScale: 1
+  meshCompression: 0
+  addCollider: 0
+  importBlendShapes: 1

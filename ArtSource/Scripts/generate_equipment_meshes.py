@@ -196,26 +196,26 @@ def build_icebin_well():
     obj.add_box(-0.208, 0.208, -0.320, -0.305, -0.183, 0.183, 0.1, 0.6, 0.1, 0.6)
 
     # Studded rubber bar mat in front of ice bin (8mm clearance separation from front flange at -0.225)
-    obj.add_box(-0.235, 0.235, 0.000, 0.006, -0.278, -0.233, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(-0.235, 0.235, 0.006, 0.008, -0.278, -0.274, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(-0.235, 0.235, 0.006, 0.008, -0.237, -0.233, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(-0.235, -0.231, 0.006, 0.008, -0.274, -0.237, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(0.231, 0.235, 0.006, 0.008, -0.274, -0.237, 0.73, 0.99, 0.02, 0.38)
-    for ix in range(15):
-        cx = -0.215 + ix * (0.430 / 14.0)
+    obj.add_box(-0.235, 0.235, 0.000, 0.005, -0.278, -0.233, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(-0.235, 0.235, 0.005, 0.008, -0.278, -0.273, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(-0.235, 0.235, 0.005, 0.008, -0.238, -0.233, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(-0.235, -0.230, 0.005, 0.008, -0.273, -0.238, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.230, 0.235, 0.005, 0.008, -0.273, -0.238, 0.73, 0.99, 0.02, 0.38)
+    for ix in range(16):
+        cx = -0.218 + ix * (0.436 / 15.0)
         for iz in range(3):
-            cz = -0.266 + iz * (0.022 / 2.0)
-            obj.add_box(cx - 0.004, cx + 0.004, 0.006, 0.0085, cz - 0.004, cz + 0.004, 0.75, 0.85, 0.05, 0.25)
+            cz = -0.267 + iz * (0.024 / 2.0)
+            obj.add_cylinder(cx, cz, 0.0035, 0.005, 0.0085, segments=8, u_min=0.75, u_max=0.85, v_min=0.05, v_max=0.25)
 
     # Narrow rubber runner strip on right side for ice scoop (10mm clearance separation from right flange at 0.250)
-    obj.add_box(0.260, 0.335, 0.000, 0.006, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(0.260, 0.264, 0.006, 0.008, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(0.331, 0.335, 0.006, 0.008, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(0.264, 0.331, 0.006, 0.008, -0.180, -0.176, 0.73, 0.99, 0.02, 0.38)
-    obj.add_box(0.264, 0.331, 0.006, 0.008, 0.176, 0.180, 0.73, 0.99, 0.02, 0.38)
-    for ir in range(8):
-        cz = -0.150 + ir * (0.300 / 7.0)
-        obj.add_box(0.264, 0.331, 0.006, 0.0085, cz - 0.003, cz + 0.003, 0.75, 0.85, 0.05, 0.25)
+    obj.add_box(0.260, 0.335, 0.000, 0.005, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.260, 0.265, 0.005, 0.008, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.330, 0.335, 0.005, 0.008, -0.180, 0.180, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.265, 0.330, 0.005, 0.008, -0.180, -0.175, 0.73, 0.99, 0.02, 0.38)
+    obj.add_box(0.265, 0.330, 0.005, 0.008, 0.175, 0.180, 0.73, 0.99, 0.02, 0.38)
+    for ir in range(11):
+        cz = -0.155 + ir * (0.310 / 10.0)
+        obj.add_box(0.265, 0.330, 0.005, 0.0085, cz - 0.0035, cz + 0.0035, 0.75, 0.85, 0.05, 0.25)
 
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_IceBin_Well.obj")
 
@@ -266,17 +266,35 @@ def build_topping_station_frame():
     obj.add_box(-0.255, -0.018, 0.080, 0.138, 0.015, 0.175, 0.74, 0.86, 0.44, 0.68)
     obj.add_box(0.018, 0.178, 0.080, 0.138, 0.015, 0.175, 0.87, 0.99, 0.44, 0.68)
 
-    # Syrup pump dispensers
+    # Realistic Commercial Syrup Pump Dispensers (Monin / Torani style)
     def add_syrup_bottle(cx, cz, u_min, u_max, v_min, v_max, spout_dz):
-        obj.add_cylinder(cx, cz, 0.021, 0.035, 0.115, segments=12, u_min=u_min, u_max=u_max, v_min=v_min, v_max=v_max)
-        obj.add_frustum(cx, cz, 0.021, 0.012, 0.115, 0.125, segments=12, u_min=u_min, u_max=u_max, v_min=v_min+0.1, v_max=v_max)
-        obj.add_cylinder(cx, cz, 0.0135, 0.125, 0.130, segments=10, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
-        obj.add_cylinder(cx, cz, 0.005, 0.130, 0.142, segments=8, u_min=0.6, u_max=0.8, v_min=0.1, v_max=0.3)
-        obj.add_box(cx - 0.010, cx + 0.010, 0.142, 0.148, cz - 0.010, cz + 0.010, 0.1, 0.3, 0.1, 0.3)
-        sz0 = cz - 0.010
-        sz1 = cz - 0.024 if spout_dz < 0 else cz + 0.024
-        sz_min, sz_max = min(sz0, sz1), max(sz0, sz1)
-        obj.add_box(cx - 0.004, cx + 0.004, 0.140, 0.146, sz_min, sz_max, 0.1, 0.3, 0.1, 0.3)
+        # 1. Glass base heel ring
+        obj.add_cylinder(cx, cz, 0.0225, 0.035, 0.040, segments=14, u_min=u_min, u_max=u_max, v_min=v_min, v_max=v_min+0.05)
+        # 2. Main cylindrical clear glass bottle with syrup
+        obj.add_cylinder(cx, cz, 0.0215, 0.040, 0.106, segments=14, u_min=u_min, u_max=u_max, v_min=v_min+0.05, v_max=v_max-0.10)
+        # 3. Curved bottle shoulder
+        obj.add_frustum(cx, cz, 0.0215, 0.015, 0.106, 0.118, segments=14, u_min=u_min, u_max=u_max, v_min=v_max-0.10, v_max=v_max-0.03)
+        # 4. Tapered neck
+        obj.add_frustum(cx, cz, 0.015, 0.011, 0.118, 0.125, segments=12, u_min=u_min, u_max=u_max, v_min=v_max-0.03, v_max=v_max)
+        # 5. Threaded pump collar (Black plastic)
+        obj.add_cylinder(cx, cz, 0.0135, 0.125, 0.131, segments=12, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # 6. Collar flange ring
+        obj.add_cylinder(cx, cz, 0.015, 0.129, 0.131, segments=12, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # 7. Chrome vertical plunger shaft
+        obj.add_cylinder(cx, cz, 0.0055, 0.131, 0.142, segments=10, u_min=0.6, u_max=0.8, v_min=0.1, v_max=0.3)
+        # 8. Ergonomic pump actuator head
+        obj.add_cylinder(cx, cz, 0.009, 0.142, 0.147, segments=10, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # 9. Saddle top push cap
+        obj.add_cylinder(cx, cz, 0.011, 0.1465, 0.148, segments=12, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # 10. Downward curved dispensing spout
+        spout_len = 0.026
+        sz_end = cz - spout_len if spout_dz < 0 else cz + spout_len
+        obj.add_frustum(cx, cz - 0.006 * (-1 if spout_dz < 0 else 1), 0.0045, 0.003, 0.144, 0.140, segments=8, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # Spout tube
+        obj.add_cylinder(cx, sz_end, 0.003, 0.138, 0.141, segments=8, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+        # Connector arm
+        sz_min, sz_max = min(cz, sz_end), max(cz, sz_end)
+        obj.add_box(cx - 0.0035, cx + 0.0035, 0.141, 0.145, sz_min, sz_max, 0.1, 0.3, 0.1, 0.3)
 
     add_syrup_bottle(0.230, -0.100, 0.74, 0.82, 0.74, 0.98, spout_dz=-1)
     add_syrup_bottle(0.230, -0.030, 0.83, 0.91, 0.74, 0.98, spout_dz=-1)
@@ -361,9 +379,16 @@ def build_topping_station_cover():
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingStation_Cover.obj")
 
 def build_grill_elmich():
-    # Exact required bounds:
-    # Base: X in [-0.170, 0.170], Y in [0.000, 0.125], Z in [-0.150, 0.152]
-    # Lid: X in [-0.170, 0.170], Y in [-0.015, 0.058], Z in [-0.020, 0.372]
+    try:
+        from generate_authentic_cake_and_props import generate_grill_base, generate_grill_lid, generate_grill_display
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_grill_base, generate_grill_lid, generate_grill_display
+    generate_grill_base('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Base.obj')
+    generate_grill_lid('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Lid.obj')
+    generate_grill_display('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Display.obj')
+    return
 
     # --- SM_Grill_Elmich_Base.obj ---
     base = ObjWriter("SM_Grill_Elmich_Base")
@@ -531,7 +556,19 @@ def build_cake_food_meshes():
     wrap.write("Assets/TramChanh/Art/Models/Food/SM_Cake_WrappedInPaper.obj")
 
 def build_cake_tool_meshes():
-    # 1. SM_Spatula_WoodHandle (normalized to [-0.5, 0.5])
+    try:
+        from generate_authentic_cake_and_props import generate_spatula, generate_scissors, generate_sauce_bag, generate_wrapping_paper, generate_roll_board
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_spatula, generate_scissors, generate_sauce_bag, generate_wrapping_paper, generate_roll_board
+    cake_dir = 'Assets/TramChanh/Art/Models/CakeStation'
+    generate_spatula(os.path.join(cake_dir, 'SM_Spatula_WoodHandle.obj'))
+    generate_scissors(os.path.join(cake_dir, 'SM_Scissors_RedGray.obj'))
+    generate_sauce_bag(os.path.join(cake_dir, 'SM_SauceBag.obj'))
+    generate_wrapping_paper(os.path.join(cake_dir, 'SM_CakeWrappingPaper.obj'))
+    generate_roll_board(os.path.join(cake_dir, 'SM_RollBoard.obj'))
+    return
     spat = ObjWriter("SM_Spatula_WoodHandle")
     spat.add_cylinder(0, -0.30, 0.06, -0.05, 0.05, segments=10, u_min=0.1, u_max=0.4, v_min=0.1, v_max=0.6)
     spat.add_box(-0.04, 0.04, -0.02, 0.02, -0.15, 0.05, 0.6, 0.9, 0.1, 0.4)
@@ -605,12 +642,36 @@ def build_cake_tool_meshes():
     disp.write("Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Display.obj")
 
 def build_ready_counter_plate():
-    plate = ObjWriter("SM_ReadyCounter_Plate")
-    plate.add_box(-0.145, 0.145, 0.000, 0.003, -0.085, 0.085, 0.1, 0.6, 0.1, 0.6)
-    plate.add_box(-0.150, 0.150, 0.000, 0.008, 0.080, 0.090, 0.6, 0.9, 0.1, 0.3)
-    plate.add_box(-0.150, 0.150, 0.000, 0.008, -0.090, -0.080, 0.6, 0.9, 0.1, 0.3)
-    plate.add_box(-0.150, -0.140, 0.000, 0.008, -0.080, 0.080, 0.6, 0.9, 0.1, 0.3)
-    plate.add_box(0.140, 0.150, 0.000, 0.008, -0.080, 0.080, 0.6, 0.9, 0.1, 0.3)
+    try:
+        from generate_authentic_cake_and_props import generate_serving_plate
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_serving_plate
+    generate_serving_plate('Assets/TramChanh/Art/Models/Props/SM_ReadyCounter_Plate.obj')
+    return
+    # Base dimensions: width 30cm (X: -0.150 to 0.150), depth 18cm (Z: -0.090 to 0.090), height 8mm (Y: 0 to 0.008)
+    # High-quality pressed stainless steel serving tray:
+    # 1. Main recessed tray bed (bottom at Y = 0.000 to 0.002, inner bed: X in [-0.138, 0.138], Z in [-0.078, 0.078])
+    plate.add_box(-0.138, 0.138, 0.000, 0.002, -0.078, 0.078, 0.1, 0.9, 0.1, 0.9)
+    # 2. Slanted inner tray walls (Y = 0.002 to 0.006)
+    plate.add_box(-0.144, 0.144, 0.002, 0.006, 0.076, 0.084, 0.1, 0.9, 0.8, 0.9)
+    plate.add_box(-0.144, 0.144, 0.002, 0.006, -0.084, -0.076, 0.1, 0.9, 0.1, 0.2)
+    plate.add_box(-0.144, -0.136, 0.002, 0.006, -0.078, 0.078, 0.1, 0.2, 0.1, 0.9)
+    plate.add_box(0.136, 0.144, 0.002, 0.006, -0.078, 0.078, 0.8, 0.9, 0.1, 0.9)
+    # 3. Rolled outer lips (Y = 0.006 to 0.008, smooth rolled lip on perimeter)
+    plate.add_box(-0.150, 0.150, 0.006, 0.008, 0.082, 0.090, 0.1, 0.9, 0.8, 0.95)
+    plate.add_box(-0.150, 0.150, 0.006, 0.008, -0.090, -0.082, 0.1, 0.9, 0.05, 0.2)
+    plate.add_box(-0.150, -0.142, 0.006, 0.008, -0.084, 0.084, 0.05, 0.15, 0.1, 0.9)
+    plate.add_box(0.142, 0.150, 0.006, 0.008, -0.084, 0.084, 0.85, 0.95, 0.1, 0.9)
+    # 4. Embossed carry handles on left and right ends (curved handle slots)
+    plate.add_box(-0.149, -0.143, 0.003, 0.006, -0.035, 0.035, 0.1, 0.2, 0.4, 0.6)
+    plate.add_box(0.143, 0.149, 0.003, 0.006, -0.035, 0.035, 0.8, 0.9, 0.4, 0.6)
+    # 5. Drink landing coaster disc on left side (matching DrinkPlacement anchor at X = -0.08)
+    plate.add_cylinder(-0.080, 0.000, 0.038, 0.002, 0.0035, segments=16, u_min=0.3, u_max=0.5, v_min=0.3, v_max=0.5)
+    plate.add_cylinder(-0.080, 0.000, 0.041, 0.002, 0.0040, segments=16, u_min=0.1, u_max=0.3, v_min=0.1, v_max=0.3)
+    # 6. Cake paper liner bed on right side (matching CakePlacement anchor at X = +0.08)
+    plate.add_box(0.025, 0.135, 0.002, 0.0032, -0.065, 0.065, 0.2, 0.8, 0.2, 0.8)
     os.makedirs("Assets/TramChanh/Art/Models/Props", exist_ok=True)
     plate.write("Assets/TramChanh/Art/Models/Props/SM_ReadyCounter_Plate.obj")
 
