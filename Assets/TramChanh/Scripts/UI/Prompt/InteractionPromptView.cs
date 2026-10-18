@@ -36,6 +36,7 @@ namespace TramChanh.UI.Prompt
         private bool _hudEnabled;
         private IOrderService _orders;
         private PlayerHudPresenter _hud;
+        private SupplierPanel _supplier;
         private Func<OrderId, double> _patienceProvider;
         private Label _hint;
         private Label _heldHint;
@@ -125,8 +126,8 @@ namespace TramChanh.UI.Prompt
             _status.style.position = Position.Absolute;
             _status.style.top = 14f;
             _status.style.left = Length.Percent(50f);
-            _status.style.width = 360f;
-            _status.style.marginLeft = -180f;
+            _status.style.width = 580f;
+            _status.style.marginLeft = -290f;
             _status.style.fontSize = 20f;
             _status.style.unityFontStyleAndWeight = FontStyle.Bold;
             _status.style.color = new Color(0.99f, 0.85f, 0.35f, 1f); // Lime gold
@@ -293,6 +294,24 @@ namespace TramChanh.UI.Prompt
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
             _summary.Show(summary, progress);
+        }
+
+        /// <summary>
+        /// Shows the shop between days. <paramref name="buy"/> runs when a Buy button is pressed and returns false when the
+        /// purchase was refused; <paramref name="onDone"/> runs on the open-the-stall button.
+        /// </summary>
+        public void ShowSupplier(StockBook stock, GameProgress wallet, Supplier supplier, Action onBuyDone, Action onDone)
+        {
+            _supplier?.Hide();
+            VisualElement root = GetComponent<UIDocument>().rootVisualElement;
+            _supplier = new SupplierPanel(root, ingredient =>
+            {
+                bool bought = supplier.TryBuyPack(stock, wallet, ingredient);
+                _supplier.Refresh(stock, wallet, supplier, bought ? string.Empty : "Không đủ tiền hoặc kho đã đầy.");
+                if (bought) { onBuyDone?.Invoke(); }
+                return bought;
+            }, () => { _supplier.Hide(); onDone?.Invoke(); });
+            _supplier.Show(stock, wallet, supplier);
         }
 
         private void BuildTitle(VisualElement root)

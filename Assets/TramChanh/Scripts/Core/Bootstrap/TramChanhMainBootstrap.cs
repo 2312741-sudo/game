@@ -178,6 +178,8 @@ namespace TramChanh.App
             _prompt.AttachPauseMenu(_input, _settings, () => { ApplySettings(); _settings.Save(new PlayerPrefsSettingsStore()); }, QuitGame);
             _progress = new GameProgress();
             _progress.Load(new PlayerPrefsSettingsStore());
+            // Tests start from the day-one stock so an empty saved stock on a developer machine cannot fail their orders.
+            if (SuppressTitleScreen) { _stock.FillStart(); } else { _stock.Load(new PlayerPrefsSettingsStore()); }
             SetUpSound();
             _orderSubscription = _events.Subscribe<OrderStatusChanged>(OnOrderStatus);
             if (_showTitleScreen && !SuppressTitleScreen)
@@ -482,13 +484,14 @@ namespace TramChanh.App
             double hour = _dayClock.HourOfDay;
             bool open = _dayClock.IsOpen;
             int clockMinute = GameClockText.MinuteOfDay(hour);
-            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen || _progress.Money != _shownMoney))
+            if (_prompt != null && (clockMinute != _shownClockMinute || open != _shownClockOpen || _progress.Money != _shownMoney || StockHash() != _shownStockHash))
             {
                 _shownClockMinute = clockMinute;
                 _shownClockOpen = open;
                 _shownMoney = _progress.Money;
+                _shownStockHash = StockHash();
                 _prompt.SetStatus("Ngày " + _progress.Day + "  " + GameClockText.Format(hour, open)
-                    + "  |  " + PriceList.Format(_progress.Money));
+                    + "  |  " + PriceList.Format(_progress.Money) + "\n" + StockLine());
             }
             foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
             Customers.ArrivalsEnabled = open;
@@ -542,6 +545,11 @@ namespace TramChanh.App
         private readonly PatienceBook _patience = new PatienceBook();
         private readonly List<OrderId> _expired = new List<OrderId>();
         private readonly System.Random _kindRandom = new System.Random(20260101);
+        private readonly StockBook _stock = new StockBook();
+        private readonly Supplier _supplier = new Supplier();
+        private readonly List<OrderId> _noStock = new List<OrderId>();
+        private readonly Dictionary<Ingredient, int> _need = new Dictionary<Ingredient, int>();
+        private int _shownStockHash = -1;
         private double _patienceNow;
         private int _failureStreak;
         private int _shownMoney = -1;
@@ -614,6 +622,7 @@ namespace TramChanh.App
         {
             AudioClip clip = null;
             TrackPatience(change);
+            TrackStock(change);
             switch (change.Status)
             {
                 case OrderStatus.Ready: clip = _readyClip; break;
@@ -636,8 +645,28 @@ namespace TramChanh.App
             }
         }
 
+        /// <summary>
+        /// Takes the ingredients when an order goes to the stall. Short of anything: nothing is taken and the customer
+        /// leaves (queued, because an order must not be failed from inside its own status event).
+        /// </summary>
+        private void TrackStock(OrderStatusChanged change)
+        {
+            if (change.Status != OrderStatus.SentToStall) { return; }
+            IReadOnlyOrder order = Orders?.Get(change.OrderId);
+            if (order == null) { return; }
+            _need.Clear();
+            foreach (IReadOnlyOrderItem item in order.Items) { IngredientUse.Add(item.Kind, _need); }
+            if (!_stock.TryTake(_need)) { _noStock.Add(change.OrderId); }
+        }
+
         private void TickPatience()
         {
+            if (_noStock.Count > 0)
+            {
+                var pending = new List<OrderId>(_noStock);
+                _noStock.Clear();
+                foreach (OrderId id in pending) { Orders.Fail(id, FailureReason.CustomerLeft); }
+            }
             _patienceNow += _clock.DeltaTime;
             _expired.Clear();
             _patience.CollectExpired(_patienceNow, _expired);
@@ -657,13 +686,38 @@ namespace TramChanh.App
             return _prices.Price(kinds, quality, _patience.LeftFraction(id, _patienceNow), payMultiplier);
         }
 
+        private string StockLine()
+        {
+            var line = new System.Text.StringBuilder("Kho: ");
+            foreach (Ingredient ingredient in StockBook.Ingredients)
+            {
+                if (ingredient != StockBook.Ingredients[0]) { line.Append("  "); }
+                line.Append(IngredientUse.DisplayName(ingredient)).Append(' ').Append(_stock.Level(ingredient));
+            }
+            return line.ToString();
+        }
+
+        private int StockHash()
+        {
+            int hash = 17;
+            foreach (Ingredient ingredient in StockBook.Ingredients) { hash = hash * 31 + _stock.Level(ingredient); }
+            return hash;
+        }
+
         private void EndOfDay()
         {
             DaySummary summary = _progress.EndDay();
+            _stock.Overnight();
             _progress.Save(new PlayerPrefsSettingsStore());
+            _stock.Save(new PlayerPrefsSettingsStore());
             _input.ModalOpen = true;
             _input.SetCaptured(false);
-            _prompt.ShowDaySummary(summary, _progress, () => { _input.ModalOpen = false; _input.SetCaptured(true); });
+            _prompt.ShowDaySummary(summary, _progress, () =>
+            {
+                _prompt.ShowSupplier(_stock, _progress, _supplier,
+                    () => { _progress.Save(new PlayerPrefsSettingsStore()); _stock.Save(new PlayerPrefsSettingsStore()); },
+                    () => { _input.ModalOpen = false; _input.SetCaptured(true); });
+            });
         }
 
         private void ApplySettings()
