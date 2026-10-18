@@ -379,9 +379,16 @@ def build_topping_station_cover():
     obj.write("Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingStation_Cover.obj")
 
 def build_grill_elmich():
-    # Exact required bounds:
-    # Base: X in [-0.170, 0.170], Y in [0.000, 0.125], Z in [-0.150, 0.152]
-    # Lid: X in [-0.170, 0.170], Y in [-0.015, 0.058], Z in [-0.020, 0.372]
+    try:
+        from generate_authentic_cake_and_props import generate_grill_base, generate_grill_lid, generate_grill_display
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_grill_base, generate_grill_lid, generate_grill_display
+    generate_grill_base('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Base.obj')
+    generate_grill_lid('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Elmich_Lid.obj')
+    generate_grill_display('Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Display.obj')
+    return
 
     # --- SM_Grill_Elmich_Base.obj ---
     base = ObjWriter("SM_Grill_Elmich_Base")
@@ -549,7 +556,19 @@ def build_cake_food_meshes():
     wrap.write("Assets/TramChanh/Art/Models/Food/SM_Cake_WrappedInPaper.obj")
 
 def build_cake_tool_meshes():
-    # 1. SM_Spatula_WoodHandle (normalized to [-0.5, 0.5])
+    try:
+        from generate_authentic_cake_and_props import generate_spatula, generate_scissors, generate_sauce_bag, generate_wrapping_paper, generate_roll_board
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_spatula, generate_scissors, generate_sauce_bag, generate_wrapping_paper, generate_roll_board
+    cake_dir = 'Assets/TramChanh/Art/Models/CakeStation'
+    generate_spatula(os.path.join(cake_dir, 'SM_Spatula_WoodHandle.obj'))
+    generate_scissors(os.path.join(cake_dir, 'SM_Scissors_RedGray.obj'))
+    generate_sauce_bag(os.path.join(cake_dir, 'SM_SauceBag.obj'))
+    generate_wrapping_paper(os.path.join(cake_dir, 'SM_CakeWrappingPaper.obj'))
+    generate_roll_board(os.path.join(cake_dir, 'SM_RollBoard.obj'))
+    return
     spat = ObjWriter("SM_Spatula_WoodHandle")
     spat.add_cylinder(0, -0.30, 0.06, -0.05, 0.05, segments=10, u_min=0.1, u_max=0.4, v_min=0.1, v_max=0.6)
     spat.add_box(-0.04, 0.04, -0.02, 0.02, -0.15, 0.05, 0.6, 0.9, 0.1, 0.4)
@@ -623,7 +642,14 @@ def build_cake_tool_meshes():
     disp.write("Assets/TramChanh/Art/Models/CakeStation/SM_Grill_Display.obj")
 
 def build_ready_counter_plate():
-    plate = ObjWriter("SM_ReadyCounter_Plate")
+    try:
+        from generate_authentic_cake_and_props import generate_serving_plate
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from generate_authentic_cake_and_props import generate_serving_plate
+    generate_serving_plate('Assets/TramChanh/Art/Models/Props/SM_ReadyCounter_Plate.obj')
+    return
     # Base dimensions: width 30cm (X: -0.150 to 0.150), depth 18cm (Z: -0.090 to 0.090), height 8mm (Y: 0 to 0.008)
     # High-quality pressed stainless steel serving tray:
     # 1. Main recessed tray bed (bottom at Y = 0.000 to 0.002, inner bed: X in [-0.138, 0.138], Z in [-0.078, 0.078])
