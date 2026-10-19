@@ -44,3 +44,12 @@ Project owner: the user (Vietnamese speaker). Lead (gameplay code, review, mergi
 - `Docs/Design/ROADMAP.md`: what is in scope now (look first, functions second, gameplay depth last).
 - `Docs/Design/STREET_500M_SPEC.md`: street geometry and graph rules.
 - Reference photos from the owner (real stall layout) take priority over your own idea of how it should look.
+
+## 7. Running several agents at once (art owner)
+A single serial task has taken over three hours. Split every prompt that has two or more independent items across parallel sub-agents.
+- One sub-agent per item, each in its own git worktree and branch made from the newest `origin/main`: `git worktree add ../game-wt-<item> -b fix/ART-FIX-nnn-<item> origin/main`. Never two agents in the same working copy.
+- Give each agent a list of files it owns. Two agents never edit the same file. Items that must edit the same prefab (for example `PF_TramChanh_StreetExtended.prefab`) go to one agent.
+- Sub-agents do file work only (generator scripts in `ArtSource/Scripts/`, prefab and material edits). Only ONE agent owns the open Unity instance, because the same project cannot be opened twice; that agent runs the Capture Standard Views, EditMode and PlayMode, and takes the evidence screenshots.
+- One integration step at the end: merge the item branches into `fix/ART-FIX-nnn` (never into `main`), run `python3 Automation/art_contract_audit.py`, `python3 Automation/static_preflight.py`, EditMode and PlayMode on the merged result, take the screenshots from the merged result, then push.
+- Every rule above (scope, evidence, no force-push, no merge into `main`) applies to every sub-agent. Report one table at the end: item, agent, branch, commit, status, evidence.
+- Remove the worktrees when done: `git worktree remove ../game-wt-<item>`.
