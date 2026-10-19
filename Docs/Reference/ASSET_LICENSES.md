@@ -91,6 +91,25 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Sidewalk Pavers** | $\le 10,000$ tris | Tiled Sidewalk Meshes | 216 tris (SM_Sidewalk_Extended_80m) | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_Sidewalk_Tiles_BaseColor) | **PASS** |
 | **Asphalt Roadway** | $\le 10,000$ tris | Asphalt Road Meshes | 36 tris (SM_Asphalt_Road_80m) | $\le 2048 \times 2048$ | $2048 \times 1024$ PNG (T_Asphalt_Night_BaseColor) | **PASS** |
 | **Street Roadside Props (10 Variants)** | $\le 3,000$ tris each | Municipal & Dual Bins, Cable & Transformer Poles, Ceramic & Terrazzo Planters, Classic & Slab Benches, Street & Tourist Signs | 24 - 72 tris each | $\le 2048 \times 2048$ | $2048 \times 2048$ PNG (T_Street_RoadsideProps_Atlas) | **PASS** |
+| **Honey Lemon Tea** | $\le 2,500$ tris | Takeaway Plastic Cup with Domed Lid, Honey Tea, Lemon Slices, Ice, Straw (`SM_Drink_HoneyLemonTea`) | 606 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewDrinks_BaseColor) | **PASS** |
+| **Passionfruit Tea** | $\le 2,500$ tris | Takeaway Plastic Cup with Domed Lid, Tropical Tea, Seeds, Ice, Straw (`SM_Drink_PassionfruitTea`) | 606 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewDrinks_BaseColor) | **PASS** |
+| **Custard Cream Rolled Cake** | $\le 2,500$ tris | Grilled Waffle Rolled Pancake with Egg Custard Cream Filling (`SM_Cake_CustardCream`) | 384 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewCakes_BaseColor) | **PASS** |
+| **Banana Flambée Rolled Cake** | $\le 2,500$ tris | Grilled Waffle Rolled Pancake with Caramelized Banana Flambée Filling (`SM_Cake_BananaFlambee`) | 560 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewCakes_BaseColor) | **PASS** |
+
+---
+
+## ART-FIX-028 Menu Art Assets (New Drinks & Cake Fillings)
+
+All 3D models, textures, materials, and prefabs created for ART-FIX-028 New Menu are **Project Originals** authored procedurally via `ArtSource/Scripts/generate_new_menu_assets.py`. They are released under **Creative Commons Zero (CC0 1.0 Universal)** for full commercial and non-commercial game use without restrictions.
+
+| Asset Name | Author / Creator | Source / Generation Method | License | Creation Date | Project File Path |
+|---|---|---|---|---|---|
+| **Honey Lemon Tea** (`SM_Drink_HoneyLemonTea`, `PF_Item_Drink_HoneyLemonTea`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Models/Food/SM_Drink_HoneyLemonTea.obj`<br>`Assets/TramChanh/Art/Materials/Food/MAT_Drink_HoneyLemonTea.mat`<br>`Assets/TramChanh/Prefabs/Items/NewMenu/PF_Item_Drink_HoneyLemonTea.prefab` |
+| **Passionfruit Tea** (`SM_Drink_PassionfruitTea`, `PF_Item_Drink_PassionfruitTea`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Models/Food/SM_Drink_PassionfruitTea.obj`<br>`Assets/TramChanh/Art/Materials/Food/MAT_Drink_PassionfruitTea.mat`<br>`Assets/TramChanh/Prefabs/Items/NewMenu/PF_Item_Drink_PassionfruitTea.prefab` |
+| **Custard Cream Rolled Cake** (`SM_Cake_CustardCream`, `PF_Item_Cake_CustardCream`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Models/Food/SM_Cake_CustardCream.obj`<br>`Assets/TramChanh/Art/Materials/Food/MAT_Cake_CustardCream.mat`<br>`Assets/TramChanh/Prefabs/Items/NewMenu/PF_Item_Cake_CustardCream.prefab` |
+| **Banana Flambée Rolled Cake** (`SM_Cake_BananaFlambee`, `PF_Item_Cake_BananaFlambee`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Models/Food/SM_Cake_BananaFlambee.obj`<br>`Assets/TramChanh/Art/Materials/Food/MAT_Cake_BananaFlambee.mat`<br>`Assets/TramChanh/Prefabs/Items/NewMenu/PF_Item_Cake_BananaFlambee.prefab` |
+| **New Drinks Texture Atlas** (`T_NewDrinks_BaseColor`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Textures/Food/T_NewDrinks_BaseColor.png` |
+| **New Cakes Texture Atlas** (`T_NewCakes_BaseColor`) | Project Trạm Chanh (Procedural Original) | Internal / `ArtSource/Scripts/generate_new_menu_assets.py` | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Textures/Food/T_NewCakes_BaseColor.png` |
 
 ---
 
