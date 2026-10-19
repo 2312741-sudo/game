@@ -477,14 +477,13 @@ def fix_and_seal_street_prefab(gate_pf_guid):
     # Step 3.2: Add Boulevard Gates and Framing Trees if not already present
     if "PF_WorldEdge_BoulevardGate" in content:
         print("PF_WorldEdge_BoulevardGate already wired.")
-        # Ensure position is x = +-248.0, z = 8.1
-        content = re.sub(r"(value: PF_WorldEdge_BoulevardGate_West[\s\S]*?propertyPath: m_LocalPosition\.x\s*\n\s*value:\s*)[^\n]+", r"\g<1>-248.0", content)
-        content = re.sub(r"(value: PF_WorldEdge_BoulevardGate_West[\s\S]*?propertyPath: m_LocalPosition\.z\s*\n\s*value:\s*)[^\n]+", r"\g<1>8.1", content)
-        content = re.sub(r"(value: PF_WorldEdge_BoulevardGate_East[\s\S]*?propertyPath: m_LocalPosition\.x\s*\n\s*value:\s*)[^\n]+", r"\g<1>248.0", content)
-        content = re.sub(r"(value: PF_WorldEdge_BoulevardGate_East[\s\S]*?propertyPath: m_LocalPosition\.z\s*\n\s*value:\s*)[^\n]+", r"\g<1>8.1", content)
+        # Positions are already correct in the prefab (they are local to the parent): leave them alone.
+        pass
     else:
         # Get ExtendedBuildings Transform fileID
-        ext_tf_match = re.search(r"--- !u!1 &(\d+)\nGameObject:\n[\s\S]*?m_Name: ExtendedBuildings", content)
+        # Search inside ONE GameObject document only; a pattern that spans documents picks the first GameObject in the file
+        # (that was WP_SidewalkNorth_22, which shifted the gates and end trees to x = -445.5 and +50.5).
+        ext_tf_match = re.search(r"--- !u!1 &(\d+)\nGameObject:\n(?:(?!--- !u!)[\s\S])*?m_Name: ExtendedBuildings\n", content)
         ext_go_id = ext_tf_match.group(1)
         tf_match = re.search(r"--- !u!4 &(\d+)\nTransform:\n[\s\S]*?m_GameObject: \{fileID: " + ext_go_id + r"\}", content)
         ext_tf_id = tf_match.group(1)
