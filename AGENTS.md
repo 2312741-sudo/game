@@ -35,6 +35,7 @@ Project owner: the user (Vietnamese speaker). Lead (gameplay code, review, mergi
 ## 5. Shared tools (use these, do not rewrite them)
 - `Automation/art_contract_audit.py`, `Automation/static_preflight.py`: repo checks.
 - `Automation/prefab_bounds.py`: footprints, overlaps, floating objects of a prefab without opening Unity.
+- `Automation/building_cube_check.py`: every building mesh must be made of solid cubes (no recess, no opening, no hollow inside). Must report 0 failed for the building meshes before you push.
 - Menu `Tram Chanh > QA > Capture Standard Views` (Play Mode): takes the standard screenshots and refuses blank images.
 - Menu `Tram Chanh > QA > Check Assembled Stall Overlaps`: stall overlap check inside Unity.
 - Playtest steps for the owner: `Docs/QA/PLAYTEST_CHECKLIST.md`.
