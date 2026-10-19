@@ -119,19 +119,16 @@ def generate_boulevard_gate():
     h = 9.5
     d = 2.0
 
-    # Foundation plinth down to -0.35m
-    mesh.add_box(-w/2, w/2, -0.35, 0.0, -d/2, d/2, (0.0, 1.0), (0.0, 0.05))
-
-    # Continuous lower masonry wall (height 3.5m across full 38m)
-    mesh.add_box(-w/2, w/2, 0.0, 3.5, -d/2, d/2, (0.0, 1.0), (0.05, 0.40))
+    # Continuous lower masonry wall with foundation down to -0.35m (height 3.5m across full 38m)
+    mesh.add_box(-w/2, w/2, -0.35, 3.5, -d/2, d/2, (0.0, 1.0), (0.0, 0.40))
 
     # Flanking high privacy walls (X: -19m to -5.5m and +5.5m to +19m) up to height 7.5m
     mesh.add_box(-w/2, -5.5, 3.5, 7.5, -d/2 + 0.2, d/2 - 0.2, (0.0, 0.4), (0.40, 0.75))
     mesh.add_box(5.5, w/2, 3.5, 7.5, -d/2 + 0.2, d/2 - 0.2, (0.6, 1.0), (0.40, 0.75))
 
-    # Central Portal Columns (X = -5.5 to -4.2 and X = +4.2 to +5.5) up to 9.0m
-    mesh.add_box(-5.5, -4.2, 0.0, 9.0, -d/2 - 0.2, d/2 + 0.2, (0.4, 0.5), (0.1, 0.9))
-    mesh.add_box(4.2, 5.5, 0.0, 9.0, -d/2 - 0.2, d/2 + 0.2, (0.5, 0.6), (0.1, 0.9))
+    # Central Portal Columns (X = -5.5 to -4.2 and X = +4.2 to +5.5) up to 9.0m with -0.35m foundation
+    mesh.add_box(-5.5, -4.2, -0.35, 9.0, -d/2 - 0.2, d/2 + 0.2, (0.4, 0.5), (0.1, 0.9))
+    mesh.add_box(4.2, 5.5, -0.35, 9.0, -d/2 - 0.2, d/2 + 0.2, (0.5, 0.6), (0.1, 0.9))
 
     # Central Portal Arch Overpass Beam (X: -5.5 to 5.5, Y: 6.2 to 8.2)
     mesh.add_box(-5.5, 5.5, 6.2, 8.2, -d/2 - 0.15, d/2 + 0.15, (0.3, 0.7), (0.65, 0.85))
