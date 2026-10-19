@@ -346,15 +346,19 @@ class ObjMesh:
         self.faces = []
 
     def add_vertex(self, x, y, z):
-        self.vertices.append((x, y, z))
+        self.vertices.append((float(x), float(y), float(z)))
         return len(self.vertices)
 
     def add_uv(self, u, v):
-        self.uvs.append((u, v))
+        self.uvs.append((float(u), float(v)))
         return len(self.uvs)
 
     def add_box(self, x1, x2, y1, y2, z1, z2, u_range=(0.0, 1.0), v_range=(0.0, 1.0)):
-        # 8 corners
+        if x1 > x2: x1, x2 = x2, x1
+        if y1 > y2: y1, y2 = y2, y1
+        if z1 > z2: z1, z2 = z2, z1
+        
+        base_v = len(self.vertices)
         v = [
             self.add_vertex(x1, y1, z1), # 0
             self.add_vertex(x2, y1, z1), # 1
@@ -365,29 +369,39 @@ class ObjMesh:
             self.add_vertex(x2, y2, z2), # 6
             self.add_vertex(x1, y2, z2), # 7
         ]
+        
         u1, u2 = u_range
         v1, v2 = v_range
-        t0 = self.add_uv(u1, v1)
-        t1 = self.add_uv(u2, v1)
-        t2 = self.add_uv(u2, v2)
-        t3 = self.add_uv(u1, v2)
+        base_t = len(self.uvs)
+        t_front = [
+            self.add_uv(u1, v1),
+            self.add_uv(u2, v1),
+            self.add_uv(u2, v2),
+            self.add_uv(u1, v2),
+        ]
+        t_side = [
+            self.add_uv(0.01, 0.01),
+            self.add_uv(0.09, 0.01),
+            self.add_uv(0.09, 0.09),
+            self.add_uv(0.01, 0.09),
+        ]
 
-        # Front (-Z)
-        self.faces.append(f"f {v[0]}/{t0} {v[1]}/{t1} {v[2]}/{t2} {v[3]}/{t3}")
-        # Back (+Z)
-        self.faces.append(f"f {v[5]}/{t0} {v[4]}/{t1} {v[7]}/{t2} {v[6]}/{t3}")
-        # Left (-X)
-        self.faces.append(f"f {v[4]}/{t0} {v[0]}/{t1} {v[3]}/{t2} {v[7]}/{t3}")
-        # Right (+X)
-        self.faces.append(f"f {v[1]}/{t0} {v[5]}/{t1} {v[6]}/{t2} {v[2]}/{t3}")
-        # Top (+Y)
-        self.faces.append(f"f {v[3]}/{t0} {v[2]}/{t1} {v[6]}/{t2} {v[7]}/{t3}")
-        # Bottom (-Y)
-        self.faces.append(f"f {v[4]}/{t0} {v[5]}/{t1} {v[1]}/{t2} {v[0]}/{t3}")
+        # Front (-Z, street facing): v0 -> v3 -> v2 -> v1
+        self.faces.append(f"f {v[0]}/{t_front[0]} {v[3]}/{t_front[3]} {v[2]}/{t_front[2]} {v[1]}/{t_front[1]}")
+        # Back (+Z): v5 -> v6 -> v7 -> v4
+        self.faces.append(f"f {v[5]}/{t_side[0]} {v[6]}/{t_side[1]} {v[7]}/{t_side[2]} {v[4]}/{t_side[3]}")
+        # Left (-X): v0 -> v4 -> v7 -> v3
+        self.faces.append(f"f {v[0]}/{t_side[0]} {v[4]}/{t_side[1]} {v[7]}/{t_side[2]} {v[3]}/{t_side[3]}")
+        # Right (+X): v1 -> v2 -> v6 -> v5
+        self.faces.append(f"f {v[1]}/{t_side[0]} {v[2]}/{t_side[1]} {v[6]}/{t_side[2]} {v[5]}/{t_side[3]}")
+        # Bottom (-Y): v0 -> v1 -> v5 -> v4
+        self.faces.append(f"f {v[0]}/{t_side[0]} {v[1]}/{t_side[1]} {v[5]}/{t_side[2]} {v[4]}/{t_side[3]}")
+        # Top (+Y): v3 -> v7 -> v6 -> v2
+        self.faces.append(f"f {v[3]}/{t_side[0]} {v[7]}/{t_side[1]} {v[6]}/{t_side[2]} {v[2]}/{t_side[3]}")
 
     def write_obj(self, out_path):
         with open(out_path, "w") as f:
-            f.write(f"# {self.name}.obj - Procedural Original CC0\n")
+            f.write(f"# Wavefront OBJ: {self.name}\n")
             f.write(f"o {self.name}\n")
             for x, y, z in self.vertices:
                 f.write(f"v {x:.4f} {y:.4f} {z:.4f}\n")
@@ -397,81 +411,57 @@ class ObjMesh:
                 f.write(face + "\n")
         print(f"Generated model: {out_path} ({len(self.faces)} faces)")
 
-        meta_p = out_path + ".meta"
-        if not os.path.exists(meta_p):
-            with open(meta_p, "w") as f:
-                f.write(f"""fileFormatVersion: 2
-guid: {generate_guid()}
-ModelImporter:
-  serializedVersion: 21300
-  internalIDToNameTable: []
-  externalObjects: {{}}
-  materials:
-    materialImportMode: 1
-    materialName: 0
-    materialSearch: 1
-  migrations:
-    version: 0
-  importCameras: 0
-  importLights: 0
-  globalScale: 1
-  meshCompression: 0
-  addCollider: 0
-  importBlendShapes: 1
-""")
-
 def generate_models():
     model_dir = "Assets/TramChanh/Art/Models/Environment"
     os.makedirs(model_dir, exist_ok=True)
 
-    # 1. SM_Shopfront_D.obj (w=4.5, h=11.5, d=4.5)
-    # Foundation plinth down to y = -0.35m to strictly pass BuildingFoundationGapTests!
-    meshD = ObjMesh("SM_Shopfront_D")
-    w, h, d = 4.5, 11.5, 4.5
-    # Plinth
-    meshD.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.0, -0.05, d + 0.05, (0.0, 1.0), (0.0, 0.1))
-    # Main shell
-    meshD.add_box(-w/2, w/2, 0.0, h, 0.0, d, (0.0, 1.0), (0.0, 1.0))
-    # Projecting signboard (Y: 3.4m to 4.3m, Z: -0.20m to 0.0m)
-    meshD.add_box(-w/2 + 0.1, w/2 - 0.1, 3.4, 4.3, -0.20, 0.0, (0.05, 0.95), (1075.0/2048.0, 1265.0/2048.0))
-    # Slanted fabric awning (slanted from Y: 3.3, Z: 0.0 to Y: 2.5, Z: -1.0)
-    meshD.add_box(-w/2 + 0.05, w/2 - 0.05, 2.5, 3.3, -1.0, 0.0, (0.05, 0.95), (1270.0/2048.0, 1380.0/2048.0))
-    # 2nd floor balcony slab
-    meshD.add_box(-w/2 + 0.2, w/2 - 0.2, 4.35, 4.55, -0.85, 0.0, (0.1, 0.9), (0.4, 0.5))
-    # Balcony railing
-    meshD.add_box(-w/2 + 0.2, w/2 - 0.2, 5.30, 5.40, -0.87, -0.83, (0.1, 0.9), (0.4, 0.5))
-    meshD_path = os.path.join(model_dir, "SM_Shopfront_D.obj")
-    meshD.write_obj(meshD_path)
+    configs = {
+        "SM_Shopfront_A": [
+            (-2.000, 2.000, -0.350, 11.000, 0.000, 4.500),
+            (-2.150, 2.150, 3.100, 3.400, -1.100, -0.010),
+            (-1.750, 1.750, 6.800, 7.100, -0.600, -0.010),
+            (-2.050, 2.050, 11.010, 11.450, -0.050, 4.550)
+        ],
+        "SM_Shopfront_B": [
+            (-2.400, 2.400, -0.350, 14.800, 0.000, 4.500),
+            (-2.450, 2.450, 3.500, 4.300, -0.250, -0.010),
+            (-2.100, 2.100, 7.500, 7.800, -0.500, -0.010),
+            (-2.450, 2.450, 14.810, 15.350, -0.050, 4.550)
+        ],
+        "SM_Shopfront_C": [
+            (-2.000, 2.000, -0.350, 10.500, 0.000, 4.500),
+            (-2.100, 2.100, 3.200, 3.500, -0.800, -0.010),
+            (-1.900, 1.900, 3.600, 4.300, -0.200, -0.010),
+            (-2.050, 2.050, 10.510, 11.000, -0.050, 4.550)
+        ],
+        "SM_Shopfront_D": [
+            (-2.200, 2.200, -0.350, 12.000, 0.000, 4.500),
+            (-2.250, 2.250, 3.000, 3.300, -1.000, -0.010),
+            (-2.100, 2.100, 3.400, 4.200, -0.250, -0.010),
+            (-1.800, 1.800, 5.200, 5.500, -0.700, -0.010),
+            (-2.250, 2.250, 12.010, 12.600, -0.050, 4.550)
+        ],
+        "SM_Shopfront_E": [
+            (-2.400, 2.400, -0.350, 14.700, 0.000, 4.500),
+            (-2.450, 2.450, 3.200, 3.500, -0.900, -0.010),
+            (-2.100, 2.100, 5.600, 5.900, -0.650, -0.010),
+            (-2.050, 2.050, 9.200, 9.500, -0.650, -0.010),
+            (-2.500, 2.500, 14.710, 15.300, -0.150, 4.650)
+        ],
+        "SM_Shopfront_F": [
+            (-2.000, 2.000, -0.350, 11.600, 0.000, 4.500),
+            (-1.950, 1.950, 3.300, 4.100, -0.200, -0.010),
+            (-1.750, 1.750, 5.800, 6.100, -0.550, -0.010),
+            (-2.050, 2.050, 11.610, 12.200, -0.050, 4.550)
+        ]
+    }
 
-    # 2. SM_Shopfront_E.obj (w=5.0, h=14.0, d=4.5)
-    meshE = ObjMesh("SM_Shopfront_E")
-    w, h, d = 5.0, 14.0, 4.5
-    # Plinth down to -0.35m
-    meshE.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.0, -0.05, d + 0.05, (0.0, 1.0), (0.0, 0.1))
-    # Main shell
-    meshE.add_box(-w/2, w/2, 0.0, h, 0.0, d, (0.0, 1.0), (0.0, 1.0))
-    # Projecting signboard (Y: 3.5m to 4.6m, Z: -0.22m to 0.0m)
-    meshE.add_box(-w/2 + 0.1, w/2 - 0.1, 3.5, 4.6, -0.22, 0.0, (0.05, 0.95), (1060.0/2048.0, 1265.0/2048.0))
-    # 2nd floor projecting balcony
-    meshE.add_box(-w/2 + 0.3, w/2 - 0.3, 4.8, 5.0, -0.9, 0.0, (0.1, 0.9), (0.4, 0.5))
-    # Rooftop parapet
-    meshE.add_box(-w/2, w/2, h, h + 0.7, -0.1, 0.1, (0.0, 1.0), (0.9, 1.0))
-    meshE_path = os.path.join(model_dir, "SM_Shopfront_E.obj")
-    meshE.write_obj(meshE_path)
-
-    # 3. SM_Shopfront_F.obj (w=4.2, h=11.0, d=4.5)
-    meshF = ObjMesh("SM_Shopfront_F")
-    w, h, d = 4.2, 11.0, 4.5
-    # Plinth down to -0.35m
-    meshF.add_box(-w/2 - 0.05, w/2 + 0.05, -0.35, 0.0, -0.05, d + 0.05, (0.0, 1.0), (0.0, 0.1))
-    # Main shell
-    meshF.add_box(-w/2, w/2, 0.0, h, 0.0, d, (0.0, 1.0), (0.0, 1.0))
-    # Projecting signboard (Y: 3.4m to 4.3m, Z: -0.18m to 0.0m)
-    meshF.add_box(-w/2 + 0.1, w/2 - 0.1, 3.4, 4.3, -0.18, 0.0, (0.05, 0.95), (1075.0/2048.0, 1265.0/2048.0))
-    # Barber pole cylinder (X: 1.85, Y: 2.2 to 3.2, Z: -0.25)
-    meshF.add_box(1.75, 1.95, 2.2, 3.2, -0.30, -0.10, (1810.0/2048.0, 1895.0/2048.0), (1105.0/2048.0, 1235.0/2048.0))
-    meshF_path = os.path.join(model_dir, "SM_Shopfront_F.obj")
-    meshF.write_obj(meshF_path)
+    for name, boxes in configs.items():
+        m = BoxMesh(name)
+        for b in boxes:
+            m.add_box(*b)
+        out_p = os.path.join(model_dir, f"{name}.obj")
+        m.write_obj(out_p)
 
 # ==============================================================================
 # 4. PREFABS GENERATION
