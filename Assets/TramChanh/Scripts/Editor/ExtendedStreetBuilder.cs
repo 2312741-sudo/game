@@ -522,10 +522,12 @@ namespace TramChanh.EditorTools
             var vehVisual = new GameObject("GenericVehicleVisual");
             vehVisual.layer = TramChanhLayers.EnvironmentIndex;
             vehVisual.transform.SetParent(vehiclePoint.transform, false);
+            vehVisual.transform.localPosition = new Vector3(0f, 0f, 3.0f);
 
             var takeawayCust = new GameObject("TakeawayCustomer");
             takeawayCust.layer = TramChanhLayers.EnvironmentIndex;
             takeawayCust.transform.SetParent(vehiclePoint.transform, false);
+            takeawayCust.transform.localPosition = new Vector3(0f, 0f, 3.0f);
 
             // CustomerArea with 10 tables
             GameObject custAreaPf = AssetDatabase.LoadAssetAtPath<GameObject>(CustomerArea10TablesPrefabPath);
@@ -684,7 +686,7 @@ namespace TramChanh.EditorTools
                 }
                 if (!nearAlley) southTrees.Add(x);
             }
-            southTrees.AddRange(new float[] { -7.5f, -4.5f, 4.5f, 7.5f, 14.0f });
+            southTrees.AddRange(new float[] { -13.0f, -11.0f, 11.0f, 13.0f, 14.0f });
 
             if (treePf != null)
             {
@@ -766,8 +768,8 @@ namespace TramChanh.EditorTools
                 new BikeSlot { x = -24.0f, z = 2.6f, rotY = 15f },  // Bicycle
                 new BikeSlot { x = -15.0f, z = 2.6f, rotY = -10f }, // Cub
                 new BikeSlot { x = -12.5f, z = 2.6f, rotY = 5f },   // Scooter
-                new BikeSlot { x = -6.5f,  z = 2.7f, rotY = 20f },  // Scooter
-                new BikeSlot { x = 5.2f,   z = 2.6f, rotY = -15f }, // Scooter
+                new BikeSlot { x = -10.0f, z = 2.7f, rotY = 20f },  // Scooter
+                new BikeSlot { x = 10.0f,  z = 2.6f, rotY = -15f }, // Scooter
                 new BikeSlot { x = 13.0f,  z = 2.6f, rotY = 10f },  // Cub
                 new BikeSlot { x = 22.5f,  z = 2.6f, rotY = 5f },   // Scooter
                 new BikeSlot { x = 31.0f,  z = 2.6f, rotY = -20f }, // Bicycle
