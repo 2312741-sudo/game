@@ -53,6 +53,7 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **World Edge Boulevard Gate** (`SM_WorldEdge_BoulevardGate`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_WorldEdge_BoulevardGate.obj`<br>`Assets/TramChanh/Art/Textures/T_WorldEdge_BoulevardGate_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_WorldEdge_BoulevardGate.prefab` |
 | **Rain & Blackout Event Art Assets** (`SM_Puddle_Oval`, `SM_Puddle_Irregular`, `SM_StringLights_Warm`, `MAT_Road_WetRain`, `MAT_Sidewalk_WetRain`, `MAT_Puddle_Water`, `MAT_StreetLamp_Blackout`, `MAT_StringLights_Warm`, `MAT_StringLights_Blackout`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_Puddle_*.obj`<br>`Assets/TramChanh/Art/Models/Environment/SM_StringLights_Warm.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Puddle_*.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StreetLamp_Blackout.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StringLights_*.prefab` |
 | **Brand UI Asset Suite (24 Icons, Title Background, Logo)** (`IC_*`, `BG_Title`, `LOGO_TramChanh`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored (`ArtSource/Scripts/generate_ui_assets.py`) | CC0 1.0 Universal | 2026-10-19 | `Assets/TramChanh/Art/UI/Icons/IC_*.png`<br>`Assets/TramChanh/Art/UI/Backgrounds/BG_Title.png`<br>`Assets/TramChanh/Art/UI/Logo/LOGO_TramChanh.png` |
+| **Weather & Event Particle VFX (ART-FIX-028)** (`PF_VFX_Rain`, `PF_VFX_RainSplash`, `PF_VFX_HeatHaze`, `PF_VFX_Sparks_Blackout`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored (`ArtSource/Scripts/generate_vfx_assets.py`) | CC0 1.0 Universal | 2026-10-20 | `Assets/TramChanh/Art/Textures/VFX/T_VFX_*.png`<br>`Assets/TramChanh/Art/Materials/VFX/MAT_VFX_*.mat`<br>`Assets/TramChanh/Prefabs/VFX/PF_VFX_*.prefab` |
 
 
 ---
@@ -95,6 +96,10 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Passionfruit Tea** | $\le 2,500$ tris | Takeaway Plastic Cup with Domed Lid, Tropical Tea, Seeds, Ice, Straw (`SM_Drink_PassionfruitTea`) | 606 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewDrinks_BaseColor) | **PASS** |
 | **Custard Cream Rolled Cake** | $\le 2,500$ tris | Grilled Waffle Rolled Pancake with Egg Custard Cream Filling (`SM_Cake_CustardCream`) | 384 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewCakes_BaseColor) | **PASS** |
 | **Banana Flambée Rolled Cake** | $\le 2,500$ tris | Grilled Waffle Rolled Pancake with Caramelized Banana Flambée Filling (`SM_Cake_BananaFlambee`) | 560 tris | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_NewCakes_BaseColor) | **PASS** |
+| **Rain Particle VFX (PF_VFX_Rain)** | $\le 500$ particles | ParticleSystem (Stretched Billboard, 15m $\times$ 15m box, no lights) | 450 max particles | $\le 1024 \times 1024$ | $128 \times 256$ PNG (T_VFX_RainStreak) | **PASS** |
+| **Rain Splash VFX (PF_VFX_RainSplash)** | $\le 300$ particles | ParticleSystem (Horizontal Billboard, concentric ripples, no lights) | 250 max particles | $\le 1024 \times 1024$ | $256 \times 256$ PNG (T_VFX_RainSplash) | **PASS** |
+| **Heat Haze VFX (PF_VFX_HeatHaze)** | $\le 200$ particles | ParticleSystem (Billboard quads, thermal buoyancy, no lights) | 150 max particles | $\le 1024 \times 1024$ | $256 \times 256$ PNG (T_VFX_HeatHaze) | **PASS** |
+| **Blackout Sparks VFX (PF_VFX_Sparks_Blackout)** | $\le 150$ particles | ParticleSystem (Stretched Billboard, one-shot electrical burst, no lights) | 120 max particles | $\le 1024 \times 1024$ | $256 \times 256$ PNG (T_VFX_ElectricSparks) | **PASS** |
 
 ---
 
