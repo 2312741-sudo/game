@@ -52,6 +52,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Tall Background City Towers A, B, C** (`SM_Building_Tower_A..C`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_Building_Tower_*.obj`<br>`Assets/TramChanh/Art/Textures/T_Building_Tower_*_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Building_Tower_*.prefab` |
 | **World Edge Boulevard Gate** (`SM_WorldEdge_BoulevardGate`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_WorldEdge_BoulevardGate.obj`<br>`Assets/TramChanh/Art/Textures/T_WorldEdge_BoulevardGate_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_WorldEdge_BoulevardGate.prefab` |
 | **Rain & Blackout Event Art Assets** (`SM_Puddle_Oval`, `SM_Puddle_Irregular`, `SM_StringLights_Warm`, `MAT_Road_WetRain`, `MAT_Sidewalk_WetRain`, `MAT_Puddle_Water`, `MAT_StreetLamp_Blackout`, `MAT_StringLights_Warm`, `MAT_StringLights_Blackout`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_Puddle_*.obj`<br>`Assets/TramChanh/Art/Models/Environment/SM_StringLights_Warm.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Puddle_*.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StreetLamp_Blackout.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StringLights_*.prefab` |
+| **Brand UI Asset Suite (24 Icons, Title Background, Logo)** (`IC_*`, `BG_Title`, `LOGO_TramChanh`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored (`ArtSource/Scripts/generate_ui_assets.py`) | CC0 1.0 Universal | 2026-10-19 | `Assets/TramChanh/Art/UI/Icons/IC_*.png`<br>`Assets/TramChanh/Art/UI/Backgrounds/BG_Title.png`<br>`Assets/TramChanh/Art/UI/Logo/LOGO_TramChanh.png` |
+
 
 ---
 
@@ -107,3 +109,64 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 
 ## Sound effects (generated in-project)
 `Assets/TramChanh/Resources/Audio/sfx_ready.wav`, `sfx_served.wav`, `sfx_failed.wav`: synthesised sine tones, created for this project. No third-party material, no attribution needed.
+
+---
+
+## ART-FIX-028 UI Asset Suite (Project Original, CC0 1.0 Universal)
+
+All 2D UI brand assets generated under **ART-FIX-028** are project-original vector-rasterized graphics created specifically for Project Trạm Chanh using procedural PIL scripts (`ArtSource/Scripts/generate_ui_assets.py`). They are released into the public domain under the **Creative Commons Zero (CC0 1.0 Universal)** dedication. No third-party textures, copyrighted fonts, or external stock icons were used.
+
+### Brand Identity & Palette
+- **Deep Tea Green**: `#132B1C` (`rgb(19, 43, 28)`) - Primary badge background fill
+- **Brand Orange**: `#E67E22` (`rgb(230, 126, 34)`) - Outer border and ribbon accents
+- **Lime Gold**: `#F1C40F` (`rgb(241, 196, 15)`) - Inner decorative rim and golden emblems
+- **Lime Green**: `#2ECC71` (`rgb(46, 204, 113)`) - Fresh citrus and tea leaf highlights
+
+### Asset Manifest
+
+#### 1. UI Icons (24 assets, 256×256 PNG, transparent background)
+Location: `Assets/TramChanh/Art/UI/Icons/`
+- **Ingredients (4)**:
+  - `IC_Ice.png` - Translucent isometric ice cubes with crystalline facets and specular glints.
+  - `IC_Jelly.png` - Glossy Vietnamese grass jelly (thạch đen) block with lime garnish.
+  - `IC_Batter.png` - Mixing bowl with rich golden cake batter, pouring ribbon, and wire whisk.
+  - `IC_Wrap.png` - Kraft parchment wrapping paper roll tied with rustic jute twine bow.
+- **Upgrades (5)**:
+  - `IC_Up_BiggerIceBin.png` - Insulated commercial stainless steel ice cooler with frost mist.
+  - `IC_Up_Pantry.png` - Organized wooden and metal 3-tier pantry shelving with jars and crates.
+  - `IC_Up_StringLights.png` - Vintage Edison festoon string light bulb with radiant warm glow.
+  - `IC_Up_WholesaleDeal.png` - Cargo crate with bulk percentage discount seal and golden handshake.
+  - `IC_Up_GoldenMenuBoard.png` - Polished brass baroque menu plaque with ornamental pediment.
+- **Status / Events (11)**:
+  - `IC_Star_Full.png` - 3D beveled golden 5-pointed rating star with radiant sheen.
+  - `IC_Star_Empty.png` - Unfilled rating star with Lime Gold border and subtle dark tea fill.
+  - `IC_Money.png` - Stack of golden coins with embossed Vietnamese Dong `₫` symbol and banknotes.
+  - `IC_Patience.png` - Turned-wood glass hourglass with golden sand stream customer timer.
+  - `IC_Goal.png` - Fluted golden champion victory trophy cup with star medallion.
+  - `IC_Rain.png` - Moody storm cloud with falling cyan raindrops and electrical spark.
+  - `IC_Hot.png` - Scorching sun with swirling flame rays and maxed-out mercury thermometer.
+  - `IC_PowerCut.png` - Dark unlit filament bulb crossed with broken electric warning slash.
+  - `IC_Festival.png` - Traditional Vietnamese Hội An silk lantern with cascading golden tassels.
+  - `IC_Inspector.png` - Food safety clipboard with verified checkmarks and golden inspector shield.
+  - `IC_Clear.png` - Peaceful golden crescent moon cradling a star under clear skies.
+- **Customers (4)**:
+  - `IC_Cust_Student.png` - Youthful student customer with backwards cap, polo collar, and backpack.
+  - `IC_Cust_Family.png` - Warm parent and child silhouette with golden floating heart.
+  - `IC_Cust_Office.png` - Professional office worker silhouette with tie, glasses, and briefcase.
+  - `IC_Cust_Regular.png` - Friendly regular patron smiling, giving thumbs-up, and holding tea cup.
+
+#### 2. Title Background (1920×1080 PNG)
+Location: `Assets/TramChanh/Art/UI/Backgrounds/BG_Title.png`
+- Night street scene of Trạm Chanh stall with glowing string lights, illuminated "TRẠM CHANH" stall sign, Old Quarter shophouses with warm glowing windows, sidewalk with plastic stools and crate table, and wet street asphalt reflections.
+
+#### 3. Brand Logo (1024×1024 PNG)
+Location: `Assets/TramChanh/Art/UI/Logo/LOGO_TramChanh.png`
+- High-resolution emblem featuring fresh lime slice with pulp segments, stylized 3D Vietnamese typography **'TRẠM CHANH'** with correct diacritics (underdot Ạ), and subtitle ribbon **'TRÀ CHANH PHỐ CỔ'**.
+
+#### 4. Unity Sprite Importer Configuration
+- **textureType**: `8` (Sprite 2D and UI)
+- **spriteMode**: `1` (Single)
+- **enableMipMap**: `0` (Off)
+- **isReadable**: `0`
+- **compressionQuality**: `100` (crisp alpha, high fidelity)
+
