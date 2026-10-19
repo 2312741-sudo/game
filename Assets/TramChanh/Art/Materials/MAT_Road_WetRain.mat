@@ -22,7 +22,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _Metallic: 0.15
-    - _Smoothness: 0.92
+    - _Smoothness: 0.7
     m_Colors:
     - _BaseColor: {r: 0.75, g: 0.75, b: 0.8, a: 1}
     - _Color: {r: 0.75, g: 0.75, b: 0.8, a: 1}

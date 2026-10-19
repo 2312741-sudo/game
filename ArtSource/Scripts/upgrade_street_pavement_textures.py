@@ -178,16 +178,16 @@ def generate_asphalt_and_mask(
     puddle_mask = np.zeros((h, w), dtype=float)
 
     puddle_centers = [
-        # South lane puddles
-        (450, 600, 280, 160),
-        (550, 1450, 320, 190),
+        # South lane subtle wet spots
+        (450, 600, 140, 80),
+        (550, 1450, 150, 90),
         # Gutter puddles near drain
-        (100, 640, 150, 70),
-        (1960, 1640, 160, 75),
-        # North lane puddles
-        (1400, 400, 340, 200),
-        (1500, 1200, 300, 170),
-        (1600, 1800, 260, 150),
+        (100, 640, 90, 45),
+        (1960, 1640, 95, 50),
+        # North lane subtle wet spots
+        (1400, 400, 160, 90),
+        (1500, 1200, 140, 80),
+        (1600, 1800, 120, 70),
     ]
 
     for cy, cx, rx, ry in puddle_centers:
@@ -197,17 +197,18 @@ def generate_asphalt_and_mask(
         dist = np.sqrt((x_grid / rx)**2 + (y_grid / ry)**2)
         dist += 0.15 * np.sin(4 * angle) + 0.10 * np.cos(6 * angle)
         p = np.clip(1.0 - dist, 0.0, 1.0)
-        p = p ** 1.5 # smooth falloff
+        p = p ** 1.8 # smooth falloff
         puddle_mask = np.maximum(puddle_mask, p)
 
-    # Apply wet puddle darkening to base color (wet asphalt looks significantly darker and richer)
+    # Wet asphalt has subtle damp sheen and ambient water tint, NOT pitch black holes
     puddle_3d = puddle_mask[:, :, np.newaxis]
-    wet_darken_factor = 1.0 - (0.55 * puddle_3d) # up to 55% darker
-    base_tarmac = base_tarmac * wet_darken_factor
+    wet_darken_factor = 1.0 - (0.15 * puddle_3d)
+    water_ambient_tint = np.array([18.0, 22.0, 28.0]) * puddle_3d
+    base_tarmac = (base_tarmac * wet_darken_factor) + water_ambient_tint
 
-    # In wet puddles, smoothness goes up to 245 (mirror water reflection: 0.96)
+    # In wet puddles, smoothness is a realistic damp asphalt sheen (165 ~ 0.65)
     dry_smooth = mask[:, :, 3].astype(float)
-    wet_smooth = dry_smooth * (1.0 - puddle_mask) + 245.0 * puddle_mask
+    wet_smooth = dry_smooth * (1.0 - puddle_mask) + 165.0 * puddle_mask
     mask[:, :, 3] = np.clip(wet_smooth, 0, 255).astype(np.uint8)
 
     # Save outputs
