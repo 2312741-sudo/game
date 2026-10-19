@@ -131,11 +131,12 @@ def generate_all_extended_meshes(out_dir):
     al_mesh.write_obj(os.path.join(out_dir, "SM_Alley_Extended.obj"))
 
     # 5. SM_Alley_Walls (flanking walls for all 4 alleys)
+    # Must be separate solid cuboids with non-coinciding corners for building_cube_check
     aw = ObjMesh("SM_Alley_Walls")
     for al in alleys:
-        aw.add_box(al - 2.05, al - 2.0, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
-        aw.add_box(al + 2.0, al + 2.05, -0.35, 7.5, -16.0, -3.8, uv_scale=0.5)
-        aw.add_box(al - 2.05, al + 2.05, -0.35, 7.5, -16.1, -16.0, uv_scale=0.5)
+        aw.add_box(al - 2.06, al - 2.00, -0.35, 7.50, -16.00, -3.80, uv_scale=0.5)
+        aw.add_box(al + 2.00, al + 2.06, -0.35, 7.50, -16.00, -3.80, uv_scale=0.5)
+        aw.add_box(al - 2.15, al + 2.15, -0.36, 7.55, -16.15, -15.95, uv_scale=0.5)
     aw.write_obj(os.path.join(out_dir, "SM_Alley_Walls.obj"))
 
 if __name__ == "__main__":
