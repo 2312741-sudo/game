@@ -52,6 +52,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Tall Background City Towers A, B, C** (`SM_Building_Tower_A..C`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_Building_Tower_*.obj`<br>`Assets/TramChanh/Art/Textures/T_Building_Tower_*_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_Building_Tower_*.prefab` |
 | **World Edge Boulevard Gate** (`SM_WorldEdge_BoulevardGate`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_WorldEdge_BoulevardGate.obj`<br>`Assets/TramChanh/Art/Textures/T_WorldEdge_BoulevardGate_BaseColor.png`<br>`Assets/TramChanh/Prefabs/Environment/PF_WorldEdge_BoulevardGate.prefab` |
 | **Rain & Blackout Event Art Assets** (`SM_Puddle_Oval`, `SM_Puddle_Irregular`, `SM_StringLights_Warm`, `MAT_Road_WetRain`, `MAT_Sidewalk_WetRain`, `MAT_Puddle_Water`, `MAT_StreetLamp_Blackout`, `MAT_StringLights_Warm`, `MAT_StringLights_Blackout`) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored | CC0 1.0 | 2026-10-18 | `Assets/TramChanh/Art/Models/Environment/SM_Puddle_*.obj`<br>`Assets/TramChanh/Art/Models/Environment/SM_StringLights_Warm.obj`<br>`Assets/TramChanh/Prefabs/Environment/PF_Puddle_*.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StreetLamp_Blackout.prefab`<br>`Assets/TramChanh/Prefabs/Environment/PF_StringLights_*.prefab` |
+| **Street Stall Menu & Price Board** (`SM_MenuBoard_Prices`, `MAT_MenuBoard_Prices`, `MAT_MenuBoard_Prices_Wet`, `PF_MenuBoard_Prices`, `PF_MenuBoard_Prices_Wet`) (ART-FIX-028 Board) | Project Trạm Chanh (Procedural Original) | Internal / Self-authored (`ArtSource/Scripts/generate_menuboard_assets.py`) | CC0 1.0 Universal | 2026-10-19 | `Assets/TramChanh/Art/Models/Props/SM_MenuBoard_Prices.obj`<br>`Assets/TramChanh/Art/Textures/Props/T_MenuBoard_Prices*.png`<br>`Assets/TramChanh/Art/Materials/Props/MAT_MenuBoard_Prices*.mat`<br>`Assets/TramChanh/Prefabs/Props/PF_MenuBoard_Prices*.prefab` |
+
 
 ---
 
@@ -89,6 +91,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | **Sidewalk Pavers** | $\le 10,000$ tris | Tiled Sidewalk Meshes | 216 tris (SM_Sidewalk_Extended_80m) | $\le 2048 \times 2048$ | $1024 \times 1024$ PNG (T_Sidewalk_Tiles_BaseColor) | **PASS** |
 | **Asphalt Roadway** | $\le 10,000$ tris | Asphalt Road Meshes | 36 tris (SM_Asphalt_Road_80m) | $\le 2048 \times 2048$ | $2048 \times 1024$ PNG (T_Asphalt_Night_BaseColor) | **PASS** |
 | **Street Roadside Props (10 Variants)** | $\le 3,000$ tris each | Municipal & Dual Bins, Cable & Transformer Poles, Ceramic & Terrazzo Planters, Classic & Slab Benches, Street & Tourist Signs | 24 - 72 tris each | $\le 2048 \times 2048$ | $2048 \times 2048$ PNG (T_Street_RoadsideProps_Atlas) | **PASS** |
+| **Street Stall Menu & Price Board** (`ART-FIX-028 Board`) | $\le 200$ tris | Framed street stall chalkboard price sign with stand & hanging eyelets (`SM_MenuBoard_Prices`) | 132 tris | $\le 2048 \times 1024$ | $2048 \times 1024$ PNG (T_MenuBoard_Prices, Normal, MaskMap) | **PASS** |
+
 
 ---
 
