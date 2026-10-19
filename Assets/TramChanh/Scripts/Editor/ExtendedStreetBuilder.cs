@@ -628,12 +628,13 @@ namespace TramChanh.EditorTools
                     slots.Add(new BuildingSlot { x = al + 2.5f, z = -11.5f, rotY = -90f, type = 1 });
                 }
 
-                // Street end closures across the street (at x = -StreetHalfLength and +StreetHalfLength)
-                float[] endClosureZs = new float[] { -3.0f, 1.0f, 5.0f, 9.0f, 13.0f, 17.0f };
+                // Street end side buildings along building lines (at x = -StreetHalfLength and +StreetHalfLength)
+                // South sidewalk building line: z <= -3.8m; North sidewalk building line: z >= 16.0m
+                float[] endClosureZs = new float[] { -14.0f, -9.5f, -5.0f, 17.0f, 21.5f, 26.0f };
                 for (int i = 0; i < endClosureZs.Length; i++)
                 {
-                    slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = 90f, type = i % 3 });
-                    slots.Add(new BuildingSlot { x = StreetHalfLength - 1.5f, z = endClosureZs[i], rotY = -90f, type = (i + 1) % 3 });
+                    slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = -90f, type = i % 3 });
+                    slots.Add(new BuildingSlot { x = StreetHalfLength - 1.5f, z = endClosureZs[i], rotY = 90f, type = (i + 1) % 3 });
                 }
 
                 // North edge shophouses across the road (lining z = 17.0m, facing South towards -Z)
