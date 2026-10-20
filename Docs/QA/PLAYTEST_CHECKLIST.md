@@ -91,3 +91,8 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] Window > General > Test Runner: run EditMode and PlayMode. Click the Unity window first so it has focus. For every red test paste the exact failure message.
 - Last verified on the Mac (2026-10-15, main at 25ff788): EditMode 732/732 green, including all `ART_STALL_001_*` and `GameplayBlockoutTests` 7/7. PlayMode 75/76: `DrinkWaveFlowTests.TC_ORDER_UI_MousePipelineActivatesEnterSendAndCloseWithoutRecapturingGameplay` fails with "Input System mouse press must reach the runtime button as a pointer event. Expected: 1 But was: 0" when the Unity window is not focused; re-run it with the window focused to confirm.
 - Known budget miss: at x = 0 m there are 12 real-time lights within 30 m (budget 8). Tracked as a lighting task.
+
+## Corner shop (emergency restock)
+- [ ] While open, with the scarcest ingredient at 0, press R: 5 units arrive, cost is 2x unit price, notice appears.
+- [ ] Press R again within 30 s: refused with a notice. Not enough cash: refused, no stock added.
+- [ ] R does nothing in a menu, pause or title screen.

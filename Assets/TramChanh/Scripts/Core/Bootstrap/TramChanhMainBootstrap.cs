@@ -176,6 +176,7 @@ namespace TramChanh.App
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
             _heldView.Initialize(context.Hands, _events);
             _prompt.Initialize(_events, _interactor, Orders);
+            _prompt.EmergencyRestockRequested += OnEmergencyRestock;
             _prompt.SetPatienceProvider(id => _patience.Has(id) ? _patience.LeftFraction(id, _patienceNow) : -1d);
             _prompt.SetCustomerIconProvider(id => _patience.TryGetKind(id, out CustomerKind kind) ? UiIcons.NameFor(kind) : null);
             _settings = new GameSettings();
@@ -600,6 +601,7 @@ namespace TramChanh.App
         private readonly HelperWorker _helper = new HelperWorker();
         private readonly Dictionary<OrderId, string> _noStockWhy = new Dictionary<OrderId, string>();
         private bool _goalAnnounced;
+        private double _nextEmergencyAt;
         private int _announcedStars = -1;
         private int _shownStatusKey = -1;
         private readonly List<OrderId> _noStock = new List<OrderId>();
@@ -742,6 +744,27 @@ namespace TramChanh.App
             _expired.Clear();
             _patience.CollectExpired(_patienceNow, _expired);
             foreach (OrderId id in _expired) { Orders.Fail(id, FailureReason.CustomerLeft); }
+        }
+
+        /// <summary>R: the corner shop. Only while the stall is open, not paused, and at most once every 30 seconds of game time.</summary>
+        private void OnEmergencyRestock()
+        {
+            if (_dayClock == null || !_dayClock.IsOpen || _input.ModalOpen || _clock.IsPaused) { return; }
+            if (_patienceNow < _nextEmergencyAt)
+            {
+                _prompt?.ShowNotice("Cửa hàng góc phố: đợi thêm " + Mathf.CeilToInt((float)(_nextEmergencyAt - _patienceNow)) + " giây.", false, 2.5f);
+                return;
+            }
+            if (EmergencyShop.TryBuy(_stock, _progress, _supplier, out Ingredient bought, out int cost))
+            {
+                _nextEmergencyAt = _patienceNow + EmergencyShop.CooldownSeconds;
+                SaveAll();
+                _prompt?.ShowNotice("Mua gấp ở cửa hàng góc phố: +" + EmergencyShop.PackUnits + " " + IngredientUse.DisplayName(bought) + " (" + PriceList.Format(cost) + ").", true, 4f);
+            }
+            else
+            {
+                _prompt?.ShowNotice("Không mua được: thiếu tiền hoặc kho " + IngredientUse.DisplayName(bought) + " đã đầy.", false, 3.5f);
+            }
         }
 
         /// <summary>A delivered order: priced, and judged when the customer is the food critic.</summary>
