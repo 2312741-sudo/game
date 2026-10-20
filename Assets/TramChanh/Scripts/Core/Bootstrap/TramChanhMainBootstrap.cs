@@ -604,6 +604,7 @@ namespace TramChanh.App
         private double _nextEmergencyAt;
         private int _announcedStars = -1;
         private int _shownStatusKey = -1;
+        private readonly ServiceCombo _combo = new ServiceCombo();
         private readonly List<OrderId> _noStock = new List<OrderId>();
         private readonly Dictionary<Ingredient, int> _need = new Dictionary<Ingredient, int>();
         private int _shownStockHash = -1;
@@ -779,6 +780,12 @@ namespace TramChanh.App
                 _reputation.AddPoints(verdict.ReputationPoints);
                 _prompt?.ShowNotice(verdict.Text, verdict.IsGood, 6f);
             }
+            int comboBonus = _combo.OnSale(sale, _patience.Has(id) ? _patience.LeftFraction(id, _patienceNow) : 0d);
+            if (comboBonus > 0)
+            {
+                sale = new Sale(sale.Amount + comboBonus, sale.Tier, sale.Quality);
+                _prompt?.ShowNotice("Chuỗi phục vụ x" + _combo.Streak + "  +" + PriceList.Format(comboBonus), true, 2.5f);
+            }
             _progress.RecordSale(sale);
             _failureStreak = 0;
             _patience.Remove(id);
@@ -799,6 +806,7 @@ namespace TramChanh.App
                 _prompt?.ShowNotice(verdict.Text, false, 5f);
             }
             _progress.RecordFailed();
+            _combo.OnFailed();
             _failureStreak++;
             _patience.Remove(id);
         }
@@ -849,6 +857,7 @@ namespace TramChanh.App
             _night = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
             _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
             _goalAnnounced = false;
+            _combo.NewNight();
             _helper.Clear();
             _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
             ApplyUpgrades();

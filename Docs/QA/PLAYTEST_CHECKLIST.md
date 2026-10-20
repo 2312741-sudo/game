@@ -99,3 +99,7 @@ Report anything that fails with a screenshot and the Console text.
 
 ## Flavour colours
 - [ ] On the active-order list, a drink order shows a round swatch in its liquid colour (basic drink amber; chanh dây yellow; xoài; đào; quả mọng dark red; mãng cầu pale green). Cake-only orders show no swatch.
+
+## Service combo
+- [ ] Serve 3 customers in a row, each not Poor and with at least a third of their patience left: the 2nd shows "Chuỗi phục vụ x2 +1.000đ" style notice, the 3rd gets more (5% per step, up to 25%).
+- [ ] A Poor drink, a slow sale or a customer who leaves resets the streak. A new night starts at zero.
