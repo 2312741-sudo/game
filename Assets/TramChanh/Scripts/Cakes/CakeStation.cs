@@ -1,5 +1,6 @@
 using TramChanh.Content;
 using System;
+using System.Collections.Generic;
 using TramChanh.Core;
 using TramChanh.Core.Provisional;
 using TramChanh.Interaction;
@@ -21,6 +22,7 @@ namespace TramChanh.Cakes
         [SerializeField] private MonoBehaviour _flipAction;
         [SerializeField, Tbd("DEC-007")] private float _preheatSeconds;
         [SerializeField, Tbd("DEC-013")] private float _openLidDegrees;
+        private readonly List<CakeStationPoint> _points = new List<CakeStationPoint>();
         private Quaternion _closedLidRotation;
         private Quaternion _scissorsRest, _sauceRest;
         private IStallTicketQueue _tickets;
@@ -214,6 +216,42 @@ namespace TramChanh.Cakes
         {
             if (action == CakeStationAction.RollArea && _scissors != null) { _scissors.localRotation = _scissorsRest * Quaternion.Euler(0f, active ? 25f : 0f, 0f); }
             if (action == CakeStationAction.Sauce && _sauceBag != null) { _sauceBag.localRotation = _sauceRest * Quaternion.Euler(active ? -25f : 0f, 0f, 0f); }
+        }
+        internal void RegisterPoint(CakeStationPoint point) { if (!_points.Contains(point)) { _points.Add(point); } }
+        internal void UnregisterPoint(CakeStationPoint point) => _points.Remove(point);
+        /// <summary>
+        /// One-key workflow: the target for the next step given the cake state and what is in hand, so no tool needs to be aimed at
+        /// (the tools overlap on the counter). Null when nothing should happen yet (cooking, nothing to do).
+        /// </summary>
+        public IInteractable ResolveKeyedStep(InteractionContext context)
+        {
+            Advance();
+            bool cupInHand = ReferenceEquals(context.Hands.Current, _cup);
+            switch (Current?.State)
+            {
+                case null:
+                case CakeState.Waiting: return cupInHand ? PointFor(CakeStationAction.Fill) : _cup;
+                case CakeState.BatterMeasured:
+                    if (!cupInHand) { return _cup; }
+                    CakeStationPoint grill = PointFor(CakeStationAction.Grill);
+                    return grill != null && grill.Query(context).Availability.IsAvailable ? grill : PointFor(CakeStationAction.Fill);
+                case CakeState.BatterPoured:
+                case CakeState.Cooked:
+                case CakeState.Ruined: return PointFor(CakeStationAction.Grill);
+                case CakeState.Flipped:
+                case CakeState.Sauced: return PointFor(CakeStationAction.RollArea);
+                case CakeState.Cut: return PointFor(CakeStationAction.Sauce, Current.Recipe.Sauce);
+                case CakeState.Rolled: return PointFor(CakeStationAction.Wrap);
+                default: return null;
+            }
+        }
+        private CakeStationPoint PointFor(CakeStationAction action, string sauce = null)
+        {
+            foreach (CakeStationPoint point in _points)
+            {
+                if (point != null && point.Action == action && (action != CakeStationAction.Sauce || string.Equals(point.Sauce, sauce, StringComparison.Ordinal))) { return point; }
+            }
+            return null;
         }
         private void PublishStep() => _events.Publish(new CakeStepCompleted(Current.PreparationId, Current.State));
     }

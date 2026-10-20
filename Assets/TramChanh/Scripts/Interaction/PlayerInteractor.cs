@@ -13,6 +13,13 @@ namespace TramChanh.Interaction
         private InteractionActionDriver _driver;
         private InteractableRef _focusedRef;
         private float _reachDistance;
+        private IInteractable _keyedTarget;
+        private Transform _aimOrigin;
+        private const float KeyedRange = 3f;
+        private static readonly Collider[] KeyedBuffer = new Collider[32];
+        /// <summary>Optional ray origin (the avatar's eye); defaults to the camera so third person still aims from the eye.</summary>
+        public void SetAimOrigin(Transform aim) { _aimOrigin = aim; }
+        private Transform Aim => _aimOrigin != null ? _aimOrigin : _camera.transform;
         public InteractionPromptChanged Prompt { get; private set; }
         public IInteractable Focused => _focusedRef != null ? _focusedRef.Target : null;
         public InteractionContext Context => _context;
@@ -32,13 +39,16 @@ namespace TramChanh.Interaction
                 return;
             }
             RefreshFocus();
-            bool buttonReleased = _driver.IsHeldUse ? _input.UseHeldReleased || !_input.UseHeldIsHeld
+            if (!_driver.IsRunning) { _keyedTarget = null; }
+            bool keyed = _keyedTarget != null;
+            bool buttonReleased = keyed ? _input.CakeStepReleased || !_input.CakeStepIsHeld
+                : _driver.IsHeldUse ? _input.UseHeldReleased || !_input.UseHeldIsHeld
                 : _input.InteractReleased || !_input.InteractIsHeld;
             if ((_driver.IsRunning && buttonReleased) || (!_input.IsCaptured && !_input.IsPausedByUser))
             {
                 _driver.Release();
             }
-            _driver.Tick(Focused);
+            _driver.Tick(keyed ? _keyedTarget : Focused);
             if (_input.InteractPressed)
             {
                 Press();
@@ -47,6 +57,10 @@ namespace TramChanh.Interaction
             {
                 UseHeld();
             }
+            else if (_input.CakeStepPressed)
+            {
+                PressKeyed();
+            }
             PublishPrompt();
         }
         public void RefreshFocus()
@@ -54,7 +68,7 @@ namespace TramChanh.Interaction
             _focusedRef = null;
             if (_context != null && !_context.Clock.IsPaused && _input.IsCaptured)
             {
-                Ray ray = new Ray(_camera.transform.position, _camera.transform.forward);
+                Ray ray = new Ray(Aim.position, Aim.forward);
                 if (Physics.Raycast(ray, out RaycastHit hit, _reachDistance, 1 << TramChanhLayers.InteractableIndex, QueryTriggerInteraction.Collide))
                 {
                     _focusedRef = hit.collider.GetComponentInParent<InteractableRef>();
@@ -70,6 +84,31 @@ namespace TramChanh.Interaction
             }
             PublishPrompt();
         }
+        /// <summary>Runs the next workflow step of whatever keyed station is within reach, regardless of where the crosshair points.</summary>
+        public void PressKeyed()
+        {
+            if (_context == null || !_input.IsCaptured || _driver.IsRunning) { return; }
+            IInteractable target = ResolveKeyedTarget();
+            if (target == null) { return; }
+            _driver.Begin(target);
+            _keyedTarget = _driver.IsRunning ? target : null;
+        }
+
+        private IInteractable ResolveKeyedTarget()
+        {
+            int count = Physics.OverlapSphereNonAlloc(Aim.position, KeyedRange, KeyedBuffer, 1 << TramChanhLayers.InteractableIndex, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < count; i++)
+            {
+                InteractableRef reference = KeyedBuffer[i].GetComponentInParent<InteractableRef>();
+                if (reference != null && reference.Target is IKeyedStepSource source)
+                {
+                    IInteractable step = source.ResolveKeyedStep(_context);
+                    if (step != null) { return step; }
+                }
+            }
+            return null;
+        }
+
         public void UseHeld()
         {
             if (_context != null && _input.IsCaptured)

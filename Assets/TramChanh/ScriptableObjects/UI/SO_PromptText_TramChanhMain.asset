@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: TramChanh.UI::TramChanh.UI.Localization.PromptLocalizationTable
   _entries:
   - _key: preview.controls
-    _en: "WASD: move \xB7 E/left mouse: station \xB7 F/right mouse: held item \xB7 Esc: pause"
-    _vi: "WASD: di chuy\u1EC3n \xB7 E/chu\u1ED9t tr\xE1i: qu\u1EA7y \xB7 F/chu\u1ED9t ph\u1EA3i: v\u1EADt \u0111ang c\u1EA7m \xB7 Esc: t\u1EA1m d\u1EEBng"
+    _en: "WASD: move \xB7 E/left mouse: station \xB7 F/right mouse: held item \xB7 R: next cake step \xB7 V: camera \xB7 Esc: pause"
+    _vi: "WASD: di chuy\u1EC3n \xB7 E/chu\u1ED9t tr\xE1i: qu\u1EA7y \xB7 F/chu\u1ED9t ph\u1EA3i: v\u1EADt \u0111ang c\u1EA7m \xB7 R: bước b\xE1nh tiếp \xB7 V: đổi g\xF3c nh\xECn \xB7 Esc: t\u1EA1m d\u1EEBng"
   - _key: preview.key
     _en: '[E / LMB]'
     _vi: "[E / chu\u1ED9t tr\xE1i]"

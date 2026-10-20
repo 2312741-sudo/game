@@ -40,6 +40,7 @@ namespace TramChanh.Interaction
             if (query.Kind == InteractionKind.Press)
             {
                 target.Execute(_context);
+                _context.Events.Publish(new PlayerActionEvent(query.PromptKey, query.Kind, PlayerActionPhase.Completed));
                 return;
             }
             _target = target;
@@ -48,6 +49,7 @@ namespace TramChanh.Interaction
             _startedAt = _context.Clock.Now;
             Progress = 0f;
             target.OnHoldStarted(_context);
+            _context.Events.Publish(new PlayerActionEvent(query.PromptKey, query.Kind, PlayerActionPhase.Started, query.HoldDuration));
         }
 
         public void BeginHeld()
@@ -105,6 +107,7 @@ namespace TramChanh.Interaction
                     _heldAtStart = null;
                     Progress = 0f;
                     completed.Execute(_context);
+                    _context.Events.Publish(new PlayerActionEvent(_query.PromptKey, _query.Kind, PlayerActionPhase.Completed));
                 }
             }
         }
@@ -129,6 +132,7 @@ namespace TramChanh.Interaction
             {
                 previous.OnHoldCancelled(_context);
             }
+            _context.Events.Publish(new PlayerActionEvent(_query.PromptKey, kind, PlayerActionPhase.Cancelled));
         }
         /// <summary>Cached adapter reuses the approved held and target contracts.</summary>
         private sealed class HeldActionTarget : IInteractable

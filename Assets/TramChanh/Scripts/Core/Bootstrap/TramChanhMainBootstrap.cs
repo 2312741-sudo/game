@@ -171,6 +171,12 @@ namespace TramChanh.App
             _player.Initialize(_input, _clock, _balance.MoveSpeed, _balance.LookSensitivity, _balance.Gravity, _balance.PitchLimit);
             _interactor.Initialize(_player.ViewCamera, _input, context, _balance.ReachDistance);
             _heldView.Initialize(context.Hands, _events);
+            PlayerAvatar avatar = _player.GetComponent<PlayerAvatar>();
+            if (avatar != null)
+            {
+                avatar.Initialize(_input, _clock, _events, context.Hands);
+                _interactor.SetAimOrigin(avatar.Eye);
+            }
             _prompt.Initialize(_events, _interactor, Orders);
             _prompt.SetPatienceProvider(id => _patience.Has(id) ? _patience.LeftFraction(id, _patienceNow) : -1d);
             _settings = new GameSettings();
@@ -283,7 +289,7 @@ namespace TramChanh.App
             }
             Customers = new CustomerDirector(customerSeats, settings, _drinkDefinition.Id, _cakeRecipes[0].ItemDefinition.Id, _customerSeed);
             Customers.CustomerRequestFailed += OnCustomerRequestFailed;
-            if (People != null) { People.Attach(Customers); }
+            if (People != null) { People.Player = _player.transform; People.Attach(Customers); }
             else
             {
                 Customers.CustomerSeated += OnCustomerSeated;
@@ -296,7 +302,8 @@ namespace TramChanh.App
             Teleport(spawn.position, spawn.rotation);
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
             _runtime.SetActive(true);
-            foreach (CustomerSeat seat in _seats) { RequestService(seat); }
+            // The takeaway customer arrives by motorbike (see UpdateVehicleSeat); only walking-in seats are served immediately.
+            foreach (CustomerSeat seat in _seats) { if (!UsesVehicleArrival(seat)) { RequestService(seat); } }
             // Open with one dine-in customer; further arrivals follow the director's pacing and max-active limit.
             Customers.SpawnNow();
             IsInitialized = true;
@@ -475,6 +482,23 @@ namespace TramChanh.App
             foreach (Transform child in anchor.transform) { child.gameObject.SetActive(false); }
         }
 
+        private bool UsesVehicleArrival(CustomerSeat seat) => People != null && ReferenceEquals(seat.Point, Vehicle);
+
+        // Rider pulls in off the road and parks at the kerb; the order opens once it has stopped, and it rides off when the order ends.
+        private void UpdateVehicleSeat(CustomerSeat seat, bool open)
+        {
+            if (seat.Point.ActiveOrder.IsValid) { return; }
+            if (People.VehicleParked) { People.SendVehicleAway(); return; }
+            if (People.VehicleBusy || !open) { seat.WaitingSeconds = 0f; return; }
+            seat.WaitingSeconds += (float)_clock.DeltaTime;
+            if (seat.WaitingSeconds < _customerReturnSeconds) { return; }
+            seat.WaitingSeconds = 0f;
+            // The rider stops where the order point's collider is, so aiming at the rider is what opens the order.
+            Collider zone = Vehicle.GetComponentInChildren<Collider>(true);
+            Vector3 stop = zone != null ? new Vector3(zone.bounds.center.x, Vehicle.transform.position.y, zone.bounds.center.z) : Vehicle.transform.position;
+            if (!People.BringVehicle(stop, () => RequestService(seat))) { RequestService(seat); }
+        }
+
         private void RequestService(CustomerSeat seat)
         {
             Result<OrderId> result = seat.Point.RequestCustomerService(new CustomerId(_nextCustomer++), seat.Requests);
@@ -518,6 +542,7 @@ namespace TramChanh.App
             // Completed orders free their point; a new customer arrives after the provisional pause.
             foreach (CustomerSeat seat in _seats)
             {
+                if (UsesVehicleArrival(seat)) { UpdateVehicleSeat(seat, open); continue; }
                 if (!open) { seat.WaitingSeconds = 0f; continue; }
                 if (seat.Point.ActiveOrder.IsValid) { continue; }
                 seat.WaitingSeconds += (float)_clock.DeltaTime;

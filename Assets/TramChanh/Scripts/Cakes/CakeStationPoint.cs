@@ -5,7 +5,7 @@ using UnityEngine;
 namespace TramChanh.Cakes
 {
     public enum CakeStationAction { Fill, Grill, RollArea, Sauce, Wrap }
-    public sealed class CakeStationPoint : MonoBehaviour, IInteractable
+    public sealed class CakeStationPoint : MonoBehaviour, IInteractable, IKeyedStepSource
     {
         [SerializeField] private CakeStation _station;
         [SerializeField] private CakeStationAction _action;
@@ -17,6 +17,10 @@ namespace TramChanh.Cakes
         public InteractableId Id => new InteractableId(_id);
         public Transform InteractionPoint => _interactionPoint;
         public CakeStationAction Action => _action;
+        public string Sauce => _sauce;
+        public IInteractable ResolveKeyedStep(InteractionContext context) => _station != null ? _station.ResolveKeyedStep(context) : null;
+        private void OnEnable() { if (_station != null) { _station.RegisterPoint(this); } }
+        private void OnDisable() { if (_station != null) { _station.UnregisterPoint(this); } }
         public InteractionQuery Query(InteractionContext context) => _station.Query(context, _action, _sauce);
         public void Execute(InteractionContext context) => _station.Execute(context, _action, _sauce, Id);
         public void OnHoldStarted(InteractionContext context)

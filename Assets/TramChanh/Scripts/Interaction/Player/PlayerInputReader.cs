@@ -32,6 +32,12 @@ namespace TramChanh.Interaction.Player
         public bool UseHeldReleased => _useHeld.WasReleasedThisFrame();
         public bool InteractIsHeld => _interact.IsPressed();
         public bool UseHeldIsHeld => _useHeld.IsPressed();
+        /// <summary>R runs the next step of the workflow in reach (cake station) without aiming; hold it for timed steps.</summary>
+        public bool CakeStepPressed => IsCaptured && !_resumedThisFrame && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame;
+        /// <summary>V switches between first and third person.</summary>
+        public bool ViewTogglePressed => IsCaptured && !_resumedThisFrame && Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame;
+        public bool CakeStepReleased => Keyboard.current != null && Keyboard.current.rKey.wasReleasedThisFrame;
+        public bool CakeStepIsHeld => Keyboard.current != null && Keyboard.current.rKey.isPressed;
 
         public void Initialize(IGameClock clock)
         {
