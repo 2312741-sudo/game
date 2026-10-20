@@ -310,7 +310,12 @@ namespace TramChanh.App
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
             _runtime.SetActive(true);
             // The takeaway customer arrives by motorbike (see UpdateVehicleSeat); only walking-in seats are served immediately.
-            foreach (CustomerSeat seat in _seats) { if (!UsesVehicleArrival(seat)) { RequestService(seat); } }
+            foreach (CustomerSeat seat in _seats)
+            {
+                // The first takeaway customer is already parked and waiting; later ones ride in (UpdateVehicleSeat).
+                if (UsesVehicleArrival(seat)) { People.ParkVehicleNow(VehicleStopPoint()); }
+                RequestService(seat);
+            }
             // Open with one dine-in customer; further arrivals follow the director's pacing and max-active limit.
             Customers.SpawnNow();
             IsInitialized = true;
@@ -489,6 +494,13 @@ namespace TramChanh.App
             foreach (Transform child in anchor.transform) { child.gameObject.SetActive(false); }
         }
 
+        // The rider stops where the order point's collider is, so aiming at the rider is what opens the order.
+        private Vector3 VehicleStopPoint()
+        {
+            Collider zone = Vehicle.GetComponentInChildren<Collider>(true);
+            return zone != null ? new Vector3(zone.bounds.center.x, Vehicle.transform.position.y, zone.bounds.center.z) : Vehicle.transform.position;
+        }
+
         private bool UsesVehicleArrival(CustomerSeat seat) => People != null && ReferenceEquals(seat.Point, Vehicle);
 
         // Rider pulls in off the road and parks at the kerb; the order opens once it has stopped, and it rides off when the order ends.
@@ -500,9 +512,7 @@ namespace TramChanh.App
             seat.WaitingSeconds += (float)_clock.DeltaTime;
             if (seat.WaitingSeconds < _customerReturnSeconds) { return; }
             seat.WaitingSeconds = 0f;
-            // The rider stops where the order point's collider is, so aiming at the rider is what opens the order.
-            Collider zone = Vehicle.GetComponentInChildren<Collider>(true);
-            Vector3 stop = zone != null ? new Vector3(zone.bounds.center.x, Vehicle.transform.position.y, zone.bounds.center.z) : Vehicle.transform.position;
+            Vector3 stop = VehicleStopPoint();
             if (!People.BringVehicle(stop, () => RequestService(seat))) { RequestService(seat); }
         }
 

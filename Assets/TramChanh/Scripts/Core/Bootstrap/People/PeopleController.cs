@@ -108,6 +108,16 @@ namespace TramChanh.App.People
             return true;
         }
 
+        /// <summary>The first takeaway customer of a session is already waiting at the kerb (no ride-in), so the vehicle point never starts empty.</summary>
+        public bool ParkVehicleNow(Vector3 stop)
+        {
+            if (VehicleBusy) { return false; }
+            PersonView view = Acquire(_bikePrefabs, "VehicleCustomer", PrimitiveType.Cube, new Color(0.15f, 0.35f, 0.6f), new Vector3(0.45f, 0.9f, 1.6f));
+            view.transform.SetPositionAndRotation(stop, Quaternion.LookRotation(Vector3.right, Vector3.up));
+            _vehicle = view; _vehicleStop = stop; _vehicleStage = VehicleStage.Parked;
+            return true;
+        }
+
         /// <summary>The parked takeaway customer rides off along the lane in the direction it came from.</summary>
         public void SendVehicleAway()
         {
