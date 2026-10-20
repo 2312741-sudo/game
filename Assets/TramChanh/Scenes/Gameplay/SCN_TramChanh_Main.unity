@@ -227,10 +227,9 @@ MonoBehaviour:
   _drinkStationPrefab: {fileID: 6505927981593460591, guid: 96acb90e76ac543cda093f50680d1a4b, type: 3}
   _cakeStationPrefab: {fileID: 8943831326368599622, guid: 3f49b381ad9d14e119ebdf6813e6313d, type: 3}
   _tablePointPrefab: {fileID: 3363350997845005691, guid: b3ce8d04b0a404d43b9091c2b1336e22, type: 3}
+  _teaRackStoolPrefab: {fileID: 5023653642298891178, guid: be0630dbaa2dd448abde9bed48e119b9, type: 3}
   _vehiclePointPrefab: {fileID: 8660045410336674729, guid: 6652ef7685e4f4047b9c17367c78fec4, type: 3}
   _cakeStationLocalPosition: {x: -0.51, y: 1, z: -0.08}
-  _showTitleScreen: 1
-  _teaRackStoolPrefab: {fileID: 5023653642298891178, guid: be0630dbaa2dd448abde9bed48e119b9, type: 3}
   _customerReturnSeconds: 4
   _customerSettings:
     _maxActiveCustomers: 3
@@ -244,6 +243,10 @@ MonoBehaviour:
     _arrivalTimeoutSeconds: 30
     _departureTimeoutSeconds: 20
   _customerSeed: 1
+  _secondsPerGameDay: 1440
+  _startHour: 18
+  _closedTimeScale: 18
+  _driveDaylight: 1
   _customerVisualPrefab: {fileID: 0}
   _simulatePeople: 1
   _peopleSettings:
@@ -253,6 +256,7 @@ MonoBehaviour:
     _maxBikes: 6
     _bikeIntervalSeconds: 2.5
     _bikeSpeed: 6
+    _ambientWindowMeters: 60
   _personPrefabs:
   - {fileID: 1310783555758317037, guid: 9b34fecbc6a924cc5a8ce57159aa6103, type: 3}
   - {fileID: 7073791044622858260, guid: 25797851e4ffc44999e4b32e588c29c6, type: 3}
@@ -260,6 +264,15 @@ MonoBehaviour:
   - {fileID: 5242672663569071914, guid: c8463570f802a489daf490d7c4e52809, type: 3}
   - {fileID: 1756485417510797237, guid: 297e99ddb660b4cdf83d0dfe3cd69cc2, type: 3}
   - {fileID: 4645705783588263865, guid: 43fe2c1843e834b0a930d3ca2d44b02a, type: 3}
+  - {fileID: 6430719813610475449, guid: ab39671828c0a46c2a88f982f026c741, type: 3}
+  - {fileID: 1183412708807389507, guid: 00c5234822b2840a3ab7492e4dd19dee, type: 3}
+  - {fileID: 1942501170991067083, guid: 957cd86293086475480986c6a418ff58, type: 3}
+  - {fileID: 6918346161622424967, guid: d50c338a91790454094225390bd44015, type: 3}
+  - {fileID: 1020821120506778224, guid: 5bac6640ea6b0444c88a0bd76eeb2fd6, type: 3}
+  - {fileID: 2985608222457646021, guid: 2ad66cdcd8f114290a43679661e41f59, type: 3}
+  - {fileID: 8373915859566051282, guid: 2f431e45e2ed24282a5c623a18555b33, type: 3}
+  - {fileID: 7170547023661776820, guid: eb27c4059b6e946da8d62d31ff9222a6, type: 3}
+  - {fileID: 203820146488527063, guid: 2ccf026ed280c47f0a6cbe028a925768, type: 3}
   _bikePrefabs:
   - {fileID: 3886195835551508535, guid: fe91c5d693d5844fd95348c1cd5f7ea5, type: 3}
   - {fileID: 6084990692839527156, guid: 81d1c1523690d40909269908f1308022, type: 3}
@@ -280,6 +293,7 @@ MonoBehaviour:
   _prompt: {fileID: 2131611176}
   _entryUI: {fileID: 1374889982}
   _lobby: {fileID: 2055904077}
+  _showTitleScreen: 1
 --- !u!4 &1722732460
 Transform:
   m_ObjectHideFlags: 0
