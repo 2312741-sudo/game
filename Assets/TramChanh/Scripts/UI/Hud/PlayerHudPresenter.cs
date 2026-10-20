@@ -73,6 +73,9 @@ namespace TramChanh.UI.Hud
         /// </summary>
         public Func<OrderId, double> PatienceProvider { get; set; }
 
+        /// <summary>Returns the icon name (Resources/UI/Icons) of an order's customer kind, or null. Set by the game; the HUD only reads it.</summary>
+        public Func<OrderId, string> CustomerIconProvider { get; set; }
+
         public HeldItemFeedbackModel Held => _held;
         public ActiveOrderListModel Orders => _orders;
         public OrderToastModel Toast => _toast;
@@ -223,19 +226,32 @@ namespace TramChanh.UI.Hud
 
         private VisualElement NewPatienceBar(OrderId id)
         {
+            var line = new VisualElement();
+            line.pickingMode = PickingMode.Ignore;
+            line.style.flexDirection = FlexDirection.Row;
+            line.style.alignItems = Align.Center;
+            line.style.marginTop = 2f;
+            string iconName = CustomerIconProvider != null ? CustomerIconProvider(id) : null;
+            if (!string.IsNullOrEmpty(iconName))
+            {
+                Image icon = TramChanh.UI.Menu.UiIcons.Make(iconName, 18f);
+                icon.style.marginRight = 6f;
+                line.Add(icon);
+            }
             var track = new VisualElement();
             track.pickingMode = PickingMode.Ignore;
             track.name = "PatienceTrack";
             track.style.height = 6f;
-            track.style.marginTop = 2f;
+            track.style.flexGrow = 1f;
             track.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
             var fill = new VisualElement();
             fill.pickingMode = PickingMode.Ignore;
             fill.name = "PatienceFill";
             fill.style.height = Length.Percent(100f);
             track.Add(fill);
+            line.Add(track);
             _patienceFills[id] = fill;
-            return track;
+            return line;
         }
 
         private void UpdatePatienceBars()

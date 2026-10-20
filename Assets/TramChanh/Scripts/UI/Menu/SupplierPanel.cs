@@ -20,6 +20,8 @@ namespace TramChanh.UI.Menu
         public Action Changed;
         /// <summary>Text under the lists, for example what tomorrow night brings.</summary>
         public string Forecast = string.Empty;
+        /// <summary>Tomorrow's night event, for its icon.</summary>
+        public NightEvent ForecastNight = NightEvent.Clear;
     }
 
     /// <summary>
@@ -37,6 +39,8 @@ namespace TramChanh.UI.Menu
         private readonly Dictionary<UpgradeId, Button> _upgradeButtons = new Dictionary<UpgradeId, Button>();
         private readonly SupplierContext _context;
         private Label _stars;
+        private VisualElement _starRow;
+        private Image _nightIcon;
         private Button _difficulty;
 
         public SupplierPanel(VisualElement root, SupplierContext context, Action onDone)
@@ -81,9 +85,17 @@ namespace TramChanh.UI.Menu
             _cash.style.fontSize = 18f;
             _cash.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
             _cash.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _cash.style.marginTop = 6f;
-            _cash.style.marginBottom = 10f;
-            box.Add(_cash);
+            var cashRow = new VisualElement();
+            cashRow.style.flexDirection = FlexDirection.Row;
+            cashRow.style.justifyContent = Justify.Center;
+            cashRow.style.alignItems = Align.Center;
+            cashRow.style.marginTop = 6f;
+            cashRow.style.marginBottom = 10f;
+            Image moneyIcon = UiIcons.Make(UiIcons.Money, 26f);
+            moneyIcon.style.marginRight = 8f;
+            cashRow.Add(moneyIcon);
+            cashRow.Add(_cash);
+            box.Add(cashRow);
 
             foreach (Ingredient ingredient in StockBook.Ingredients)
             {
@@ -96,6 +108,9 @@ namespace TramChanh.UI.Menu
                 label.style.flexGrow = 1f;
                 label.style.fontSize = 17f;
                 label.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
+                Image ingredientIcon = UiIcons.Make(UiIcons.NameFor(ingredient), 30f);
+                ingredientIcon.style.marginRight = 8f;
+                row.Add(ingredientIcon);
                 var buy = new Button(() => { if (onBuy != null) { onBuy(captured); } }) { text = "Mua " + Supplier.PackSize };
                 buy.style.width = 96f;
                 buy.style.height = 32f;
@@ -114,6 +129,11 @@ namespace TramChanh.UI.Menu
             _stars.style.unityTextAlign = TextAnchor.MiddleCenter;
             _stars.style.marginTop = 12f;
             box.Add(_stars);
+            _starRow = new VisualElement();
+            _starRow.style.flexDirection = FlexDirection.Row;
+            _starRow.style.justifyContent = Justify.Center;
+            _starRow.style.marginTop = 2f;
+            box.Add(_starRow);
 
             foreach (UpgradeInfo info in UpgradeBook.All)
             {
@@ -127,6 +147,9 @@ namespace TramChanh.UI.Menu
                 label.style.fontSize = 15f;
                 label.style.whiteSpace = WhiteSpace.Normal;
                 label.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
+                Image upgradeIcon = UiIcons.Make(UiIcons.NameFor(info.Id), 30f);
+                upgradeIcon.style.marginRight = 8f;
+                row.Add(upgradeIcon);
                 var buy = new Button(() =>
                 {
                     bool bought = context.Upgrades.TryBuy(captured, context.Wallet, context.Reputation);
@@ -150,6 +173,11 @@ namespace TramChanh.UI.Menu
             _difficulty.style.backgroundColor = new Color(0.2f, 0.45f, 0.32f, 1f);
             _difficulty.style.color = Color.white;
             box.Add(_difficulty);
+
+            _nightIcon = UiIcons.Make(UiIcons.NameFor(NightEvent.Clear), 34f);
+            _nightIcon.style.alignSelf = Align.Center;
+            _nightIcon.style.marginTop = 10f;
+            box.Add(_nightIcon);
 
             _message = new Label();
             _message.style.fontSize = 15f;
@@ -209,7 +237,18 @@ namespace TramChanh.UI.Menu
                 _rowLabels[ingredient].text = DescribeRow(ingredient, c.Stock, c.Supplier);
                 _buyButtons[ingredient].SetEnabled(c.Stock.Space(ingredient) >= Supplier.PackSize && c.Wallet.Money >= c.Supplier.PackPrice(ingredient));
             }
-            _stars.text = "Uy tín: " + Reputation.StarText(c.Reputation.Stars);
+            _stars.text = "Uy tín";
+            _starRow.Clear();
+            for (int i = 0; i < 5; i++)
+            {
+                Image star = UiIcons.Make(i < c.Reputation.Stars ? UiIcons.StarFull : UiIcons.StarEmpty, 28f);
+                star.style.marginLeft = 2f;
+                star.style.marginRight = 2f;
+                _starRow.Add(star);
+            }
+            Texture2D nightTexture = UiIcons.Load(UiIcons.NameFor(c.ForecastNight));
+            if (nightTexture != null) { _nightIcon.image = nightTexture; _nightIcon.style.display = DisplayStyle.Flex; }
+            else { _nightIcon.style.display = DisplayStyle.None; }
             foreach (UpgradeInfo info in UpgradeBook.All)
             {
                 UpgradeStatus status = c.Upgrades.StatusOf(info.Id, c.Wallet, c.Reputation);

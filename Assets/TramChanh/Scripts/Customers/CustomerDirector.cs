@@ -99,6 +99,11 @@ namespace TramChanh.Customers
         public bool ArrivalsEnabled { get; set; } = true;
         /// <summary>Multiplies the arrival interval: below 1 is busier, above 1 is quieter. Non-positive or NaN values count as 1.</summary>
         public double ArrivalIntervalScale { get; set; } = 1d;
+        /// <summary>
+        /// Drink ids a customer may ask for (the basic drink plus unlocked flavours). Null or fewer than two ids: always the basic drink,
+        /// and no random number is used, so seeded behaviour is unchanged.
+        /// </summary>
+        public IReadOnlyList<string> DrinkChoices { get; set; }
         public int MaxActiveCustomers => Math.Min(_settings.MaxActiveCustomers, _seats.Length);
         public ICustomerSeat SeatAt(int seatIndex) => InRange(seatIndex) ? _seats[seatIndex] : null;
         public bool IsOccupied(int seatIndex) => InRange(seatIndex) && _customers[seatIndex].IsValid;
@@ -346,12 +351,20 @@ namespace TramChanh.Customers
             double total = drink + cake + mixed;
             if (total <= 0d) { return Mixed(); }
             double roll = _random.NextDouble() * total;
-            if (roll < drink) { return new[] { new ItemRequest(_drinkItemId, 1) }; }
+            if (roll < drink) { return new[] { new ItemRequest(PickDrinkId(), 1) }; }
             if (roll < drink + cake || mixed <= 0d) { return new[] { new ItemRequest(_cakeItemId, 1) }; }
             return Mixed();
         }
 
-        private ItemRequest[] Mixed() => new[] { new ItemRequest(_drinkItemId, 1), new ItemRequest(_cakeItemId, 1) };
+        private ItemRequest[] Mixed() => new[] { new ItemRequest(PickDrinkId(), 1), new ItemRequest(_cakeItemId, 1) };
+
+        private string PickDrinkId()
+        {
+            IReadOnlyList<string> choices = DrinkChoices;
+            if (choices == null || choices.Count < 2) { return _drinkItemId; }
+            string id = choices[_random.Next(choices.Count)];
+            return string.IsNullOrEmpty(id) ? _drinkItemId : id;
+        }
 
         private bool InRange(int seatIndex) => seatIndex >= 0 && seatIndex < _seats.Length;
     }

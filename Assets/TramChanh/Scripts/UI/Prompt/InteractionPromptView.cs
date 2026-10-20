@@ -38,6 +38,7 @@ namespace TramChanh.UI.Prompt
         private PlayerHudPresenter _hud;
         private SupplierPanel _supplier;
         private Func<OrderId, double> _patienceProvider;
+        private Func<OrderId, string> _customerIconProvider;
         private Label _hint;
         private Label _heldHint;
         private Label _status;
@@ -63,6 +64,13 @@ namespace TramChanh.UI.Prompt
         public PlayerHudPresenter Hud => _hud;
 
         /// <summary>Gives the order list a way to read each order's patience (share left, negative when not tracked).</summary>
+        /// <summary>Gives the order list the icon name of each order's customer kind (null when unknown).</summary>
+        public void SetCustomerIconProvider(Func<OrderId, string> provider)
+        {
+            _customerIconProvider = provider;
+            if (_hud != null) { _hud.CustomerIconProvider = provider; }
+        }
+
         public void SetPatienceProvider(Func<OrderId, double> provider)
         {
             _patienceProvider = provider;
@@ -260,6 +268,7 @@ namespace TramChanh.UI.Prompt
             IHeldItemSlot hands = _source != null && _source.Context != null ? _source.Context.Hands : null;
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
             _hud.PatienceProvider = _patienceProvider;
+            _hud.CustomerIconProvider = _customerIconProvider;
         }
 
         /// <summary>
@@ -288,12 +297,12 @@ namespace TramChanh.UI.Prompt
         }
 
         /// <summary>Shows the end-of-day card. <paramref name="onContinue"/> runs when the player presses the button.</summary>
-        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null)
+        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null, int stars = -1)
         {
             _summary?.Hide();
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
-            _summary.Show(summary, progress, extra);
+            _summary.Show(summary, progress, extra, stars);
         }
 
         /// <summary>
