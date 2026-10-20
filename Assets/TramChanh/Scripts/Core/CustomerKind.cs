@@ -2,7 +2,7 @@ using System;
 
 namespace TramChanh.Core
 {
-    public enum CustomerKind { Student = 0, Family = 1, Office = 2, Regular = 3 }
+    public enum CustomerKind { Student = 0, Family = 1, Office = 2, Regular = 3, Critic = 4 }
 
     /// <summary>How one kind of customer behaves: how long they wait and how much they pay.</summary>
     public readonly struct CustomerProfile
@@ -46,6 +46,7 @@ namespace TramChanh.Core
             new CustomerProfile(CustomerKind.Family, "Gia đình", 180d, 1.0f, 25),
             new CustomerProfile(CustomerKind.Office, "Nhân viên văn phòng", 90d, 1.15f, 25),
             new CustomerProfile(CustomerKind.Regular, "Khách quen", 150d, 1.2f, 10),
+            new CustomerProfile(CustomerKind.Critic, "Nhà phê bình", 100d, 1.0f, 5),
         });
 
         public int Count => _profiles.Length;
@@ -57,19 +58,28 @@ namespace TramChanh.Core
             return _profiles[0];
         }
 
-        /// <summary>Picks a kind by weight. <paramref name="roll"/> is a random number in [0, 1); other values are clamped.</summary>
-        public CustomerProfile Pick(double roll)
+        /// <summary>Picks a kind by weight. <paramref name="roll"/> is a random number in [0, 1); other values are clamped. The critic can come.</summary>
+        public CustomerProfile Pick(double roll) => Pick(roll, true);
+
+        /// <summary>Same, but with <paramref name="allowCritic"/> false the critic is left out (the critic only comes at higher reputation).</summary>
+        public CustomerProfile Pick(double roll, bool allowCritic)
         {
             if (double.IsNaN(roll)) { roll = 0d; }
             roll = Math.Min(0.999999d, Math.Max(0d, roll));
-            double target = roll * _totalWeight;
+            int total = 0;
+            foreach (CustomerProfile p in _profiles) { if (allowCritic || p.Kind != CustomerKind.Critic) { total += Math.Max(0, p.Weight); } }
+            if (total <= 0) { return _profiles[0]; }
+            double target = roll * total;
             double sum = 0d;
+            CustomerProfile last = _profiles[0];
             foreach (CustomerProfile p in _profiles)
             {
+                if (!allowCritic && p.Kind == CustomerKind.Critic) { continue; }
                 sum += Math.Max(0, p.Weight);
+                last = p;
                 if (target < sum) { return p; }
             }
-            return _profiles[_profiles.Length - 1];
+            return last;
         }
     }
 }

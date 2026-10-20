@@ -345,6 +345,30 @@ namespace TramChanh.Tests.EditMode.Customers
             }
         }
 
+        [Test]
+        public void DrinkChoices_Several_SpreadTheRequestedDrinks_ButNullKeepsTheBasicDrink()
+        {
+            FakeCustomerSeat[] plainSeats = FakeCustomerSeat.Tables();
+            var plain = new CustomerDirector(plainSeats, new CustomerDirectorSettings(10, 6f, 2f, 1f, 0f, 0f), Drink, Cake, 3, 500);
+            for (int i = 0; i < 10; i++) { plain.SpawnNow(); }
+            foreach (FakeCustomerSeat seat in plainSeats)
+            {
+                foreach (var request in seat.Requests) { Assert.That(request.Items[0].ItemDefinitionId, Is.EqualTo(Drink)); }
+            }
+
+            FakeCustomerSeat[] seats = FakeCustomerSeat.Tables();
+            var director = new CustomerDirector(seats, new CustomerDirectorSettings(10, 6f, 2f, 1f, 0f, 0f), Drink, Cake, 3, 600);
+            director.DrinkChoices = new[] { Drink, "drink.chanh_day", "drink.xoai" };
+            for (int i = 0; i < 10; i++) { director.SpawnNow(); }
+            var asked = new HashSet<string>();
+            foreach (FakeCustomerSeat seat in seats)
+            {
+                foreach (var request in seat.Requests) { asked.Add(request.Items[0].ItemDefinitionId); }
+            }
+            Assert.That(asked.Count, Is.GreaterThan(1), "With several choices more than one drink id is requested.");
+            Assert.That(asked.IsSubsetOf(new HashSet<string> { Drink, "drink.chanh_day", "drink.xoai" }), Is.True);
+        }
+
         private static int Spawned(CustomerDirector director)
         {
             int count = 0;

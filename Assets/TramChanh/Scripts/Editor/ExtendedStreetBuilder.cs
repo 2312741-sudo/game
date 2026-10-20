@@ -523,10 +523,12 @@ namespace TramChanh.EditorTools
             var vehVisual = new GameObject("GenericVehicleVisual");
             vehVisual.layer = TramChanhLayers.EnvironmentIndex;
             vehVisual.transform.SetParent(vehiclePoint.transform, false);
+            vehVisual.transform.localPosition = new Vector3(0f, 0f, 3.0f);
 
             var takeawayCust = new GameObject("TakeawayCustomer");
             takeawayCust.layer = TramChanhLayers.EnvironmentIndex;
             takeawayCust.transform.SetParent(vehiclePoint.transform, false);
+            takeawayCust.transform.localPosition = new Vector3(0f, 0f, 3.0f);
 
             // CustomerArea with 10 tables
             GameObject custAreaPf = AssetDatabase.LoadAssetAtPath<GameObject>(CustomerArea10TablesPrefabPath);
@@ -629,12 +631,13 @@ namespace TramChanh.EditorTools
                     slots.Add(new BuildingSlot { x = al + 2.5f, z = -11.5f, rotY = -90f, type = 1 });
                 }
 
-                // Street end closures across the street (at x = -StreetHalfLength and +StreetHalfLength)
-                float[] endClosureZs = new float[] { -3.0f, 1.0f, 5.0f, 9.0f, 13.0f, 17.0f };
+                // Street end side buildings along building lines (at x = -StreetHalfLength and +StreetHalfLength)
+                // South sidewalk building line: z <= -3.8m; North sidewalk building line: z >= 16.0m
+                float[] endClosureZs = new float[] { -14.0f, -9.5f, -5.0f, 17.0f, 21.5f, 26.0f };
                 for (int i = 0; i < endClosureZs.Length; i++)
                 {
-                    slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = 90f, type = i % 3 });
-                    slots.Add(new BuildingSlot { x = StreetHalfLength - 1.5f, z = endClosureZs[i], rotY = -90f, type = (i + 1) % 3 });
+                    slots.Add(new BuildingSlot { x = -StreetHalfLength + 1.5f, z = endClosureZs[i], rotY = -90f, type = i % 3 });
+                    slots.Add(new BuildingSlot { x = StreetHalfLength - 1.5f, z = endClosureZs[i], rotY = 90f, type = (i + 1) % 3 });
                 }
 
                 // North edge shophouses across the road (lining z = 17.0m, facing South towards -Z)
@@ -700,7 +703,7 @@ namespace TramChanh.EditorTools
                 }
                 if (!nearAlley) southTrees.Add(x);
             }
-            southTrees.AddRange(new float[] { -7.5f, -4.5f, 4.5f, 7.5f, 14.0f });
+            southTrees.AddRange(new float[] { -13.0f, -11.0f, 11.0f, 13.0f, 14.0f });
 
             if (treePf != null)
             {
@@ -784,8 +787,8 @@ namespace TramChanh.EditorTools
                 new BikeSlot { x = -24.0f, z = 2.6f, rotY = 15f },  // Bicycle
                 new BikeSlot { x = -15.0f, z = 2.6f, rotY = -10f }, // Cub
                 new BikeSlot { x = -12.5f, z = 2.6f, rotY = 5f },   // Scooter
-                new BikeSlot { x = -6.5f,  z = 2.7f, rotY = 20f },  // Scooter
-                new BikeSlot { x = 5.2f,   z = 2.6f, rotY = -15f }, // Scooter
+                new BikeSlot { x = -10.0f, z = 2.7f, rotY = 20f },  // Scooter
+                new BikeSlot { x = 10.0f,  z = 2.6f, rotY = -15f }, // Scooter
                 new BikeSlot { x = 13.0f,  z = 2.6f, rotY = 10f },  // Cub
                 new BikeSlot { x = 22.5f,  z = 2.6f, rotY = 5f },   // Scooter
                 new BikeSlot { x = 31.0f,  z = 2.6f, rotY = -20f }, // Bicycle

@@ -23,3 +23,11 @@ Rule: no Phase 3 work starts until Phase 1 and 2 acceptance is signed off by the
 Round A (art, Anti; lead reviews): ART-FIX-021 (stool under 1,500 triangles, drop VIP_Real), table rows, bar mat and cake props verified in Play; tea rack model when the owner supplies the file.
 Round B (UI, lead; Mac session verifies): HUD and menu in brand style (fonts, colours, icons), menu board and shop sign, order toast style, day-summary art, title-screen background (stall at night), cursor and prompt icons, lighting budget at x = 0 (12 lights vs 8).
 After Round B: owner plays `PLAYTEST_CHECKLIST.md`, signs off Phases 1-2, then `GAMEPLAY_DESIGN.md` is approved and steps G1-G6 start.
+
+## Status on 2026-10-20 (lead)
+Done in code, waiting for the owner's play test in Unity: G1 money and quality, G2 patience and customer kinds, G3 stock and shop, G4 stars, upgrades and drink flavours, G5 night events (numbers plus light), G6 daily goal and difficulty, UI icons.
+Open, by owner of the work:
+- Owner: real prices of the drinks and the cake (board photo `IMG_4932 2`); decide if each flavour needs its own tea bag and cup colour; play 3 nights and report balance.
+- Anti: push `fix/ART-FIX-022` (seated pose, rider head, puddle light, street clearing); look of the two new drinks on the counter; the tea rack model when the owner supplies the file.
+- Mac session: Play Mode checks (street ends after the gate fix, black lake, building in front of the stall, tree/person gone) once Unity MCP is connected.
+- Lead (needs a Unity run first): PlayMode full-night smoke test, rain particles (needs the particle system module decision), corner shop restock, flavour-specific tea bags and cups.

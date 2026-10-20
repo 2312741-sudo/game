@@ -38,9 +38,14 @@ namespace TramChanh.UI.Prompt
         private PlayerHudPresenter _hud;
         private SupplierPanel _supplier;
         private Func<OrderId, double> _patienceProvider;
+        private Func<OrderId, string> _customerIconProvider;
         private Label _hint;
         private Label _heldHint;
         private Label _status;
+        private Label _notice;
+        private string _noticeText = string.Empty;
+        private bool _noticePositive = true;
+        private float _noticeUntil;
         private Label _credits;
         private PauseMenu _pauseMenu;
         private PauseMenu _titleMenu;
@@ -63,6 +68,13 @@ namespace TramChanh.UI.Prompt
         public PlayerHudPresenter Hud => _hud;
 
         /// <summary>Gives the order list a way to read each order's patience (share left, negative when not tracked).</summary>
+        /// <summary>Gives the order list the icon name of each order's customer kind (null when unknown).</summary>
+        public void SetCustomerIconProvider(Func<OrderId, string> provider)
+        {
+            _customerIconProvider = provider;
+            if (_hud != null) { _hud.CustomerIconProvider = provider; }
+        }
+
         public void SetPatienceProvider(Func<OrderId, double> provider)
         {
             _patienceProvider = provider;
@@ -148,6 +160,22 @@ namespace TramChanh.UI.Prompt
             _status.style.paddingTop = 5f;
             _status.style.paddingBottom = 5f;
             root.Add(_status);
+            _notice = new Label();
+            _notice.pickingMode = PickingMode.Ignore;
+            _notice.style.position = Position.Absolute;
+            _notice.style.top = 100f;
+            _notice.style.left = Length.Percent(50f);
+            _notice.style.width = 620f;
+            _notice.style.marginLeft = -310f;
+            _notice.style.fontSize = 20f;
+            _notice.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _notice.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _notice.style.whiteSpace = WhiteSpace.Normal;
+            _notice.style.paddingTop = 8f;
+            _notice.style.paddingBottom = 8f;
+            _notice.style.display = DisplayStyle.None;
+            root.Add(_notice);
+            ApplyNotice();
             _credits = new Label(CreditsText.Build() + "\n\n[F1] close");
             _credits.pickingMode = PickingMode.Ignore;
             _credits.style.position = Position.Absolute;
@@ -260,6 +288,7 @@ namespace TramChanh.UI.Prompt
             IHeldItemSlot hands = _source != null && _source.Context != null ? _source.Context.Hands : null;
             _hud = new PlayerHudPresenter(root, key => _table.Resolve(key, _language), _table.Contains, _events, hands, _orders, null);
             _hud.PatienceProvider = _patienceProvider;
+            _hud.CustomerIconProvider = _customerIconProvider;
         }
 
         /// <summary>
@@ -288,12 +317,12 @@ namespace TramChanh.UI.Prompt
         }
 
         /// <summary>Shows the end-of-day card. <paramref name="onContinue"/> runs when the player presses the button.</summary>
-        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null)
+        public void ShowDaySummary(DaySummary summary, GameProgress progress, Action onContinue, string extra = null, int stars = -1)
         {
             _summary?.Hide();
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             _summary = new DaySummaryPanel(root, () => { _summary.Hide(); onContinue?.Invoke(); });
-            _summary.Show(summary, progress, extra);
+            _summary.Show(summary, progress, extra, stars);
         }
 
         /// <summary>
@@ -346,11 +375,41 @@ namespace TramChanh.UI.Prompt
             _credits.BringToFront();
         }
 
+        /// <summary>Shows a short message under the clock for a few seconds (stock ran out, a star was won, the critic came...).</summary>
+        public void ShowNotice(string text, bool positive = true, float seconds = 4f)
+        {
+            _noticeText = text ?? string.Empty;
+            _noticePositive = positive;
+            _noticeUntil = Time.unscaledTime + Mathf.Max(0.5f, seconds);
+            ApplyNotice();
+        }
+
+        private void ApplyNotice()
+        {
+            if (_notice == null) { return; }
+            bool show = !string.IsNullOrEmpty(_noticeText) && Time.unscaledTime < _noticeUntil;
+            _notice.text = _noticeText;
+            _notice.style.color = Color.white;
+            _notice.style.backgroundColor = _noticePositive ? new Color(0.1f, 0.45f, 0.2f, 0.9f) : new Color(0.55f, 0.15f, 0.1f, 0.9f);
+            _notice.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>The player pressed R: buy a small pack at the corner shop. The game decides whether it works right now.</summary>
+        public event Action EmergencyRestockRequested;
+
+        public string NoticeText => _notice != null && _notice.style.display.value == DisplayStyle.Flex ? _notice.text : string.Empty;
+
         private void Update()
         {
+            if (_notice != null && !string.IsNullOrEmpty(_noticeText) && Time.unscaledTime >= _noticeUntil)
+            {
+                _noticeText = string.Empty;
+                ApplyNotice();
+            }
             _hud?.Tick();
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) { ToggleCredits(); }
+            if (keyboard != null && keyboard.rKey.wasPressedThisFrame) { EmergencyRestockRequested?.Invoke(); }
             if (_pauseMenu != null)
             {
                 bool paused = _pauseInput != null && _pauseInput.IsPausedByUser;

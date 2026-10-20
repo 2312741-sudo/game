@@ -35,6 +35,7 @@ Project owner: the user (Vietnamese speaker). Lead (gameplay code, review, mergi
 ## 5. Shared tools (use these, do not rewrite them)
 - `Automation/art_contract_audit.py`, `Automation/static_preflight.py`: repo checks.
 - `Automation/prefab_bounds.py`: footprints, overlaps, floating objects of a prefab without opening Unity.
+- `Automation/building_cube_check.py`: every building mesh must be made of solid cubes (no recess, no opening, no hollow inside). Must report 0 failed for the building meshes before you push.
 - Menu `Tram Chanh > QA > Capture Standard Views` (Play Mode): takes the standard screenshots and refuses blank images.
 - Menu `Tram Chanh > QA > Check Assembled Stall Overlaps`: stall overlap check inside Unity.
 - Playtest steps for the owner: `Docs/QA/PLAYTEST_CHECKLIST.md`.
@@ -44,3 +45,19 @@ Project owner: the user (Vietnamese speaker). Lead (gameplay code, review, mergi
 - `Docs/Design/ROADMAP.md`: what is in scope now (look first, functions second, gameplay depth last).
 - `Docs/Design/STREET_500M_SPEC.md`: street geometry and graph rules.
 - Reference photos from the owner (real stall layout) take priority over your own idea of how it should look.
+
+## 7. Running several agents at once (art owner)
+A single serial task has taken over three hours. Split every prompt that has two or more independent items across parallel sub-agents.
+- One sub-agent per item, each in its own git worktree and branch made from the newest `origin/main`: `git worktree add ../game-wt-<item> -b fix/ART-FIX-nnn-<item> origin/main`. Never two agents in the same working copy.
+- Give each agent a list of files it owns. Two agents never edit the same file. Items that must edit the same prefab (for example `PF_TramChanh_StreetExtended.prefab`) go to one agent.
+- Sub-agents do file work only (generator scripts in `ArtSource/Scripts/`, prefab and material edits). Only ONE agent owns the open Unity instance, because the same project cannot be opened twice; that agent runs the Capture Standard Views, EditMode and PlayMode, and takes the evidence screenshots.
+- One integration step at the end: merge the item branches into `fix/ART-FIX-nnn` (never into `main`), run `python3 Automation/art_contract_audit.py`, `python3 Automation/static_preflight.py`, EditMode and PlayMode on the merged result, take the screenshots from the merged result, then push.
+- Every rule above (scope, evidence, no force-push, no merge into `main`) applies to every sub-agent. Report one table at the end: item, agent, branch, commit, status, evidence.
+- Remove the worktrees when done: `git worktree remove ../game-wt-<item>`.
+
+## 8. Products, brand and menu belong to the owner
+- Never invent a product, a recipe, a menu item, a logo, a slogan, a brand colour scheme, a sign text or a price. The menu and the brand are what the owner has shown in his photos and told us. If a task seems to need a new one, stop and ask the lead; the lead asks the owner and writes the answer in the prompt.
+- Examples in a prompt ("for example honey lemon tea") are only examples of the kind of work, never a list to build. If a prompt names no concrete item, do nothing for it.
+- Current real menu (owner): lemon tea with jellies and ice, and the roll cake (bánh lăn hương). Stall name on the sign: "Trạm Chanh". Anything else needs the owner's written approval.
+- Do not add Unity packages or edit `Packages/` or `ProjectSettings/` without the lead's approval.
+- New assets that are not placed in the game need the owner's approval before the lead merges them.

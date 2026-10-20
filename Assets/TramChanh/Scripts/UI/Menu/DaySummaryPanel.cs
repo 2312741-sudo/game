@@ -11,6 +11,7 @@ namespace TramChanh.UI.Menu
         private readonly VisualElement _panel;
         private readonly Label _title;
         private readonly Label _body;
+        private readonly VisualElement _starRow;
 
         public DaySummaryPanel(VisualElement root, Action onContinue)
         {
@@ -74,6 +75,13 @@ namespace TramChanh.UI.Menu
             _body.style.unityTextAlign = TextAnchor.MiddleCenter;
             statBox.Add(_body);
 
+            _starRow = new VisualElement();
+            _starRow.style.flexDirection = FlexDirection.Row;
+            _starRow.style.justifyContent = Justify.Center;
+            _starRow.style.marginBottom = 14f;
+            _starRow.style.display = DisplayStyle.None;
+            box.Add(_starRow);
+
             var button = new Button(() => onContinue?.Invoke()) { text = "Ngày mới" };
             button.style.fontSize = 19f;
             button.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -118,8 +126,21 @@ namespace TramChanh.UI.Menu
             return text;
         }
 
-        public void Show(DaySummary summary, GameProgress progress, string extra = null)
+        public void Show(DaySummary summary, GameProgress progress, string extra = null, int stars = -1)
         {
+            _starRow.Clear();
+            if (stars >= 0)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    Image star = UiIcons.Make(i < stars ? UiIcons.StarFull : UiIcons.StarEmpty, 30f);
+                    star.style.marginLeft = 3f;
+                    star.style.marginRight = 3f;
+                    _starRow.Add(star);
+                }
+                _starRow.style.display = DisplayStyle.Flex;
+            }
+            else { _starRow.style.display = DisplayStyle.None; }
             _title.text = "Hết ngày " + summary.Day;
             _body.text = Describe(summary, progress, extra);
             _panel.style.display = DisplayStyle.Flex;

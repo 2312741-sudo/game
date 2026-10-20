@@ -29,3 +29,9 @@
 3. Screenshot taken in `SCN_TramChanh_Main` with the shared capture tool, from the player's eye height and from one overview angle.
 4. Licence row added, Credits entry added if CC-BY.
 5. Audit and preflight pass; Unity tests pass or the failure text is pasted.
+
+## Buildings are solid cubes (owner decision)
+- Every building (towers, shopfronts, boundary and backdrop buildings, alley walls, world-edge gates) is made of solid closed cuboids: 8 corners, 6 outward sides, nothing cut into the volume.
+- Doors, windows, shutters, signs and shop interiors are painted in the texture, never modelled as recesses or openings. A player must never see "inside" a building.
+- Awnings, balconies and signs may be separate closed cuboids that touch the building; they must not open a hole in it.
+- Check with `python3 Automation/building_cube_check.py` (needs `git lfs pull`). The check is part of the pre-push list.

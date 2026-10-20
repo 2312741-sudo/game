@@ -73,6 +73,9 @@ namespace TramChanh.UI.Hud
         /// </summary>
         public Func<OrderId, double> PatienceProvider { get; set; }
 
+        /// <summary>Returns the icon name (Resources/UI/Icons) of an order's customer kind, or null. Set by the game; the HUD only reads it.</summary>
+        public Func<OrderId, string> CustomerIconProvider { get; set; }
+
         public HeldItemFeedbackModel Held => _held;
         public ActiveOrderListModel Orders => _orders;
         public OrderToastModel Toast => _toast;
@@ -210,7 +213,36 @@ namespace TramChanh.UI.Hud
                 }
                 Label itemLabel = NewLabel(14f, DimColor);
                 itemLabel.text = items.ToString();
-                _ordersRows.Add(itemLabel);
+                int firstDrink = -1;
+                foreach (string itemId in row.ItemIds)
+                {
+                    if (MenuBook.LiquidColor(itemId) >= 0) { firstDrink = MenuBook.LiquidColor(itemId); break; }
+                }
+                if (firstDrink >= 0)
+                {
+                    // A swatch in the drink's liquid colour, so flavours are told apart at a glance.
+                    var swatchLine = new VisualElement();
+                    swatchLine.pickingMode = PickingMode.Ignore;
+                    swatchLine.style.flexDirection = FlexDirection.Row;
+                    swatchLine.style.alignItems = Align.Center;
+                    var swatch = new VisualElement();
+                    swatch.pickingMode = PickingMode.Ignore;
+                    swatch.style.width = 14f;
+                    swatch.style.height = 14f;
+                    swatch.style.marginRight = 6f;
+                    swatch.style.borderTopLeftRadius = 7f;
+                    swatch.style.borderTopRightRadius = 7f;
+                    swatch.style.borderBottomLeftRadius = 7f;
+                    swatch.style.borderBottomRightRadius = 7f;
+                    swatch.style.backgroundColor = new Color(((firstDrink >> 16) & 255) / 255f, ((firstDrink >> 8) & 255) / 255f, (firstDrink & 255) / 255f, 1f);
+                    swatchLine.Add(swatch);
+                    swatchLine.Add(itemLabel);
+                    _ordersRows.Add(swatchLine);
+                }
+                else
+                {
+                    _ordersRows.Add(itemLabel);
+                }
                 Label next = NewLabel(14f, row.IsPrimary ? HintColor : DimColor);
                 next.text = Text(row.NextStep);
                 _ordersRows.Add(next);
@@ -223,19 +255,32 @@ namespace TramChanh.UI.Hud
 
         private VisualElement NewPatienceBar(OrderId id)
         {
+            var line = new VisualElement();
+            line.pickingMode = PickingMode.Ignore;
+            line.style.flexDirection = FlexDirection.Row;
+            line.style.alignItems = Align.Center;
+            line.style.marginTop = 2f;
+            string iconName = CustomerIconProvider != null ? CustomerIconProvider(id) : null;
+            if (!string.IsNullOrEmpty(iconName))
+            {
+                Image icon = TramChanh.UI.Menu.UiIcons.Make(iconName, 18f);
+                icon.style.marginRight = 6f;
+                line.Add(icon);
+            }
             var track = new VisualElement();
             track.pickingMode = PickingMode.Ignore;
             track.name = "PatienceTrack";
             track.style.height = 6f;
-            track.style.marginTop = 2f;
+            track.style.flexGrow = 1f;
             track.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
             var fill = new VisualElement();
             fill.pickingMode = PickingMode.Ignore;
             fill.name = "PatienceFill";
             fill.style.height = Length.Percent(100f);
             track.Add(fill);
+            line.Add(track);
             _patienceFills[id] = fill;
-            return track;
+            return line;
         }
 
         private void UpdatePatienceBars()

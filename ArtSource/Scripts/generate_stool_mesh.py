@@ -4,14 +4,15 @@ generate_stool_mesh.py - Generates SM_PlasticStool.obj (<1500 triangles) & PBR T
 Authentic Vietnamese sidewalk plastic stool modeled directly after reference FBX & photos:
 - Rectangular seat with rounded corners and raised perimeter rim.
 - 9x8 aligned grid of shallow circular ventilation dimples/indentations.
-- 2 large trapezoidal arch cutouts on the wider sides (+Z / -Z).
-- 2 narrower tapered slot cutouts on the narrower sides (+X / -X).
-- Flared corner legs with rounded foot pads, horizontal cross-braces, and bottom ground arches.
+- 2 large arched cutouts on the wider sides (+Z / -Z).
+- 2 triangular cutouts ('khe tam giác ở thân bên') on the narrower sides (+X / -X).
+- Splayed corner legs ('chân choãi') flaring outwards down to the feet.
+- Stepped horizontal foot connector ridge ('gờ nối chân') wrapping around legs and crossbars.
 - Real plastic shell thickness / inner jambs around all cutouts and bottom rim (no 1-sided paper look).
 - Cream beige matte plastic with subtle sheen (Smoothness ~0.38).
-- Real dimensions: 0.350m (W) x 0.300m (H) x 0.324m (D).
+- Real dimensions: ~0.350m (W) x 0.300m (H) x 0.320m (D).
 - Pivot at bottom center (0, 0, 0).
-- Budget: ~350 triangles (far below 1500 limit).
+- Budget: ~380 triangles (far below 1500 limit).
 - 100% clean manifold geometry: 0 black spots, 0 tears, 0 stretched UVs.
 """
 
@@ -57,22 +58,17 @@ class AuthenticPlasticStoolBuilder:
             v = 0.75 + (z / 0.140) * 0.20
             return self.vt(np.clip(u, 0.02, 0.48), np.clip(v, 0.52, 0.98))
 
-        def uv_wide(u_local, y):
+        def uv_side(u_local, y):
             u = 0.75 + u_local * 0.20
-            v = 0.54 + (y / 0.300) * 0.40
-            return self.vt(np.clip(u, 0.52, 0.98), np.clip(v, 0.52, 0.98))
-
-        def uv_narrow(u_local, y):
-            u = 0.75 + u_local * 0.20
-            v = 0.04 + (y / 0.300) * 0.40
+            v = 0.05 + (y / 0.300) * 0.40
             return self.vt(np.clip(u, 0.52, 0.98), np.clip(v, 0.02, 0.48))
 
         def uv_flange(u_f, v_f):
             return self.vt(0.05 + u_f * 0.40, 0.05 + v_f * 0.40)
 
         # 1. SEAT TOP PERIMETER & DECK
-        cx_top = 0.102; cz_top = 0.092; cr_top = 0.036
-        cx_bev = 0.102; cz_bev = 0.092; cr_bev = 0.044
+        cx_top = 0.100; cz_top = 0.088; cr_top = 0.035
+        cx_bev = 0.105; cz_bev = 0.092; cr_bev = 0.042
 
         def get_rounded_rect_24_pts(cx, cz, cr):
             pts = []
@@ -108,7 +104,7 @@ class AuthenticPlasticStoolBuilder:
 
         # 5x5 grid for seat top deck
         x_grid = [-0.100, -0.050, 0.0, 0.050, 0.100]
-        z_grid = [-0.090, -0.045, 0.0, 0.045, 0.090]
+        z_grid = [-0.088, -0.044, 0.0, 0.044, 0.088]
         grid_v = np.zeros((5, 5), dtype=int)
         for ix in range(5):
             for iz in range(5):
@@ -163,7 +159,7 @@ class AuthenticPlasticStoolBuilder:
                       uv_seat(p_gb[0], p_gb[2]), uv_seat(p_rb[0], p_rb[2]),
                       n_up, n_up, n_up, n_up)
 
-        # Seat corners
+        # Corners
         p_c0 = self.verts[grid_v[4, 4]]
         p_r0 = self.verts[v_top[0]]; p_r1 = self.verts[v_top[1]]; p_r2 = self.verts[v_top[2]]
         self.tri(v_top[0], grid_v[4, 4], v_top[1], uv_seat(p_r0[0], p_r0[2]), uv_seat(p_c0[0], p_c0[2]), uv_seat(p_r1[0], p_r1[2]), n_up, n_up, n_up)
@@ -198,13 +194,16 @@ class AuthenticPlasticStoolBuilder:
             n0 = bev_normals[i]; n1 = bev_normals[i_next]; n2 = bev_normals[i_next]; n3 = bev_normals[i]
             self.quad(v_top[i], v_top[i_next], v_bev[i_next], v_bev[i], uv0, uv1, uv2, uv3, n0, n1, n2, n3)
 
-        # 2. CORNER LEGS (4 POINTS PER ARC = 3 QUADS PER CORNER)
+        # 2. SPLAYED CORNER LEGS (with continuous foot step ledge)
+        # Splay from top (0.105, 0.092) out to bottom (0.132, 0.115)
         leg_stages = [
-            # Y,    cx,     cz,     r_out
-            (0.285, 0.102,  0.092,  0.044),
-            (0.220, 0.108,  0.098,  0.046),
-            (0.065, 0.116,  0.104,  0.050),
-            (0.000, 0.122,  0.109,  0.053),
+            # Y,     cx,     cz,     r_out
+            (0.285,  0.105,  0.092,  0.042), # 0 (bevel interface)
+            (0.220,  0.112,  0.098,  0.044), # 1 (window top)
+            (0.075,  0.122,  0.106,  0.047), # 2 (window bottom / crossbar top)
+            (0.035,  0.126,  0.110,  0.049), # 3 (pre-step inner)
+            (0.035,  0.128,  0.112,  0.054), # 4 (stepped ledge outer: +5mm)
+            (0.000,  0.132,  0.115,  0.056), # 5 (ground foot pad)
         ]
 
         corner_signs = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
@@ -236,18 +235,18 @@ class AuthenticPlasticStoolBuilder:
                         pz = cz + math.sin(ang) * r_out
                         pts.append(self.v(px, y_h, pz))
                         nx = math.cos(ang); nz = math.sin(ang)
-                        norms.append(self.vn(nx, 0.05, nz))
+                        norms.append(self.vn(nx, 0.05 if s_idx != 4 else 0.9, nz))
                     c_stages.append(pts)
                     c_norms.append(norms)
             leg_verts.append(c_stages)
             leg_norms.append(c_norms)
 
-            for s in range(3):
+            # Leg vertical quads (stages 0->1, 1->2, 2->3):
+            for s in [0, 1, 2]:
                 s_t = c_stages[s]; s_b = c_stages[s+1]
                 n_t = c_norms[s];  n_b = c_norms[s+1]
                 p0t = self.verts[s_t[0]]; p1t = self.verts[s_t[1]]; p2t = self.verts[s_t[2]]
                 p0b = self.verts[s_b[0]]; p1b = self.verts[s_b[1]]; p2b = self.verts[s_b[2]]
-                
                 self.quad(s_t[0], s_t[1], s_b[1], s_b[0],
                           uv_seat(p0t[0], p0t[2]), uv_seat(p1t[0], p1t[2]),
                           uv_seat(p1b[0], p1b[2]), uv_seat(p0b[0], p0b[2]),
@@ -257,9 +256,35 @@ class AuthenticPlasticStoolBuilder:
                           uv_seat(p2b[0], p2b[2]), uv_seat(p1b[0], p1b[2]),
                           n_t[1], n_t[2], n_b[2], n_b[1])
 
-        # 3. UNIFIED 4-SIDE BUILDER
-        # Side specs: (side_idx, ca, cb, bev_inds, is_wide, normal_vec, inward_vec)
-        # In all sides, ca is on the RIGHT, cb is on the LEFT when looking from outside!
+            # Leg step ledge (horizontal upward facing, s=3 to s=4):
+            s_t = c_stages[3]; s_b = c_stages[4]
+            n_ledge = n_up
+            p0t = self.verts[s_t[0]]; p1t = self.verts[s_t[1]]; p2t = self.verts[s_t[2]]
+            p0b = self.verts[s_b[0]]; p1b = self.verts[s_b[1]]; p2b = self.verts[s_b[2]]
+            self.quad(s_t[0], s_t[1], s_b[1], s_b[0],
+                      uv_seat(p0t[0], p0t[2]), uv_seat(p1t[0], p1t[2]),
+                      uv_seat(p1b[0], p1b[2]), uv_seat(p0b[0], p0b[2]),
+                      n_ledge, n_ledge, n_ledge, n_ledge)
+            self.quad(s_t[1], s_t[2], s_b[2], s_b[1],
+                      uv_seat(p1t[0], p1t[2]), uv_seat(p2t[0], p2t[2]),
+                      uv_seat(p2b[0], p2b[2]), uv_seat(p1b[0], p1b[2]),
+                      n_ledge, n_ledge, n_ledge, n_ledge)
+
+            # Leg foot down to ground (s=4 to s=5):
+            s_t = c_stages[4]; s_b = c_stages[5]
+            n_t = c_norms[4];  n_b = c_norms[5]
+            p0t = self.verts[s_t[0]]; p1t = self.verts[s_t[1]]; p2t = self.verts[s_t[2]]
+            p0b = self.verts[s_b[0]]; p1b = self.verts[s_b[1]]; p2b = self.verts[s_b[2]]
+            self.quad(s_t[0], s_t[1], s_b[1], s_b[0],
+                      uv_seat(p0t[0], p0t[2]), uv_seat(p1t[0], p1t[2]),
+                      uv_seat(p1b[0], p1b[2]), uv_seat(p0b[0], p0b[2]),
+                      n_t[0], n_t[1], n_b[1], n_b[0])
+            self.quad(s_t[1], s_t[2], s_b[2], s_b[1],
+                      uv_seat(p1t[0], p1t[2]), uv_seat(p2t[0], p2t[2]),
+                      uv_seat(p2b[0], p2b[2]), uv_seat(p1b[0], p1b[2]),
+                      n_t[1], n_t[2], n_b[2], n_b[1])
+
+        # 3. 4-SIDE WALLS WITH CONTINUOUS LEDGE BAND
         sides_info = [
             # Side 0: +Z (wide)
             (0, 0, 1, [3, 4, 5], True, np.array([0, 0, 1.0]), np.array([0, 0, -0.008])),
@@ -271,111 +296,180 @@ class AuthenticPlasticStoolBuilder:
             (3, 3, 0, [21, 22, 23], False, np.array([1.0, 0, 0]), np.array([-0.008, 0, 0])),
         ]
 
-        n_down = self.vn(0, -1, 0)
-
         for side_idx, ca, cb, bev_inds, is_wide, n_out, in_norm in sides_info:
             wall_norm = self.vn(n_out[0], n_out[1], n_out[2])
-            uv_fn = uv_wide if is_wide else uv_narrow
 
-            # ca is Right (index 2), cb is Left (index 0)
-            la = [leg_verts[ca][s][2] for s in range(4)]
-            lb = [leg_verts[cb][s][0] for s in range(4)]
+            la = [leg_verts[ca][s][2] for s in range(6)]
+            lb = [leg_verts[cb][s][0] for s in range(6)]
 
-            # Bevel points between la[0] and lb[0]
             b0 = v_bev[bev_inds[0]]; b1 = v_bev[bev_inds[1]]; b2 = v_bev[bev_inds[2]]
 
             wall_y_top = 0.220
-            wall_y_bot = 0.065
+            wall_y_bot = 0.075
+            ridge_y    = 0.035
             arch_ceil_y = 0.025
 
             if is_wide:
                 sign_lat = 1.0 if side_idx == 0 else -1.0
                 z_face = self.verts[la[1]][2]
-                z_foot = self.verts[la[3]][2]
+                z_bot  = self.verts[la[2]][2]
+                z_pre  = self.verts[la[3]][2]
+                z_step = self.verts[la[4]][2]
+                z_foot = self.verts[la[5]][2]
 
-                w_win_t = 0.050; w_win_b = 0.065
-                w_arch = 0.045; w_foot = 0.075
+                w_win_t = 0.052; w_win_b = 0.065
+                w_arch = 0.045; w_foot = 0.080
 
-                def pt_win(w, y):
-                    return self.v(sign_lat * w, y, z_face)
+                def pt_win(w, y): return self.v(sign_lat * w, y, z_face)
+                def pt_bot(w, y): return self.v(sign_lat * w, y, z_bot)
+                def pt_pre(w, y): return self.v(sign_lat * w, y, z_pre)
+                def pt_step(w, y): return self.v(sign_lat * w, y, z_step)
+                def pt_arch(w, y): return self.v(sign_lat * w, y, z_foot)
 
-                def pt_arch(w, y):
-                    return self.v(sign_lat * w, y, z_foot)
-
+                # Wide face: large arch window (ô khoét vòm lớn)
                 v_cut_tr = pt_win(w_win_t, wall_y_top)
-                v_cut_tm = self.v(0.000, wall_y_top + 0.008, z_face)
+                v_cut_tm = self.v(0.000, wall_y_top + 0.010, z_face)
                 v_cut_tl = pt_win(-w_win_t, wall_y_top)
-                v_cut_br = pt_win(w_win_b, wall_y_bot)
-                v_cut_bl = pt_win(-w_win_b, wall_y_bot)
+                v_cut_br = pt_bot(w_win_b, wall_y_bot)
+                v_cut_bl = pt_bot(-w_win_b, wall_y_bot)
+
+                v_pre_r = pt_pre(w_foot, ridge_y)
+                v_pre_l = pt_pre(-w_foot, ridge_y)
+                v_step_r = pt_step(w_foot, ridge_y)
+                v_step_l = pt_step(-w_foot, ridge_y)
 
                 v_arch_cr = pt_arch(w_arch, arch_ceil_y)
                 v_arch_cl = pt_arch(-w_arch, arch_ceil_y)
                 v_foot_r  = pt_arch(w_foot, 0.000)
                 v_foot_l  = pt_arch(-w_foot, 0.000)
+
+                # Top Apron
+                self.quad(la[0], b0, v_cut_tr, la[1], uv_side(0.9, 0.285), uv_side(0.5, 0.285), uv_side(0.3, wall_y_top), uv_side(0.9, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(b0, b1, v_cut_tm, v_cut_tr, uv_side(0.5, 0.285), uv_side(0.0, 0.285), uv_side(0.0, wall_y_top+0.010), uv_side(0.3, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(b1, b2, v_cut_tl, v_cut_tm, uv_side(0.0, 0.285), uv_side(-0.5, 0.285), uv_side(-0.3, wall_y_top), uv_side(0.0, wall_y_top+0.010), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(b2, lb[0], lb[1], v_cut_tl, uv_side(-0.5, 0.285), uv_side(-0.9, 0.285), uv_side(-0.9, wall_y_top), uv_side(-0.3, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
+
+                # Side Columns
+                self.quad(la[1], v_cut_tr, v_cut_br, la[2], uv_side(0.9, wall_y_top), uv_side(0.3, wall_y_top), uv_side(0.4, wall_y_bot), uv_side(0.9, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_cut_tl, lb[1], lb[2], v_cut_bl, uv_side(-0.3, wall_y_top), uv_side(-0.9, wall_y_top), uv_side(-0.9, wall_y_bot), uv_side(-0.4, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
+
+                # Lower leg down to pre-step ridge (la[3], lb[3])
+                self.quad(la[2], v_cut_br, v_pre_r, la[3], uv_side(0.9, wall_y_bot), uv_side(0.4, wall_y_bot), uv_side(0.5, ridge_y), uv_side(0.9, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_cut_bl, lb[2], lb[3], v_pre_l, uv_side(-0.4, wall_y_bot), uv_side(-0.9, wall_y_bot), uv_side(-0.9, ridge_y), uv_side(-0.5, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
+
+                # Wall upper crossbar above ridge
+                self.quad(v_cut_br, v_cut_bl, v_pre_l, v_pre_r, uv_side(0.4, wall_y_bot), uv_side(-0.4, wall_y_bot), uv_side(-0.4, ridge_y), uv_side(0.4, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
+
+                # CONTINUOUS HORIZONTAL STEP LEDGE AT Y = 0.035 ('gờ nối chân')!
+                self.quad(v_pre_r, v_pre_l, v_step_l, v_step_r, uv_side(0.5, ridge_y), uv_side(-0.5, ridge_y), uv_side(-0.5, ridge_y), uv_side(0.5, ridge_y), n_up, n_up, n_up, n_up)
+                # Ledge bridge quads to corner legs
+                self.quad(la[3], v_pre_r, v_step_r, la[4], uv_side(0.9, ridge_y), uv_side(0.5, ridge_y), uv_side(0.5, ridge_y), uv_side(0.9, ridge_y), n_up, n_up, n_up, n_up)
+                self.quad(v_pre_l, lb[3], lb[4], v_step_l, uv_side(-0.5, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.5, ridge_y), n_up, n_up, n_up, n_up)
+
+                # Wall lower section from stepped ledge down to ground
+                self.quad(la[4], v_step_r, v_foot_r, la[5], uv_side(0.9, ridge_y), uv_side(0.5, ridge_y), uv_side(0.5, 0.000), uv_side(0.9, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_step_l, lb[4], lb[5], v_foot_l, uv_side(-0.5, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.9, 0.000), uv_side(-0.5, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
+
+                # Lower crossbar & ground arch
+                self.quad(v_step_r, v_step_l, v_arch_cl, v_arch_cr, uv_side(0.4, ridge_y), uv_side(-0.4, ridge_y), uv_side(-0.3, arch_ceil_y), uv_side(0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.tri(v_step_r, v_arch_cr, v_foot_r, uv_side(0.4, ridge_y), uv_side(0.3, arch_ceil_y), uv_side(0.5, 0.000), wall_norm, wall_norm, wall_norm)
+                self.tri(v_step_l, v_foot_l, v_arch_cl, uv_side(-0.4, ridge_y), uv_side(-0.5, 0.000), uv_side(-0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm)
+
             else:
+                # Narrow face: TRIANGULAR CUTOUT ('khe tam giác ở thân bên')!
                 sign_lat = 1.0 if side_idx == 1 else -1.0
                 x_face = self.verts[la[1]][0]
-                x_foot = self.verts[la[3]][0]
+                x_bot  = self.verts[la[2]][0]
+                x_pre  = self.verts[la[3]][0]
+                x_step = self.verts[la[4]][0]
+                x_foot = self.verts[la[5]][0]
 
-                w_win_t = 0.022; w_win_b = 0.035
-                w_arch = 0.025; w_foot = 0.065
+                w_tri_base = 0.038
+                w_arch = 0.024; w_foot = 0.070
 
-                def pt_win(w, y):
-                    return self.v(x_face, y, sign_lat * w)
+                def pt_win(w, y): return self.v(x_face, y, sign_lat * w)
+                def pt_bot(w, y): return self.v(x_bot, y, sign_lat * w)
+                def pt_pre(w, y): return self.v(x_pre, y, sign_lat * w)
+                def pt_step(w, y): return self.v(x_step, y, sign_lat * w)
+                def pt_arch(w, y): return self.v(x_foot, y, sign_lat * w)
 
-                def pt_arch(w, y):
-                    return self.v(x_foot, y, sign_lat * w)
+                # Triangular cutout apex at top center!
+                v_cut_apex = self.v(x_face, wall_y_top + 0.005, 0.000)
+                v_cut_br   = pt_bot(w_tri_base, wall_y_bot)
+                v_cut_bl   = pt_bot(-w_tri_base, wall_y_bot)
 
-                v_cut_tr = pt_win(w_win_t, wall_y_top)
-                v_cut_tm = self.v(x_face, wall_y_top + 0.006, 0.000)
-                v_cut_tl = pt_win(-w_win_t, wall_y_top)
-                v_cut_br = pt_win(w_win_b, wall_y_bot)
-                v_cut_bl = pt_win(-w_win_b, wall_y_bot)
+                v_pre_r = pt_pre(w_foot, ridge_y)
+                v_pre_l = pt_pre(-w_foot, ridge_y)
+                v_step_r = pt_step(w_foot, ridge_y)
+                v_step_l = pt_step(-w_foot, ridge_y)
 
                 v_arch_cr = pt_arch(w_arch, arch_ceil_y)
                 v_arch_cl = pt_arch(-w_arch, arch_ceil_y)
                 v_foot_r  = pt_arch(w_foot, 0.000)
                 v_foot_l  = pt_arch(-w_foot, 0.000)
 
-            # TOP APRON
-            self.quad(la[0], b0, v_cut_tr, la[1], uv_fn(0.9, 0.285), uv_fn(0.5, 0.285), uv_fn(0.3, wall_y_top), uv_fn(0.9, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.quad(b0, b1, v_cut_tm, v_cut_tr, uv_fn(0.5, 0.285), uv_fn(0.0, 0.285), uv_fn(0.0, wall_y_top+0.008), uv_fn(0.3, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.quad(b1, b2, v_cut_tl, v_cut_tm, uv_fn(0.0, 0.285), uv_fn(-0.5, 0.285), uv_fn(-0.3, wall_y_top), uv_fn(0.0, wall_y_top+0.008), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.quad(b2, lb[0], lb[1], v_cut_tl, uv_fn(-0.5, 0.285), uv_fn(-0.9, 0.285), uv_fn(-0.9, wall_y_top), uv_fn(-0.3, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
+                # Top Apron
+                self.quad(la[0], b0, v_cut_apex, la[1], uv_side(0.9, 0.285), uv_side(0.5, 0.285), uv_side(0.0, wall_y_top+0.005), uv_side(0.9, wall_y_top), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.tri(b0, b1, v_cut_apex, uv_side(0.5, 0.285), uv_side(0.0, 0.285), uv_side(0.0, wall_y_top+0.005), wall_norm, wall_norm, wall_norm)
+                self.tri(b1, b2, v_cut_apex, uv_side(0.0, 0.285), uv_side(-0.5, 0.285), uv_side(0.0, wall_y_top+0.005), wall_norm, wall_norm, wall_norm)
+                self.quad(b2, lb[0], lb[1], v_cut_apex, uv_side(-0.5, 0.285), uv_side(-0.9, 0.285), uv_side(-0.9, wall_y_top), uv_side(0.0, wall_y_top+0.005), wall_norm, wall_norm, wall_norm, wall_norm)
 
-            # SIDE COLUMNS BESIDE WINDOW
-            self.quad(la[1], v_cut_tr, v_cut_br, la[2], uv_fn(0.9, wall_y_top), uv_fn(0.3, wall_y_top), uv_fn(0.4, wall_y_bot), uv_fn(0.9, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.quad(v_cut_tl, lb[1], lb[2], v_cut_bl, uv_fn(-0.3, wall_y_top), uv_fn(-0.9, wall_y_top), uv_fn(-0.9, wall_y_bot), uv_fn(-0.4, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
+                # Side flanks beside triangular cutout
+                self.quad(la[1], v_cut_apex, v_cut_br, la[2], uv_side(0.9, wall_y_top), uv_side(0.0, wall_y_top+0.005), uv_side(0.3, wall_y_bot), uv_side(0.9, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_cut_apex, lb[1], lb[2], v_cut_bl, uv_side(0.0, wall_y_top+0.005), uv_side(-0.9, wall_y_top), uv_side(-0.9, wall_y_bot), uv_side(-0.3, wall_y_bot), wall_norm, wall_norm, wall_norm, wall_norm)
 
-            # SOLID LEG FACES DOWN TO GROUND (Y = 0.000)
-            self.quad(la[2], v_cut_br, v_foot_r, la[3], uv_fn(0.9, wall_y_bot), uv_fn(0.4, wall_y_bot), uv_fn(0.5, 0.000), uv_fn(0.9, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.quad(v_cut_bl, lb[2], lb[3], v_foot_l, uv_fn(-0.4, wall_y_bot), uv_fn(-0.9, wall_y_bot), uv_fn(-0.9, 0.000), uv_fn(-0.5, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
+                # Lower leg down to pre-step ridge (la[3], lb[3])
+                self.quad(la[2], v_cut_br, v_pre_r, la[3], uv_side(0.9, wall_y_bot), uv_side(0.3, wall_y_bot), uv_side(0.5, ridge_y), uv_side(0.9, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_cut_bl, lb[2], lb[3], v_pre_l, uv_side(-0.3, wall_y_bot), uv_side(-0.9, wall_y_bot), uv_side(-0.9, ridge_y), uv_side(-0.5, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
 
-            # HORIZONTAL CROSSBAR & GROUND ARCH
-            self.quad(v_cut_br, v_cut_bl, v_arch_cl, v_arch_cr, uv_fn(0.4, wall_y_bot), uv_fn(-0.4, wall_y_bot), uv_fn(-0.3, arch_ceil_y), uv_fn(0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm, wall_norm)
-            self.tri(v_cut_br, v_arch_cr, v_foot_r, uv_fn(0.4, wall_y_bot), uv_fn(0.3, arch_ceil_y), uv_fn(0.5, 0.000), wall_norm, wall_norm, wall_norm)
-            self.tri(v_cut_bl, v_foot_l, v_arch_cl, uv_fn(-0.4, wall_y_bot), uv_fn(-0.5, 0.000), uv_fn(-0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm)
+                # Wall upper crossbar below triangle
+                self.quad(v_cut_br, v_cut_bl, v_pre_l, v_pre_r, uv_side(0.3, wall_y_bot), uv_side(-0.3, wall_y_bot), uv_side(-0.5, ridge_y), uv_side(0.5, ridge_y), wall_norm, wall_norm, wall_norm, wall_norm)
 
-            # WINDOW JAMBS
-            j_tr = self.v(*(self.verts[v_cut_tr] + in_norm))
-            j_tm = self.v(*(self.verts[v_cut_tm] + in_norm))
-            j_tl = self.v(*(self.verts[v_cut_tl] + in_norm))
-            j_br = self.v(*(self.verts[v_cut_br] + in_norm))
-            j_bl = self.v(*(self.verts[v_cut_bl] + in_norm))
+                # CONTINUOUS HORIZONTAL STEP LEDGE AT Y = 0.035 ('gờ nối chân')!
+                self.quad(v_pre_r, v_pre_l, v_step_l, v_step_r, uv_side(0.5, ridge_y), uv_side(-0.5, ridge_y), uv_side(-0.5, ridge_y), uv_side(0.5, ridge_y), n_up, n_up, n_up, n_up)
+                # Ledge bridge quads to corner legs
+                self.quad(la[3], v_pre_r, v_step_r, la[4], uv_side(0.9, ridge_y), uv_side(0.5, ridge_y), uv_side(0.5, ridge_y), uv_side(0.9, ridge_y), n_up, n_up, n_up, n_up)
+                self.quad(v_pre_l, lb[3], lb[4], v_step_l, uv_side(-0.5, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.5, ridge_y), n_up, n_up, n_up, n_up)
 
-            n_jamb_top = self.vn(0, -1, 0)
-            n_jamb_bot = self.vn(0, 1, 0)
-            lat_axis = np.cross(n_out, np.array([0, 1, 0]))
-            n_jamb_r = self.vn(-lat_axis[0], 0, -lat_axis[2])
-            n_jamb_l = self.vn(lat_axis[0], 0, lat_axis[2])
+                # Wall lower section from stepped ledge down to ground
+                self.quad(la[4], v_step_r, v_foot_r, la[5], uv_side(0.9, ridge_y), uv_side(0.5, ridge_y), uv_side(0.5, 0.000), uv_side(0.9, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.quad(v_step_l, lb[4], lb[5], v_foot_l, uv_side(-0.5, ridge_y), uv_side(-0.9, ridge_y), uv_side(-0.9, 0.000), uv_side(-0.5, 0.000), wall_norm, wall_norm, wall_norm, wall_norm)
 
-            self.quad(v_cut_tr, v_cut_tm, j_tm, j_tr, uv_flange(0,1), uv_flange(0.5,1), uv_flange(0.5,0), uv_flange(0,0), n_jamb_top, n_jamb_top, n_jamb_top, n_jamb_top)
-            self.quad(v_cut_tm, v_cut_tl, j_tl, j_tm, uv_flange(0.5,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0.5,0), n_jamb_top, n_jamb_top, n_jamb_top, n_jamb_top)
-            self.quad(v_cut_bl, v_cut_br, j_br, j_bl, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_jamb_bot, n_jamb_bot, n_jamb_bot, n_jamb_bot)
-            self.quad(v_cut_br, v_cut_tr, j_tr, j_br, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_jamb_r, n_jamb_r, n_jamb_r, n_jamb_r)
-            self.quad(v_cut_tl, v_cut_bl, j_bl, j_tl, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_jamb_l, n_jamb_l, n_jamb_l, n_jamb_l)
+                # Lower crossbar & ground arch
+                self.quad(v_step_r, v_step_l, v_arch_cl, v_arch_cr, uv_side(0.4, ridge_y), uv_side(-0.4, ridge_y), uv_side(-0.3, arch_ceil_y), uv_side(0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm, wall_norm)
+                self.tri(v_step_r, v_arch_cr, v_foot_r, uv_side(0.4, ridge_y), uv_side(0.3, arch_ceil_y), uv_side(0.5, 0.000), wall_norm, wall_norm, wall_norm)
+                self.tri(v_step_l, v_foot_l, v_arch_cl, uv_side(-0.4, ridge_y), uv_side(-0.5, 0.000), uv_side(-0.3, arch_ceil_y), wall_norm, wall_norm, wall_norm)
 
-            # GROUND ARCH INNER FLANGE
+            # JAMBS for cutouts (inward thickness)
+            if is_wide:
+                j_tr = self.v(*(self.verts[v_cut_tr] + in_norm))
+                j_tm = self.v(*(self.verts[v_cut_tm] + in_norm))
+                j_tl = self.v(*(self.verts[v_cut_tl] + in_norm))
+                j_br = self.v(*(self.verts[v_cut_br] + in_norm))
+                j_bl = self.v(*(self.verts[v_cut_bl] + in_norm))
+                n_j_top = self.vn(0, -1, 0); n_j_bot = self.vn(0, 1, 0)
+                lat_axis = np.cross(n_out, np.array([0, 1, 0]))
+                n_j_r = self.vn(-lat_axis[0], 0, -lat_axis[2])
+                n_j_l = self.vn(lat_axis[0], 0, lat_axis[2])
+
+                self.quad(v_cut_tr, v_cut_tm, j_tm, j_tr, uv_flange(0,1), uv_flange(0.5,1), uv_flange(0.5,0), uv_flange(0,0), n_j_top, n_j_top, n_j_top, n_j_top)
+                self.quad(v_cut_tm, v_cut_tl, j_tl, j_tm, uv_flange(0.5,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0.5,0), n_j_top, n_j_top, n_j_top, n_j_top)
+                self.quad(v_cut_bl, v_cut_br, j_br, j_bl, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_bot, n_j_bot, n_j_bot, n_j_bot)
+                self.quad(v_cut_br, v_cut_tr, j_tr, j_br, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_r, n_j_r, n_j_r, n_j_r)
+                self.quad(v_cut_tl, v_cut_bl, j_bl, j_tl, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_l, n_j_l, n_j_l, n_j_l)
+            else:
+                j_apex = self.v(*(self.verts[v_cut_apex] + in_norm))
+                j_br   = self.v(*(self.verts[v_cut_br] + in_norm))
+                j_bl   = self.v(*(self.verts[v_cut_bl] + in_norm))
+                n_j_bot = self.vn(0, 1, 0)
+                lat_axis = np.cross(n_out, np.array([0, 1, 0]))
+                n_j_r = self.vn(-lat_axis[0], 0, -lat_axis[2])
+                n_j_l = self.vn(lat_axis[0], 0, lat_axis[2])
+                self.quad(v_cut_bl, v_cut_br, j_br, j_bl, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_bot, n_j_bot, n_j_bot, n_j_bot)
+                self.quad(v_cut_br, v_cut_apex, j_apex, j_br, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_r, n_j_r, n_j_r, n_j_r)
+                self.quad(v_cut_apex, v_cut_bl, j_bl, j_apex, uv_flange(0,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0,0), n_j_l, n_j_l, n_j_l, n_j_l)
+
+            # Ground arch inner flange
             j_foot_r  = self.v(*(self.verts[v_foot_r] + in_norm))
             j_arch_cr = self.v(*(self.verts[v_arch_cr] + in_norm))
             j_arch_cl = self.v(*(self.verts[v_arch_cl] + in_norm))
@@ -385,15 +479,10 @@ class AuthenticPlasticStoolBuilder:
             self.quad(v_arch_cr, v_arch_cl, j_arch_cl, j_arch_cr, uv_flange(0.3,1), uv_flange(0.7,1), uv_flange(0.7,0), uv_flange(0.3,0), n_flange, n_flange, n_flange, n_flange)
             self.quad(v_arch_cl, v_foot_l, j_foot_l, j_arch_cl, uv_flange(0.7,1), uv_flange(1,1), uv_flange(1,0), uv_flange(0.7,0), n_flange, n_flange, n_flange, n_flange)
 
-            # FOOT BOTTOM PADS UNDER FRONT FACES (Y = 0.000)
-            j_la_3 = self.v(*(self.verts[la[3]] + in_norm))
-            j_lb_3 = self.v(*(self.verts[lb[3]] + in_norm))
-            self.quad(la[3], v_foot_r, j_foot_r, j_la_3, uv_flange(1,0), uv_flange(0,0), uv_flange(0,1), uv_flange(1,1), n_down, n_down, n_down, n_down)
-            self.quad(v_foot_l, lb[3], j_lb_3, j_foot_l, uv_flange(0,0), uv_flange(1,0), uv_flange(1,1), uv_flange(0,1), n_down, n_down, n_down, n_down)
-
-        # 4. SOLID CORNER FOOT BOTTOM PADS (Y = 0.000)
+        # 4. SOLID FOOT PADS AT GROUND (Y = 0.000)
+        n_down = self.vn(0, -1, 0)
         for c_idx in range(4):
-            pts_gr = leg_verts[c_idx][3]
+            pts_gr = leg_verts[c_idx][5]
             p0 = pts_gr[0]; p1 = pts_gr[1]; p2 = pts_gr[2]
             self.tri(p0, p2, p1, uv_seat(self.verts[p0][0], self.verts[p0][2]), uv_seat(self.verts[p2][0], self.verts[p2][2]), uv_seat(self.verts[p1][0], self.verts[p1][2]), n_down, n_down, n_down)
 
@@ -402,21 +491,21 @@ class AuthenticPlasticStoolBuilder:
     def write_obj(self, filepath):
         os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
         with open(filepath, 'w') as out:
-            out.write("# SM_PlasticStool - Authentic Vietnamese Sidewalk Plastic Stool\n")
-            out.write("mtllib MAT_Plastic_BeigeStool.mtl\n")
-            out.write("o SM_PlasticStool\n")
+            out.write('# SM_PlasticStool - Authentic Vietnamese Sidewalk Plastic Stool\n')
+            out.write('mtllib MAT_Plastic_BeigeStool.mtl\n')
+            out.write('o SM_PlasticStool\n')
             for v in self.verts:
-                out.write(f"v {v[0]:.6f} {v[1]:.6f} {v[2]:.6f}\n")
+                out.write(f'v {v[0]:.6f} {v[1]:.6f} {v[2]:.6f}\n')
             for vt in self.uvs:
-                out.write(f"vt {vt[0]:.6f} {vt[1]:.6f}\n")
+                out.write(f'vt {vt[0]:.6f} {vt[1]:.6f}\n')
             for vn in self.normals:
-                out.write(f"vn {vn[0]:.6f} {vn[1]:.6f} {vn[2]:.6f}\n")
-            out.write("usemtl MAT_Plastic_BeigeStool\n")
-            out.write("s 1\n")
+                out.write(f'vn {vn[0]:.6f} {vn[1]:.6f} {vn[2]:.6f}\n')
+            out.write('usemtl MAT_Plastic_BeigeStool\n')
+            out.write('s 1\n')
             for face in self.faces:
-                f_str = " ".join([f"{v_idx+1}/{vt_idx+1}/{vn_idx+1}" for v_idx, vt_idx, vn_idx in face])
-                out.write(f"f {f_str}\n")
-        print(f"Generated {filepath}: {len(self.verts)} verts, {len(self.faces)} triangles")
+                f_str = ' '.join([f'{v_idx+1}/{vt_idx+1}/{vn_idx+1}' for v_idx, vt_idx, vn_idx in face])
+                out.write(f'f {f_str}\n')
+        print(f'Wrote {filepath} ({len(self.verts)} verts, {len(self.faces)} tris)')
 
 
 def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
@@ -425,46 +514,36 @@ def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
     normal_map_path = os.path.join(out_dir, "T_Plastic_Beige_Normal.png")
     mask_map_path = os.path.join(out_dir, "T_Plastic_Beige_MaskMap.png")
 
-    # Colors
-    # Authentic Vietnamese cream beige plastic: #DAC8B0
     beige_base = (218, 200, 176)
     highlight_rim = (245, 238, 226)
     cavity_dark = (125, 110, 92)
     hole_center = (65, 55, 45)
 
-    # 1. BaseColor Image
     base_img = Image.new('RGB', (size, size), beige_base)
     draw_base = ImageDraw.Draw(base_img)
 
-    # 2. Normal Map Image (Default flat tangent space normal = (128, 128, 255))
     normal_arr = np.zeros((size, size, 3), dtype=np.float32)
     normal_arr[:, :, 0] = 0.5
     normal_arr[:, :, 1] = 0.5
     normal_arr[:, :, 2] = 1.0
 
-    # 3. Mask Map Image (R: Metallic=0, G: AO=255, B: Detail=0, A: Smoothness=98 ~ 0.38)
     mask_arr = np.zeros((size, size, 4), dtype=np.uint8)
     mask_arr[:, :, 0] = 0    # Metallic = 0
     mask_arr[:, :, 1] = 255  # AO = 1.0
     mask_arr[:, :, 2] = 0    # Detail = 0
     mask_arr[:, :, 3] = 98   # Smoothness = 0.384
 
-    # -------------------------------------------------------------
-    # SEAT TOP TEXTURING (UV in [0.02, 0.48] x [0.52, 0.98])
-    # In Pillow coordinates: Seat Center is at (256, 256)
-    # -------------------------------------------------------------
+    # Seat top texturing (9x8 Dimple Grid)
     seat_cx, seat_cy = 256, 256
     seat_w, seat_h = 280, 260
     r_seat_corner = 65
 
-    # Raised outer perimeter rim
     x0, y0 = seat_cx - seat_w // 2, seat_cy - seat_h // 2
     x1, y1 = seat_cx + seat_w // 2, seat_cy + seat_h // 2
     draw_base.rounded_rectangle([x0, y0, x1, y1], radius=r_seat_corner, outline=highlight_rim, width=3)
 
-    # 9x8 Dimple Grid
-    grid_cols = 9 # X axis
-    grid_rows = 8 # Z axis
+    grid_cols = 9
+    grid_rows = 8
     grid_w = 186
     grid_h = 160
     xs = np.linspace(seat_cx - grid_w // 2, seat_cx + grid_w // 2, grid_cols)
@@ -475,10 +554,7 @@ def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
         for iy, hy in enumerate(ys):
             if (ix == 0 or ix == grid_cols - 1) and (iy == 0 or iy == grid_rows - 1):
                 continue
-
             hx_i, hy_i = int(round(hx)), int(round(hy))
-
-            # BaseColor: highlight rim + cavity gradient
             draw_base.ellipse([hx_i - dimple_r - 1.5, hy_i - dimple_r - 1.5,
                                hx_i + dimple_r + 1.5, hy_i + dimple_r + 1.5], fill=highlight_rim)
             draw_base.ellipse([hx_i - dimple_r - 0.5, hy_i - dimple_r - 0.5,
@@ -486,7 +562,6 @@ def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
             draw_base.ellipse([hx_i - dimple_r, hy_i - dimple_r,
                                hx_i + dimple_r, hy_i + dimple_r], fill=hole_center)
 
-            # Normal Map & Mask Map: Spherical depression vectors
             r_int = int(math.ceil(dimple_r + 1.0))
             for dy in range(-r_int, r_int + 1):
                 for dx in range(-r_int, r_int + 1):
@@ -507,9 +582,8 @@ def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
                             mask_arr[py, px, 1] = int(255 * ao_factor)
                             mask_arr[py, px, 3] = int(98 * (0.85 + 0.15 * (dist / dimple_r)))
 
-    # -------------------------------------------------------------
-    # SIDE EMBOSSED CONTOURS (Cutout window embossed frames)
-    # -------------------------------------------------------------
+    # Side embossed contours
+    # Wide face arch
     cx_w, cy_w = 768, 256
     poly_trap = [
         (cx_w - 75, cy_w + 60),
@@ -520,23 +594,22 @@ def generate_pbr_textures(out_dir="Assets/TramChanh/Art/Textures", size=1024):
     ]
     draw_base.polygon(poly_trap, outline=highlight_rim, width=4)
 
+    # Narrow face triangular cutout frame ('khe tam giác')
     cx_n, cy_n = 768, 768
-    poly_slot = [
-        (cx_n - 42, cy_n + 60),
-        (cx_n + 42, cy_n + 60),
-        (cx_n + 25, cy_n - 65),
-        (cx_n - 25, cy_n - 65),
+    poly_tri = [
+        (cx_n - 45, cy_n + 60),
+        (cx_n + 45, cy_n + 60),
+        (cx_n, cy_n - 80),
     ]
-    draw_base.polygon(poly_slot, outline=highlight_rim, width=4)
+    draw_base.polygon(poly_tri, outline=highlight_rim, width=4)
 
-    # Subtle micro-surface noise for authentic plastic texture
+    # Subtle noise
     np.random.seed(42)
     noise = np.random.normal(0, 1.0, (size, size, 3))
     base_arr = np.array(base_img, dtype=np.float32) + noise
     base_arr = np.clip(base_arr, 0, 255).astype(np.uint8)
     base_img = Image.fromarray(base_arr)
 
-    # Save textures
     base_img.save(base_color_path)
     print(f"Generated BaseColor: {base_color_path}")
 

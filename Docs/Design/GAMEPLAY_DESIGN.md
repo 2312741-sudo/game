@@ -31,7 +31,7 @@ Already built and kept: ordering UI, ready shelf, 10 tables, takeaway vehicles, 
 - Each item gets a quality 0-100 from the steps: correct jelly and ice portion (inside tolerance), shake time, wiped cup, cake not burnt, wrapped neatly.
 - Price = base x quality tier (Poor 0.6, Good 1.0, Perfect 1.3). Perfect streaks add a small combo tip.
 - Speed bonus: served in the first third of patience = +15 percent.
-- Starting prices TBD: drink 25k VND, cake 20k, combo discount 10 percent.
+- Prices are the owner's real menu (VND): basic drink Trà Olong - Chanh tươi 20k, other Trà Olong flavours 30k, roll cake (Lăn Truyền Thống) 20k, no combo discount.
 - Costs: tea bags, jelly, ice, batter, sauce, wrap. Running out is a real problem (tea rack already has capacity and stock).
 
 ## 5. Stock and restock (the planning layer)
@@ -78,7 +78,7 @@ Keep E / F / hold actions. Add: audio cues per step, ticket pile that grows phys
 | G2 (done, awaiting owner playtest) | Patience, customer kinds, arrival curve, speed bonus, failure assist | Core + Customers + Bootstrap | EditMode: patience book, kinds, arrival plan, price bonus, director scale |
 | G3 (done, awaiting owner playtest) | Stock for ice, jelly, batter, wrap + supplier screen + save (tea bags stay on the rack; corner-shop walk not built) | Core + Bootstrap + UI Menu | EditMode: stock book, supplier, panel text |
 | G4 (done, awaiting owner playtest) | Reputation stars + five upgrades gated by stars (menu unlocks with new recipes not built: they need art) | Core + UI Menu | EditMode: reputation, upgrade book |
-| G5 (done, awaiting owner playtest) | Rain, hot night, power cut, festival, inspector (no weather visuals yet) | Core + Bootstrap | EditMode: night plan |
+| G5 (done, awaiting owner playtest) | Rain, hot night, power cut, festival, inspector (light only: rain darker, power cut dims the lamps, festival brightens them; no rain particles yet) | Core + Bootstrap | EditMode: night plan |
 | G6 (goal and difficulty done; balance pass needs the owner playtest; PlayMode full-night smoke not written) | Daily goal + three difficulties | Core + UI Menu | EditMode: goal, difficulty |
 Each step ships on its own branch, EditMode/PlayMode green, and the owner plays it before the next step.
 
@@ -88,3 +88,9 @@ Each step ships on its own branch, EditMode/PlayMode green, and the owner plays 
 3. Should the critic and inspector exist in v1, or later?
 4. Season length (30 nights) or endless only?
 5. Does the shop corner restock (walking away) feel fun, or only a menu screen?
+
+## Owner answers (2026-10-20)
+- Helper worker: yes. Built as the upgrade "Nhân viên phụ": takes orders at the tables for the player (not the cooking steps), wage 30.000đ a night, unlocks at 3 stars.
+- Food critic: yes. Built as a rare customer kind from 3 stars (see section 3): Perfect and quick pays double and +25 reputation; poor or slow pays half and -20; walking out -15.
+- Flavours have different colours: the cup and the tea bag per flavour is art and station work still to do (Anti draws the cups, the lead then colours the liquid by the flavour of the order).
+- Balance numbers (money, times, goals): after the owner plays a few nights.
