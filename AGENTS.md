@@ -54,3 +54,10 @@ A single serial task has taken over three hours. Split every prompt that has two
 - One integration step at the end: merge the item branches into `fix/ART-FIX-nnn` (never into `main`), run `python3 Automation/art_contract_audit.py`, `python3 Automation/static_preflight.py`, EditMode and PlayMode on the merged result, take the screenshots from the merged result, then push.
 - Every rule above (scope, evidence, no force-push, no merge into `main`) applies to every sub-agent. Report one table at the end: item, agent, branch, commit, status, evidence.
 - Remove the worktrees when done: `git worktree remove ../game-wt-<item>`.
+
+## 8. Products, brand and menu belong to the owner
+- Never invent a product, a recipe, a menu item, a logo, a slogan, a brand colour scheme, a sign text or a price. The menu and the brand are what the owner has shown in his photos and told us. If a task seems to need a new one, stop and ask the lead; the lead asks the owner and writes the answer in the prompt.
+- Examples in a prompt ("for example honey lemon tea") are only examples of the kind of work, never a list to build. If a prompt names no concrete item, do nothing for it.
+- Current real menu (owner): lemon tea with jellies and ice, and the roll cake (bánh lăn hương). Stall name on the sign: "Trạm Chanh". Anything else needs the owner's written approval.
+- Do not add Unity packages or edit `Packages/` or `ProjectSettings/` without the lead's approval.
+- New assets that are not placed in the game need the owner's approval before the lead merges them.
