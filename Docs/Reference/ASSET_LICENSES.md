@@ -112,4 +112,4 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | Asset | Author | Source | Licence | Paths |
 |---|---|---|---|---|
 | Trà chanh dây and trà ô long chanh tươi cups (models, materials, atlas, prefabs) | Project Trạm Chanh (Anti, from the owner's photos IMG_5213 and IMG_5214) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Art/Models/Food/SM_Drink_*.obj`, `Assets/TramChanh/Art/Materials/Food/MAT_Drink_*.mat`, `Assets/TramChanh/Art/Textures/Food/T_NewDrinks_BaseColor.png`, `Assets/TramChanh/Prefabs/Items/NewMenu/*` |
-| UI icon set (24 icons) | Project Trạm Chanh (Anti) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Art/UI/Icons/IC_*.png` |
+| UI icon set (24 icons) | Project Trạm Chanh (Anti) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Resources/UI/Icons/IC_*.png` |

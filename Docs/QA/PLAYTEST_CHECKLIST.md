@@ -54,6 +54,13 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] Day 1 and 2 are "Trời quang". Later nights vary: Rain (fewer customers), Hot night (more customers, 2 ice per drink), Power cut 21:00 to 21:20 (no customers arrive), Festival 20:00 to 21:00 (a rush), Inspector from day 4 (reward or fine at the end of the day).
 - [ ] More stars bring customers a little faster.
 
+## Icons and new drinks (new)
+- [ ] The shop between days shows an icon on every ingredient row and every upgrade row, a money icon beside the cash, five star icons (full and empty) under "Uy tín", and tomorrow's night icon above the forecast text.
+- [ ] The end-of-day card shows five star icons above the "Ngày mới" button.
+- [ ] Every order in the top-left list has a small customer icon (student, family, office, regular) left of its patience bar.
+- [ ] At 2 stars customers can also ask for "Trà chanh dây"; at 3 stars also "Trà ô long chanh tươi". The shop forecast lists "Món thêm đang bán" and "Món kế tiếp". Any of the drinks is made the same way at the station (the flavour is only the order label for now); the order list and the held-item panel show the flavour name.
+- [ ] Prices are the same for all drinks until the owner gives the real prices.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 

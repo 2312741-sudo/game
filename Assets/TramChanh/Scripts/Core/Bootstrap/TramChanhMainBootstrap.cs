@@ -161,7 +161,11 @@ namespace TramChanh.App
             _events = new EventBus();
             _clock = new UnityGameClock();
             _ids = new SequentialIdGenerator();
-            var service = new OrderService(_clock, _events, _ids, new ContentDatabase(definitions), 1, 1, error => UnityEngine.Debug.LogException(error));
+            // Drink flavours (MenuBook) are order labels of kind Drink; they have no ItemDefinition asset of their own.
+            var kinds = new List<KeyValuePair<string, ItemKind>>();
+            foreach (ItemDefinition definition in definitions) { kinds.Add(new KeyValuePair<string, ItemKind>(definition.Id, definition.Kind)); }
+            foreach (string flavourId in MenuBook.ExtraIds()) { kinds.Add(new KeyValuePair<string, ItemKind>(flavourId, ItemKind.Drink)); }
+            var service = new OrderService(_clock, _events, _ids, new ContentDatabase(kinds), 1, 1, error => UnityEngine.Debug.LogException(error));
             Orders = service;
             var queue = new StallTicketQueue(service);
             Tickets = queue;
@@ -173,6 +177,7 @@ namespace TramChanh.App
             _heldView.Initialize(context.Hands, _events);
             _prompt.Initialize(_events, _interactor, Orders);
             _prompt.SetPatienceProvider(id => _patience.Has(id) ? _patience.LeftFraction(id, _patienceNow) : -1d);
+            _prompt.SetCustomerIconProvider(id => _patience.TryGetKind(id, out CustomerKind kind) ? UiIcons.NameFor(kind) : null);
             _settings = new GameSettings();
             _settings.Load(new PlayerPrefsSettingsStore());
             ApplySettings();
@@ -503,6 +508,7 @@ namespace TramChanh.App
                     + "  |  " + PriceList.Format(_progress.Money) + "\n" + StockLine() + "\n" + NightLine());
             }
             foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Tick((float)_clock.DeltaTime); } }
+            Customers.DrinkChoices = _unlockedDrinks;
             Customers.ArrivalsEnabled = open && !NightPlan.ArrivalsBlocked(_night, hour);
             Customers.ArrivalIntervalScale = Math.Min(4d, Math.Max(0.2d,
                 ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak) * _reputation.ArrivalFactor
@@ -563,6 +569,7 @@ namespace TramChanh.App
         private Difficulty _difficulty = Difficulty.Normal;
         private NightEvent _night = NightEvent.Clear;
         private DailyGoal _goal;
+        private IReadOnlyList<string> _unlockedDrinks;
         private int _shownStatusKey = -1;
         private readonly List<OrderId> _noStock = new List<OrderId>();
         private readonly Dictionary<Ingredient, int> _need = new Dictionary<Ingredient, int>();
@@ -719,6 +726,7 @@ namespace TramChanh.App
         {
             _night = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
             _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
+            _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
             ApplyUpgrades();
         }
 
@@ -737,6 +745,21 @@ namespace TramChanh.App
             _reputation.Save(store);
             _upgrades.Save(store);
             Difficulties.Save(store, _difficulty);
+        }
+
+        /// <summary>Which extra drinks the stall sells at this star count, and when the next one comes.</summary>
+        private static string MenuNote(int stars)
+        {
+            var have = new List<string>();
+            string next = null;
+            foreach (MenuEntry entry in MenuBook.Extra)
+            {
+                if (stars >= entry.RequiredStars) { have.Add(entry.DisplayName); }
+                else if (next == null) { next = entry.DisplayName + " (" + entry.RequiredStars + " sao)"; }
+            }
+            string note = have.Count > 0 ? "\nMón thêm đang bán: " + string.Join(", ", have) : string.Empty;
+            if (next != null) { note += "\nMón kế tiếp: " + next; }
+            return note;
         }
 
         private string StockLine()
@@ -785,7 +808,7 @@ namespace TramChanh.App
             SaveAll();
             _input.ModalOpen = true;
             _input.SetCaptured(false);
-            _prompt.ShowDaySummary(summary, _progress, () => ShowShop(), notes.ToString());
+            _prompt.ShowDaySummary(summary, _progress, () => ShowShop(), notes.ToString(), _reputation.Stars);
         }
 
         private void ShowShop()
@@ -804,7 +827,9 @@ namespace TramChanh.App
                 CycleDifficulty = () => { _difficulty = Difficulties.Next(_difficulty); },
                 Changed = () => { ApplyUpgrades(); SaveAll(); },
             };
-            context.Forecast = "Ngày " + _progress.Day + ": " + NightPlan.Name(tomorrow) + " - " + NightPlan.Announcement(tomorrow) + "\n" + goal.Describe();
+            context.ForecastNight = tomorrow;
+            string menuNote = MenuNote(_reputation.Stars);
+            context.Forecast = "Ngày " + _progress.Day + ": " + NightPlan.Name(tomorrow) + " - " + NightPlan.Announcement(tomorrow) + "\n" + goal.Describe() + menuNote;
             _prompt.ShowSupplier(context, () =>
             {
                 BeginNight();
