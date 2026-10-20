@@ -46,6 +46,8 @@ namespace TramChanh.App.People
         public const string PedestrianLaneSouth = "SidewalkSouth";
         public const string RoadEast = "RoadEast";
         public const string RoadWest = "RoadWest";
+        private const float PedestrianRadius = 0.3f;
+        private const float BikeRadius = 0.45f;
 
         private readonly Dictionary<int, PersonView> _customers = new Dictionary<int, PersonView>();
         private readonly Dictionary<int, PersonView> _leavers = new Dictionary<int, PersonView>();
@@ -65,9 +67,74 @@ namespace TramChanh.App.People
         private System.Random _random;
         private int _entryWest = -1, _entryEast = -1;
         private Vector3 _windowCenter;
+        private PathObstacles _obstacles = new PathObstacles();
         private readonly List<Vector3> _lanePoints = new List<Vector3>();
         private int _nextLeaverId;
         private bool _paused;
+        private PersonView _vehicle;
+        private Vector3 _vehicleStop;
+        private Action _vehicleArrived;
+        private VehicleStage _vehicleStage;
+
+        /// <summary>The player's body; motorbikes brake for it so nobody is ridden through. Optional.</summary>
+        public Transform Player { get; set; }
+
+        private enum VehicleStage { None, Arriving, Parked, Leaving }
+
+        public bool VehicleArriving => _vehicleStage == VehicleStage.Arriving;
+        public bool VehicleParked => _vehicleStage == VehicleStage.Parked;
+        public bool VehicleBusy => _vehicleStage != VehicleStage.None;
+
+        /// <summary>
+        /// A takeaway customer rides along the kerb-side road lane, pulls in and stops at <paramref name="stop"/> (world space, facing the
+        /// lane's direction). <paramref name="arrived"/> fires once it has stopped, which is when it may order. False if no lane exists.
+        /// </summary>
+        public bool BringVehicle(Vector3 stop, Action arrived)
+        {
+            if (VehicleBusy || Graph == null || !LanePath(RoadEast, false, BikeRadius, _path)) { return false; }
+            // Keep the lane up to the approach, then ease in to the kerb.
+            var route = new List<Vector3>();
+            foreach (Vector3 point in _path) { if (point.x <= stop.x - 9f) { route.Add(point); } }
+            if (route.Count == 0) { route.Add(new Vector3(stop.x - 9f, stop.y, _path[0].z)); }
+            float laneZ = _path[0].z;
+            route.Add(new Vector3(stop.x - 7f, stop.y, laneZ));
+            route.Add(new Vector3(stop.x - 3.5f, stop.y, Mathf.Lerp(laneZ, stop.z, 0.6f)));
+            route.Add(new Vector3(stop.x - 1.2f, stop.y, stop.z));
+            route.Add(stop);
+            PersonView view = Acquire(_bikePrefabs, "VehicleCustomer", PrimitiveType.Cube, new Color(0.15f, 0.35f, 0.6f), new Vector3(0.45f, 0.9f, 1.6f));
+            _vehicle = view; _vehicleStop = stop; _vehicleArrived = arrived; _vehicleStage = VehicleStage.Arriving;
+            view.transform.position = route[0];
+            view.Walk(route, _settings.BikeSpeed * 0.7f, _ => Guard(() => { _vehicleStage = VehicleStage.Parked; _vehicle.SpeedScale = 1f; Action done = _vehicleArrived; _vehicleArrived = null; done?.Invoke(); }));
+            return true;
+        }
+
+        /// <summary>The parked takeaway customer rides off along the lane in the direction it came from.</summary>
+        public void SendVehicleAway()
+        {
+            if (_vehicleStage != VehicleStage.Parked || _vehicle == null) { return; }
+            if (!LanePath(RoadEast, false, BikeRadius, _path)) { ReleaseVehicle(); return; }
+            float laneZ = _path[0].z;
+            var route = new List<Vector3> { _vehicleStop, new Vector3(_vehicleStop.x + 1.5f, _vehicleStop.y, Mathf.Lerp(_vehicleStop.z, laneZ, 0.5f)), new Vector3(_vehicleStop.x + 4f, _vehicleStop.y, laneZ) };
+            foreach (Vector3 point in _path) { if (point.x > _vehicleStop.x + 4f) { route.Add(point); } }
+            _vehicleStage = VehicleStage.Leaving;
+            _vehicle.Walk(route, _settings.BikeSpeed * 0.7f, _ => Guard(ReleaseVehicle));
+        }
+
+        private void ReleaseVehicle()
+        {
+            if (_vehicle != null) { Destroy(_vehicle.gameObject); }
+            _vehicle = null; _vehicleStage = VehicleStage.None; _vehicleArrived = null;
+        }
+
+        // Slow to a walking pace for the last few metres, and give way to anyone standing in the way (same rule as ambient bikes).
+        private void TickVehicle()
+        {
+            if (_vehicle == null || !_vehicle.IsWalking) { return; }
+            float scale = _vehicleStage == VehicleStage.Arriving ? Mathf.Clamp(Vector3.Distance(_vehicle.transform.position, _vehicleStop) / 6f, 0.25f, 1f) : 0.6f;
+            scale = Mathf.Min(scale, BrakeFor(_vehicle, Player));
+            foreach (PersonView other in _pedestrians.Values) { scale = Mathf.Min(scale, BrakeFor(_vehicle, other != null ? other.transform : null)); }
+            _vehicle.SpeedScale = scale;
+        }
 
         public WaypointGraph Graph { get; private set; }
         public PeopleSettings Settings => _settings;
@@ -90,6 +157,7 @@ namespace TramChanh.App.People
             _bikePrefabs = bikePrefabs ?? Array.Empty<GameObject>();
             _random = new System.Random(seed);
             _windowCenter = environmentRoot != null ? environmentRoot.position : Vector3.zero;
+            _obstacles = PathObstacles.Collect(environmentRoot);
 
             Dictionary<string, Vector3> anchors = PeopleLayout.Collect(environmentRoot, tableAnchors, out bool fallback);
             UsedFallbackLayout = fallback;
@@ -161,7 +229,10 @@ namespace TramChanh.App.People
             StepAll(_customers, seconds);
             StepAll(_leavers, seconds);
             StepAll(_pedestrians, seconds);
+            BrakeBikes();
             StepAll(_bikes, seconds);
+            TickVehicle();
+            if (_vehicle != null && _vehicle.IsWalking) { try { _vehicle.Step(seconds); } catch (Exception error) { Debug.LogException(error, this); } }
         }
 
         /// <summary>Animators freeze while the game clock is paused; views created while paused start frozen.</summary>
@@ -169,10 +240,43 @@ namespace TramChanh.App.People
         {
             _paused = paused;
             float speed = paused ? 0f : 1f;
+            if (_vehicle != null) { _vehicle.SetAnimatorSpeed(speed); }
             foreach (Dictionary<int, PersonView> views in new[] { _customers, _leavers, _pedestrians, _bikes })
             {
                 foreach (PersonView view in views.Values) { if (view != null) { view.SetAnimatorSpeed(speed); } }
             }
+        }
+
+        private const float BrakeLookAhead = 6f;
+        private const float BrakeStopGap = 1.6f;
+        private const float BikeFollowGap = 2.4f;       // bumper-to-bumper room kept behind the bike in front
+        private const float BrakeLaneHalfWidth = 1.1f;   // player radius + bike half-width + margin
+
+        // A bike slows to a stop 1.6 m short of anyone standing in its lane and moves off again once they step aside.
+        private void BrakeBikes()
+        {
+            foreach (PersonView bike in _bikes.Values)
+            {
+                if (bike == null) { continue; }
+                float scale = 1f;
+                scale = Mathf.Min(scale, BrakeFor(bike, Player));
+                foreach (PersonView other in _pedestrians.Values) { scale = Mathf.Min(scale, BrakeFor(bike, other != null ? other.transform : null)); }
+                foreach (PersonView other in _customers.Values) { scale = Mathf.Min(scale, BrakeFor(bike, other != null ? other.transform : null)); }
+                foreach (PersonView other in _bikes.Values) { if (other != bike) { scale = Mathf.Min(scale, BrakeFor(bike, other != null ? other.transform : null, BikeFollowGap)); } }
+                bike.SpeedScale = scale;
+            }
+        }
+
+        private static float BrakeFor(PersonView bike, Transform obstacle, float stopGap = BrakeStopGap)
+        {
+            if (obstacle == null) { return 1f; }
+            Vector3 forward = bike.transform.forward; forward.y = 0f;
+            Vector3 offset = obstacle.position - bike.transform.position; offset.y = 0f;
+            float ahead = Vector3.Dot(offset, forward.normalized);
+            if (ahead <= 0f || ahead > BrakeLookAhead) { return 1f; }
+            float lateral = Mathf.Abs(Vector3.Cross(forward.normalized, offset).y);
+            if (lateral > BrakeLaneHalfWidth) { return 1f; }
+            return Mathf.Clamp01((ahead - stopGap) / (BrakeLookAhead - stopGap));
         }
 
         private void StepAll(Dictionary<int, PersonView> views, double seconds)
@@ -205,6 +309,7 @@ namespace TramChanh.App.People
                 }
                 _path.Reverse();                       // entry → approach
                 _path.Add(_seats[seat].position);      // approach → seat
+                _obstacles.Detour(_path, PedestrianRadius);
                 view.transform.position = _path[0];
                 view.Walk(_path, _settings.WalkSpeed, _ => Guard(() =>
                 {
@@ -232,6 +337,7 @@ namespace TramChanh.App.People
                     return;
                 }
                 _path.Insert(0, view.transform.position);   // seat → approach → nearest exit
+                _obstacles.Detour(_path, PedestrianRadius);
                 view.Walk(_path, _settings.WalkSpeed, _ => Guard(() => _director.NotifyDeparted(seat)));
             });
         }
@@ -258,7 +364,7 @@ namespace TramChanh.App.People
         {
             Guard(() =>
             {
-                if (!LanePath(spawn.Lane, spawn.Reverse, _path)) { _pedestrianScheduler.NotifyFinished(spawn.AgentId); return; }
+                if (!LanePath(spawn.Lane, spawn.Reverse, PedestrianRadius, _path)) { _pedestrianScheduler.NotifyFinished(spawn.AgentId); return; }
                 PersonView view = Acquire(_personPrefabs, "Pedestrian_" + spawn.AgentId, PrimitiveType.Capsule, new Color(0.45f, 0.55f, 0.7f));
                 _pedestrians[spawn.AgentId] = view;
                 view.transform.position = _path[0];
@@ -272,7 +378,7 @@ namespace TramChanh.App.People
             Guard(() =>
             {
                 // Road lanes are one-way: never reverse them.
-                if (!LanePath(spawn.Lane, false, _path)) { _bikeScheduler.NotifyFinished(spawn.AgentId); return; }
+                if (!LanePath(spawn.Lane, false, BikeRadius, _path)) { _bikeScheduler.NotifyFinished(spawn.AgentId); return; }
                 PersonView view = Acquire(_bikePrefabs, "Motorbike_" + spawn.AgentId, PrimitiveType.Cube, new Color(0.2f, 0.2f, 0.25f), new Vector3(0.45f, 0.9f, 1.6f));
                 _bikes[spawn.AgentId] = view;
                 view.transform.position = _path[0];
@@ -318,7 +424,7 @@ namespace TramChanh.App.People
 
         private readonly List<Vector3> _routeScratch = new List<Vector3>();
 
-        private bool LanePath(string lane, bool reverse, List<Vector3> path)
+        private bool LanePath(string lane, bool reverse, float clearance, List<Vector3> path)
         {
             path.Clear();
             if (!Graph.TryGetLane(lane, out IReadOnlyList<int> nodes, out _) || nodes.Count < 2) { return false; }
@@ -326,7 +432,9 @@ namespace TramChanh.App.People
             for (int i = 0; i < nodes.Count; i++) { _lanePoints.Add(Graph.PositionOf(nodes[i])); }
             if (!LaneWindow.TryGetRange(_lanePoints, _windowCenter, _settings.AmbientWindowMeters, out int first, out int last)) { return false; }
             for (int i = first; i <= last; i++) { path.Add(_lanePoints[reverse ? last - (i - first) : i]); }
-            return path.Count >= 2;
+            if (path.Count < 2) { return false; }
+            _obstacles.Detour(path, clearance);
+            return true;
         }
 
         private PersonView Acquire(GameObject[] prefabs, string name, PrimitiveType placeholder, Color color, Vector3? scale = null)

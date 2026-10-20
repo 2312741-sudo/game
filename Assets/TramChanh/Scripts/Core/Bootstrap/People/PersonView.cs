@@ -21,6 +21,9 @@ namespace TramChanh.App.People
         private Animator _animator;
         private bool _hasSpeed, _hasSitting, _hasEating;
 
+        /// <summary>0..1 multiplier on walking speed; vehicles use it to brake for whoever is in their way.</summary>
+        public float SpeedScale { get; set; } = 1f;
+
         public bool IsWalking => _follower != null && !_follower.Arrived;
 
         public void Prepare()
@@ -78,7 +81,7 @@ namespace TramChanh.App.People
         public void Step(double seconds)
         {
             if (_follower == null) { return; }
-            _follower.Step(seconds);
+            _follower.Step(seconds * Mathf.Clamp01(SpeedScale));
             Apply();
             if (_follower.Arrived) { Finish(); }
         }

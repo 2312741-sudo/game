@@ -516,7 +516,8 @@ namespace TramChanh.EditorTools
             var vehiclePoint = new GameObject("VehiclePoint");
             vehiclePoint.layer = TramChanhLayers.EnvironmentIndex;
             vehiclePoint.transform.SetParent(root, false);
-            vehiclePoint.transform.localPosition = new Vector3(2.0f, 0f, -1.3f);
+            // Kerb side in front of the stall (a rider pulls in off lane RoadEast and stops here), clear of the tea rack row at z = -1.5.
+            vehiclePoint.transform.localPosition = new Vector3(0.3f, 0f, 4.6f);
             vehiclePoint.transform.localScale = Vector3.one;
 
             var vehVisual = new GameObject("GenericVehicleVisual");
@@ -665,6 +666,21 @@ namespace TramChanh.EditorTools
             }
         }
 
+        // Smallest slide along the street (0.5 m steps, either way) that leaves x at least minDistance from every blocker.
+        private static float NudgeClear(float x, List<float> blockers, float minDistance)
+        {
+            for (float offset = 0f; offset <= 8f; offset += 0.5f)
+            {
+                foreach (float candidate in new[] { x + offset, x - offset })
+                {
+                    bool clear = true;
+                    foreach (float b in blockers) { if (Mathf.Abs(candidate - b) < minDistance) { clear = false; break; } }
+                    if (clear) { return candidate; }
+                }
+            }
+            return x;
+        }
+
         private static void PopulateStreetProps(Transform parent)
         {
             GameObject treePf = AssetDatabase.LoadAssetAtPath<GameObject>(StreetTreePrefabPath);
@@ -721,12 +737,14 @@ namespace TramChanh.EditorTools
             }
             if (lampPf != null)
             {
-                foreach (var x in lampList)
+                foreach (var lampX in lampList)
                 {
+                    // Lamp posts sit on the 24 m grid, which lines up with every second tree on the 12 m grid: slide them clear of the trunks.
+                    float x = Mathf.Abs(lampX - (-0.6f)) < 0.1f ? lampX : NudgeClear(lampX, southTrees, 2.8f);
                     var l = (GameObject)PrefabUtility.InstantiatePrefab(lampPf, parent);
                     l.transform.position = new Vector3(x, 0.0f, 3.4f);
                     l.transform.rotation = Quaternion.identity;
-                    if (Mathf.Abs(x - (-0.6f)) < 0.1f)
+                    if (Mathf.Abs(lampX - (-0.6f)) < 0.1f)
                     {
                         var light = l.GetComponentInChildren<Light>();
                         if (light != null) Object.DestroyImmediate(light);
