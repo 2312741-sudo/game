@@ -107,3 +107,9 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 
 ## Sound effects (generated in-project)
 `Assets/TramChanh/Resources/Audio/sfx_ready.wav`, `sfx_served.wav`, `sfx_failed.wav`: synthesised sine tones, created for this project. No third-party material, no attribution needed.
+
+## ART-FIX-028 (taken 2026-10-20)
+| Asset | Author | Source | Licence | Paths |
+|---|---|---|---|---|
+| Trà chanh dây and trà ô long chanh tươi cups (models, materials, atlas, prefabs) | Project Trạm Chanh (Anti, from the owner's photos IMG_5213 and IMG_5214) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Art/Models/Food/SM_Drink_*.obj`, `Assets/TramChanh/Art/Materials/Food/MAT_Drink_*.mat`, `Assets/TramChanh/Art/Textures/Food/T_NewDrinks_BaseColor.png`, `Assets/TramChanh/Prefabs/Items/NewMenu/*` |
+| UI icon set (24 icons) | Project Trạm Chanh (Anti) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Art/UI/Icons/IC_*.png` |
