@@ -17,8 +17,8 @@ namespace TramChanh.UI.Hud
     public sealed class PlayerHudPresenter : IDisposable
     {
         private static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.6f);
-        private static readonly Color HintColor = new Color(1f, 0.85f, 0.4f);
-        private static readonly Color DimColor = new Color(0.8f, 0.8f, 0.8f);
+        private static readonly Color HintColor = new Color(0.99f, 0.82f, 0.28f);
+        private static readonly Color DimColor = new Color(0.78f, 0.86f, 0.80f);
         private readonly Func<string, string> _resolve;
         private readonly HeldItemFeedbackModel _held;
         private readonly ActiveOrderListModel _orders;
@@ -87,9 +87,9 @@ namespace TramChanh.UI.Hud
                 var text = new StringBuilder(Join(_ordersTitle, _ordersNext));
                 if (_ordersRows != null)
                 {
-                    foreach (VisualElement child in _ordersRows.Children())
+                    foreach (Label label in _ordersRows.Query<Label>().ToList())
                     {
-                        if (child is Label label && !string.IsNullOrEmpty(label.text)) { text.Append('\n').Append(label.text); }
+                        if (!string.IsNullOrEmpty(label.text)) { text.Append('\n').Append(label.text); }
                     }
                 }
                 if (_ordersMore != null && !string.IsNullOrEmpty(_ordersMore.text)) { text.Append('\n').Append(_ordersMore.text); }
@@ -140,6 +140,7 @@ namespace TramChanh.UI.Hud
                 var title = NewLabel(13f, DimColor);
                 title.text = Text(HudText.Of(HudKeys.HeldTitle));
                 _heldName = NewLabel(20f, Color.white);
+                _heldName.style.unityFontStyleAndWeight = FontStyle.Bold;
                 _heldState = NewLabel(15f, Color.white);
                 _heldNext = NewLabel(15f, HintColor);
                 _heldOrder = NewLabel(14f, DimColor);
@@ -156,7 +157,8 @@ namespace TramChanh.UI.Hud
                 _ordersPanel.style.left = 20f;
                 _ordersPanel.style.top = 52f;
                 _ordersPanel.style.width = 380f;
-                _ordersTitle = NewLabel(17f, Color.white);
+                _ordersTitle = NewLabel(17f, TramChanh.UI.Menu.UiStyle.Gold);
+                _ordersTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
                 _ordersNext = NewLabel(16f, HintColor);
                 _ordersNext.style.marginBottom = 6f;
                 _ordersRows = new VisualElement();
@@ -176,6 +178,9 @@ namespace TramChanh.UI.Hud
                 _toastLabel.style.paddingTop = 10f;
                 _toastLabel.style.paddingBottom = 10f;
                 _toastLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                _toastLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                TramChanh.UI.Menu.UiStyle.Round(_toastLabel, 14f);
+                TramChanh.UI.Menu.UiStyle.Border(_toastLabel, new Color(1f, 1f, 1f, 0.35f), 1.5f);
                 root.Add(_toastLabel);
             }
         }
@@ -201,10 +206,18 @@ namespace TramChanh.UI.Hud
             _patienceFills.Clear();
             foreach (OrderRow row in _orders.Rows)
             {
+                var card = new VisualElement();
+                card.pickingMode = PickingMode.Ignore;
+                card.style.marginTop = 6f;
+                card.style.paddingTop = 5f; card.style.paddingBottom = 5f; card.style.paddingLeft = 8f; card.style.paddingRight = 8f;
+                card.style.backgroundColor = row.IsPrimary ? new Color(0.95f, 0.48f, 0.10f, 0.22f) : new Color(1f, 1f, 1f, 0.06f);
+                TramChanh.UI.Menu.UiStyle.Round(card, 8f);
+                if (row.IsPrimary) { card.style.borderLeftWidth = 3f; card.style.borderLeftColor = new Color(0.95f, 0.48f, 0.10f, 1f); }
+                _ordersRows.Add(card);
                 Label header = NewLabel(16f, row.IsPrimary ? HintColor : Color.white);
-                header.style.marginTop = 4f;
+                header.style.unityFontStyleAndWeight = FontStyle.Bold;
                 header.text = Text(row.Header);
-                _ordersRows.Add(header);
+                card.Add(header);
                 var items = new StringBuilder();
                 foreach (HudText item in row.Items)
                 {
@@ -237,16 +250,16 @@ namespace TramChanh.UI.Hud
                     swatch.style.backgroundColor = new Color(((firstDrink >> 16) & 255) / 255f, ((firstDrink >> 8) & 255) / 255f, (firstDrink & 255) / 255f, 1f);
                     swatchLine.Add(swatch);
                     swatchLine.Add(itemLabel);
-                    _ordersRows.Add(swatchLine);
+                    card.Add(swatchLine);
                 }
                 else
                 {
-                    _ordersRows.Add(itemLabel);
+                    card.Add(itemLabel);
                 }
                 Label next = NewLabel(14f, row.IsPrimary ? HintColor : DimColor);
                 next.text = Text(row.NextStep);
-                _ordersRows.Add(next);
-                _ordersRows.Add(NewPatienceBar(row.Id));
+                card.Add(next);
+                card.Add(NewPatienceBar(row.Id));
             }
             UpdatePatienceBars();
             _ordersMore.text = _orders.HiddenCount > 0 ? Text(HudText.Of(HudKeys.OrdersMore, _orders.HiddenCount)) : string.Empty;
@@ -273,6 +286,9 @@ namespace TramChanh.UI.Hud
             track.style.height = 6f;
             track.style.flexGrow = 1f;
             track.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
+            track.style.height = 8f;
+            TramChanh.UI.Menu.UiStyle.Round(track, 4f);
+            track.style.overflow = Overflow.Hidden;
             var fill = new VisualElement();
             fill.pickingMode = PickingMode.Ignore;
             fill.name = "PatienceFill";
@@ -311,11 +327,7 @@ namespace TramChanh.UI.Hud
             var panel = new VisualElement();
             panel.pickingMode = PickingMode.Ignore;
             panel.style.position = Position.Absolute;
-            panel.style.paddingTop = 8f;
-            panel.style.paddingBottom = 8f;
-            panel.style.paddingLeft = 12f;
-            panel.style.paddingRight = 12f;
-            panel.style.backgroundColor = PanelColor;
+            TramChanh.UI.Menu.UiStyle.MakeCard(panel, 12f, 9f);
             return panel;
         }
 
