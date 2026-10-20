@@ -516,7 +516,7 @@ namespace TramChanh.App
             if (open) { TickPatience(); }
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
-            if (_driveDaylight) { ApplyDaylight(DayCycle.LightingAt(hour)); }
+            if (_driveDaylight) { ApplyNightLook(hour); ApplyDaylight(DayCycle.LightingAt(hour)); }
             // A load hitch must not seat several customers at once; arrivals follow normal frame pacing.
             double customerDelta = Math.Min(_clock.DeltaTime, MaxCustomerTickSeconds);
             Customers.Tick(customerDelta);
@@ -534,22 +534,48 @@ namespace TramChanh.App
         private void CaptureSun()
         {
             _ambientBaseIntensity = RenderSettings.ambientIntensity;
+            _lamps.Clear();
             foreach (Light candidate in FindObjectsByType<Light>())
             {
-                if (candidate.type != LightType.Directional) { continue; }
+                if (candidate.type != LightType.Directional)
+                {
+                    _lamps.Add(new KeyValuePair<Light, float>(candidate, candidate.intensity));
+                    continue;
+                }
+                if (_sun != null) { continue; }
                 _sun = candidate;
                 _sunBaseIntensity = candidate.intensity;
                 _sunBaseEuler = candidate.transform.eulerAngles;
-                return;
+            }
+        }
+
+        private readonly List<KeyValuePair<Light, float>> _lamps = new List<KeyValuePair<Light, float>>();
+        private double _lookSun = 1d, _lookAmbient = 1d, _lookLamps = 1d;
+
+        /// <summary>Tonight's event dims or brightens the light (rain, power cut, festival), moving smoothly towards the target.</summary>
+        private void ApplyNightLook(double hour)
+        {
+            NightLookFactors target = NightLook.For(_night, hour);
+            double step = Math.Max(0.0001d, _clock.DeltaTime) * 0.6d;
+            _lookSun = NightLook.Approach(_lookSun, target.Sun, step);
+            _lookAmbient = NightLook.Approach(_lookAmbient, target.Ambient, step);
+            double lamps = NightLook.Approach(_lookLamps, target.Lamps, step * 2d);
+            if (Math.Abs(lamps - _lookLamps) > 1e-6)
+            {
+                _lookLamps = lamps;
+                foreach (KeyValuePair<Light, float> lamp in _lamps)
+                {
+                    if (lamp.Key != null) { lamp.Key.intensity = lamp.Value * (float)_lookLamps; }
+                }
             }
         }
 
         private void ApplyDaylight(DayLighting lighting)
         {
-            RenderSettings.ambientIntensity = _ambientBaseIntensity * Mathf.Lerp(0.35f, 1f, (float)lighting.AmbientFactor);
+            RenderSettings.ambientIntensity = _ambientBaseIntensity * Mathf.Lerp(0.35f, 1f, (float)lighting.AmbientFactor) * (float)_lookAmbient;
             if (_sun == null) { return; }
             // Moonlight keeps a floor so the street never goes fully black; the sun never points up from below.
-            _sun.intensity = _sunBaseIntensity * Mathf.Lerp(0.2f, 1f, (float)lighting.LightIntensity);
+            _sun.intensity = _sunBaseIntensity * Mathf.Lerp(0.2f, 1f, (float)lighting.LightIntensity) * (float)_lookSun;
             float pitch = Mathf.Clamp((float)lighting.SunAngleDegrees, 15f, 90f);
             _sun.transform.rotation = Quaternion.Euler(pitch, _sunBaseEuler.y, 0f);
         }
