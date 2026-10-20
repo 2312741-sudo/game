@@ -193,6 +193,7 @@ namespace TramChanh.App
                 _difficulty = Difficulties.Load(new PlayerPrefsSettingsStore());
             }
             BeginNight();
+            AnnounceStars();
             SetUpSound();
             _orderSubscription = _events.Subscribe<OrderStatusChanged>(OnOrderStatus);
             if (_showTitleScreen && !SuppressTitleScreen)
@@ -596,6 +597,10 @@ namespace TramChanh.App
         private NightEvent _night = NightEvent.Clear;
         private DailyGoal _goal;
         private IReadOnlyList<string> _unlockedDrinks;
+        private readonly HelperWorker _helper = new HelperWorker();
+        private readonly Dictionary<OrderId, string> _noStockWhy = new Dictionary<OrderId, string>();
+        private bool _goalAnnounced;
+        private int _announcedStars = -1;
         private int _shownStatusKey = -1;
         private readonly List<OrderId> _noStock = new List<OrderId>();
         private readonly Dictionary<Ingredient, int> _need = new Dictionary<Ingredient, int>();
@@ -671,13 +676,14 @@ namespace TramChanh.App
         private void OnOrderStatus(OrderStatusChanged change)
         {
             AudioClip clip = null;
+            if (change.Status != OrderStatus.WaitingForLobby) { _helper.Forget(change.OrderId); }
             TrackPatience(change);
             TrackStock(change);
             switch (change.Status)
             {
                 case OrderStatus.Ready: clip = _readyClip; break;
-                case OrderStatus.Completed: _progress.RecordSale(PriceOrder(change.OrderId)); _failureStreak = 0; _patience.Remove(change.OrderId); clip = _servedClip; break;
-                case OrderStatus.Failed: _progress.RecordFailed(); _failureStreak++; _patience.Remove(change.OrderId); clip = _failedClip; break;
+                case OrderStatus.Completed: CompleteOrder(change.OrderId); clip = _servedClip; break;
+                case OrderStatus.Failed: FailOrder(change.OrderId); clip = _failedClip; break;
             }
             if (clip != null && _sfx != null) { _sfx.PlayOneShot(clip); }
         }
@@ -686,8 +692,11 @@ namespace TramChanh.App
         {
             if (change.Status == OrderStatus.WaitingForLobby && !_patience.Has(change.OrderId))
             {
-                CustomerProfile profile = _customerKinds.Pick(_kindRandom.NextDouble());
+                // The food critic only visits a stall with at least three stars.
+                CustomerProfile profile = _customerKinds.Pick(_kindRandom.NextDouble(), _reputation.Stars >= 3);
                 _patience.Add(change.OrderId, profile.Kind, _patienceNow, profile.PatienceSeconds * _upgrades.PatienceMultiplier * Difficulties.Profile(_difficulty).PatienceScale);
+                if (_upgrades.HasHelper) { _helper.Observe(change.OrderId, _patienceNow); }
+                if (profile.Kind == CustomerKind.Critic) { _prompt?.ShowNotice("Nhà phê bình vừa đến! Làm thật chuẩn và thật nhanh.", true, 5f); }
             }
             else if (change.Status == OrderStatus.PickedUpByLobby || change.Status == OrderStatus.Delivered)
             {
@@ -706,7 +715,12 @@ namespace TramChanh.App
             if (order == null) { return; }
             _need.Clear();
             foreach (IReadOnlyOrderItem item in order.Items) { IngredientUse.Add(item.Kind, _need, NightPlan.IceUsePerDrink(_night)); }
-            if (!_stock.TryTake(_need)) { _noStock.Add(change.OrderId); }
+            if (!_stock.TryTake(_need))
+            {
+                Ingredient? shortOf = _stock.FirstShort(_need);
+                _noStockWhy[change.OrderId] = shortOf.HasValue ? IngredientUse.DisplayName(shortOf.Value) : "nguyên liệu";
+                _noStock.Add(change.OrderId);
+            }
         }
 
         private void TickPatience()
@@ -715,12 +729,67 @@ namespace TramChanh.App
             {
                 var pending = new List<OrderId>(_noStock);
                 _noStock.Clear();
-                foreach (OrderId id in pending) { Orders.Fail(id, FailureReason.CustomerLeft); }
+                foreach (OrderId id in pending)
+                {
+                    _noStockWhy.TryGetValue(id, out string why);
+                    _noStockWhy.Remove(id);
+                    _prompt?.ShowNotice("Hết " + (why ?? "nguyên liệu") + "! Khách bỏ đi. Mua thêm khi đóng cửa.", false, 5f);
+                    Orders.Fail(id, FailureReason.CustomerLeft);
+                }
             }
             _patienceNow += _clock.DeltaTime;
+            if (_upgrades.HasHelper && _helper.TryNext(_patienceNow, out OrderId helperOrder)) { HelperTakeOrder(helperOrder); }
             _expired.Clear();
             _patience.CollectExpired(_patienceNow, _expired);
             foreach (OrderId id in _expired) { Orders.Fail(id, FailureReason.CustomerLeft); }
+        }
+
+        /// <summary>A delivered order: priced, and judged when the customer is the food critic.</summary>
+        private void CompleteOrder(OrderId id)
+        {
+            Sale sale = PriceOrder(id);
+            if (_patience.TryGetKind(id, out CustomerKind kind) && kind == CustomerKind.Critic)
+            {
+                CriticVerdict verdict = CriticReview.Judge(sale.Tier, _patience.LeftFraction(id, _patienceNow));
+                int amount = (int)(Math.Round(sale.Amount * verdict.MoneyMultiplier / PriceList.RoundTo, MidpointRounding.AwayFromZero) * PriceList.RoundTo);
+                sale = new Sale(amount, sale.Tier, sale.Quality);
+                _reputation.AddPoints(verdict.ReputationPoints);
+                _prompt?.ShowNotice(verdict.Text, verdict.IsGood, 6f);
+            }
+            _progress.RecordSale(sale);
+            _failureStreak = 0;
+            _patience.Remove(id);
+            if (!_goalAnnounced && _goal.ServedTarget > 0 && _progress.ServedToday >= _goal.ServedTarget)
+            {
+                _goalAnnounced = true;
+                _prompt?.ShowNotice("Đạt mục tiêu ngày! Giữ tỉ lệ phục vụ từ " + DailyGoal.MinServedPercent + "% để nhận thưởng.", true, 5f);
+            }
+        }
+
+        /// <summary>A failed order: counted, and a critic who left without being served leaves a bad review.</summary>
+        private void FailOrder(OrderId id)
+        {
+            if (_patience.TryGetKind(id, out CustomerKind kind) && kind == CustomerKind.Critic)
+            {
+                CriticVerdict verdict = CriticReview.Walkout();
+                _reputation.AddPoints(verdict.ReputationPoints);
+                _prompt?.ShowNotice(verdict.Text, false, 5f);
+            }
+            _progress.RecordFailed();
+            _failureStreak++;
+            _patience.Remove(id);
+        }
+
+        /// <summary>The helper worker takes a waiting order for the player: take it, enter what the customer asked for, send it to the stall.</summary>
+        private void HelperTakeOrder(OrderId id)
+        {
+            IReadOnlyOrder order = Orders?.Get(id);
+            if (order == null || order.Status != OrderStatus.WaitingForLobby) { return; }
+            var helperActor = new ActorRef(2);
+            if (!Orders.BeginTaking(id, helperActor, order.Origin).IsSuccess) { return; }
+            if (!Orders.Enter(id, order.RequestedItems).IsSuccess) { return; }
+            if (!Orders.SendToStall(id).IsSuccess) { return; }
+            _prompt?.ShowNotice("Nhân viên phụ đã nhận một đơn.", true, 2.5f);
         }
 
         private Sale PriceOrder(OrderId id)
@@ -756,6 +825,8 @@ namespace TramChanh.App
         {
             _night = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
             _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
+            _goalAnnounced = false;
+            _helper.Clear();
             _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
             ApplyUpgrades();
         }
@@ -834,6 +905,11 @@ namespace TramChanh.App
                 points += _reputation.AddPoints(inspectorPoints);
                 notes.Append(money > 0 ? "Thanh tra hài lòng: +" + PriceList.Format(realMoney) : "Thanh tra phạt: " + PriceList.Format(-realMoney)).Append('\n');
             }
+            if (_upgrades.HasHelper)
+            {
+                int paid = -_progress.AddBonus(-HelperWorker.WagePerNight);
+                notes.Append("Lương nhân viên phụ: -").Append(PriceList.Format(paid)).Append('\n');
+            }
             notes.Append("Uy tín: ").Append(Reputation.StarText(_reputation.Stars)).Append(" (").Append(points >= 0 ? "+" : "").Append(points).Append(" điểm)");
             SaveAll();
             _input.ModalOpen = true;
@@ -867,7 +943,28 @@ namespace TramChanh.App
                 _shownStatusKey = -1;
                 _input.ModalOpen = false;
                 _input.SetCaptured(true);
+                AnnounceStars();
             });
+        }
+
+        /// <summary>At the start of a night: tell the player about a new star, the drinks it opens and the critic at three stars.</summary>
+        private void AnnounceStars()
+        {
+            int stars = _reputation.Stars;
+            if (_announcedStars >= 0 && stars > _announcedStars)
+            {
+                string text = "Lên " + stars + " sao!";
+                IReadOnlyList<MenuEntry> opened = MenuBook.UnlockedAt(stars);
+                if (opened.Count > 0)
+                {
+                    var names = new List<string>();
+                    foreach (MenuEntry entry in opened) { names.Add(entry.DisplayName); }
+                    text += " Mở món: " + string.Join(", ", names) + ".";
+                }
+                if (stars == 3) { text += " Nhà phê bình có thể ghé quán."; }
+                _prompt?.ShowNotice(text, true, 7f);
+            }
+            _announcedStars = stars;
         }
 
         private void ApplySettings()

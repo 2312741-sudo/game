@@ -99,7 +99,7 @@ namespace TramChanh.Tests.EditMode.UI
             Assert.That(changes, Is.GreaterThan(0), "Orders events refresh the list.");
             Assert.That(Render(Row().Origin), Is.EqualTo("Xe 1"));
             Assert.That(Render(Row().Stage), Is.EqualTo("Chờ nhận đơn"));
-            Assert.That(Row().Items.Select(Render), Is.EqualTo(new[] { "Đồ uống (tên tạm) x1", "Bánh thử nghiệm x1" }));
+            Assert.That(Row().Items.Select(Render), Is.EqualTo(new[] { "Trà Olong - Chanh tươi x1", "Lăn Truyền Thống x1" }));
             Assert.That(Render(Row().NextStep), Is.EqualTo("Tới Xe 1 nhận đơn"));
             Assert.That(Render(list.PrimaryNextStep), Is.EqualTo("Tiếp theo: Tới Xe 1 nhận đơn"));
             Assert.That(Render(list.Title), Is.EqualTo("Đơn hàng (1)"));
@@ -110,12 +110,12 @@ namespace TramChanh.Tests.EditMode.UI
             Assert.That(Row().NextStep.Key, Is.EqualTo(HudKeys.NextSendOrder));
             Assert.That(_orders.SendToStall(id).IsSuccess, Is.True);
             Assert.That(Render(Row().Stage), Is.EqualTo("Đã gửi quầy (0/2 món xong)"));
-            Assert.That(Row().Items.Select(Render), Is.EqualTo(new[] { "Đồ uống (tên tạm): Chờ làm", "Bánh thử nghiệm: Chờ làm" }));
+            Assert.That(Row().Items.Select(Render), Is.EqualTo(new[] { "Trà Olong - Chanh tươi: Chờ làm", "Lăn Truyền Thống: Chờ làm" }));
             Assert.That(Render(Row().NextStep), Is.EqualTo("Lấy túi trà ở kệ"));
 
             Prepared drink = Claim(ItemKind.Drink);
             Assert.That(Render(Row().Stage), Is.EqualTo("Đang làm (0/2 món xong)"));
-            Assert.That(Render(Row().NextStep), Is.EqualTo("Làm xong Đồ uống (tên tạm) rồi đặt lên quầy giao"));
+            Assert.That(Render(Row().NextStep), Is.EqualTo("Làm xong Trà Olong - Chanh tươi rồi đặt lên quầy giao"));
             Assert.That(_shelf.PlaceReady(drink).IsSuccess, Is.True);
             Assert.That(Render(Row().Stage), Is.EqualTo("Đang làm (1/2 món xong)"));
             Assert.That(Render(Row().NextStep), Is.EqualTo("Làm bánh ở bếp nướng"));

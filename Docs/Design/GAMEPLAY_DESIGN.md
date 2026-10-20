@@ -88,3 +88,9 @@ Each step ships on its own branch, EditMode/PlayMode green, and the owner plays 
 3. Should the critic and inspector exist in v1, or later?
 4. Season length (30 nights) or endless only?
 5. Does the shop corner restock (walking away) feel fun, or only a menu screen?
+
+## Owner answers (2026-10-20)
+- Helper worker: yes. Built as the upgrade "Nhân viên phụ": takes orders at the tables for the player (not the cooking steps), wage 30.000đ a night, unlocks at 3 stars.
+- Food critic: yes. Built as a rare customer kind from 3 stars (see section 3): Perfect and quick pays double and +25 reputation; poor or slow pays half and -20; walking out -15.
+- Flavours have different colours: the cup and the tea bag per flavour is art and station work still to do (Anti draws the cups, the lead then colours the liquid by the flavour of the order).
+- Balance numbers (money, times, goals): after the owner plays a few nights.
