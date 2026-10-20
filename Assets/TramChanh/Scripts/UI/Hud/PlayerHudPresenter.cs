@@ -213,7 +213,36 @@ namespace TramChanh.UI.Hud
                 }
                 Label itemLabel = NewLabel(14f, DimColor);
                 itemLabel.text = items.ToString();
-                _ordersRows.Add(itemLabel);
+                int firstDrink = -1;
+                foreach (string itemId in row.ItemIds)
+                {
+                    if (MenuBook.LiquidColor(itemId) >= 0) { firstDrink = MenuBook.LiquidColor(itemId); break; }
+                }
+                if (firstDrink >= 0)
+                {
+                    // A swatch in the drink's liquid colour, so flavours are told apart at a glance.
+                    var swatchLine = new VisualElement();
+                    swatchLine.pickingMode = PickingMode.Ignore;
+                    swatchLine.style.flexDirection = FlexDirection.Row;
+                    swatchLine.style.alignItems = Align.Center;
+                    var swatch = new VisualElement();
+                    swatch.pickingMode = PickingMode.Ignore;
+                    swatch.style.width = 14f;
+                    swatch.style.height = 14f;
+                    swatch.style.marginRight = 6f;
+                    swatch.style.borderTopLeftRadius = 7f;
+                    swatch.style.borderTopRightRadius = 7f;
+                    swatch.style.borderBottomLeftRadius = 7f;
+                    swatch.style.borderBottomRightRadius = 7f;
+                    swatch.style.backgroundColor = new Color(((firstDrink >> 16) & 255) / 255f, ((firstDrink >> 8) & 255) / 255f, (firstDrink & 255) / 255f, 1f);
+                    swatchLine.Add(swatch);
+                    swatchLine.Add(itemLabel);
+                    _ordersRows.Add(swatchLine);
+                }
+                else
+                {
+                    _ordersRows.Add(itemLabel);
+                }
                 Label next = NewLabel(14f, row.IsPrimary ? HintColor : DimColor);
                 next.text = Text(row.NextStep);
                 _ordersRows.Add(next);

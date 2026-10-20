@@ -75,6 +75,24 @@ namespace TramChanh.Core
             return list;
         }
 
+        /// <summary>
+        /// Liquid colour of a drink as 0xRRGGBB, from the project's tea liquid palette (Docs/Reference/TramChanh_3D_Asset_Pipeline.md):
+        /// passion fruit #EDA417, the basic lemon tea amber #E79D32, mixed berry #9B232A. Mango and peach are the lead's choice
+        /// (no reference colour exists), soursop a pale green. Returns -1 for ids that are not drinks.
+        /// </summary>
+        public static int LiquidColor(string itemId)
+        {
+            switch (itemId)
+            {
+                case PassionfruitId: return 0xEDA417;
+                case MangoId: return 0xF3B33D;
+                case PeachId: return 0xF08A5D;
+                case MixedBerryId: return 0x9B232A;
+                case SoursopId: return 0xC9D6A0;
+                default: return itemId != null && itemId.StartsWith("item.drink") ? 0xE79D32 : -1;
+            }
+        }
+
         /// <summary>Unit price of one item: a flavour's own price, otherwise the base price of its kind.</summary>
         public static int UnitPrice(string itemId, ItemKind kind, PriceList prices)
         {

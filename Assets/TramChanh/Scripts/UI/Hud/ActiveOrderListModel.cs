@@ -9,8 +9,9 @@ namespace TramChanh.UI.Hud
     public sealed class OrderRow
     {
         internal OrderRow(OrderId id, OrderStatus status, HudText origin, HudText stage, IReadOnlyList<HudText> items, HudText next,
-            int readyCount, int itemCount, bool isPrimary)
+            int readyCount, int itemCount, bool isPrimary, IReadOnlyList<string> itemIds = null)
         {
+            ItemIds = itemIds ?? Array.Empty<string>();
             Id = id;
             Status = status;
             Origin = origin;
@@ -28,6 +29,8 @@ namespace TramChanh.UI.Hud
         /// <summary>"order.status.*", with ready/total progress while the stall works on it.</summary>
         public HudText Stage { get; }
         public IReadOnlyList<HudText> Items { get; }
+        /// <summary>Item definition ids, parallel to <see cref="Items"/>; lets the view colour a drink by flavour.</summary>
+        public IReadOnlyList<string> ItemIds { get; }
         public HudText NextStep { get; }
         public int ReadyCount { get; }
         public int ItemCount { get; }
@@ -155,11 +158,13 @@ namespace TramChanh.UI.Hud
             HudText origin = HudKeys.Origin(order.Origin);
             IReadOnlyList<IReadOnlyOrderItem> items = order.Items ?? Array.Empty<IReadOnlyOrderItem>();
             var lines = new List<HudText>();
+            var ids = new List<string>();
             int ready = 0;
             if (items.Count == 0)
             {
                 foreach (ItemRequest request in order.RequestedItems ?? Array.Empty<ItemRequest>())
                 {
+                    ids.Add(request.ItemDefinitionId);
                     lines.Add(HudText.Of(HudKeys.OrderItemQuantity, HudText.Of(HudKeys.ItemName(request.ItemDefinitionId)), request.Quantity));
                 }
             }
@@ -167,6 +172,7 @@ namespace TramChanh.UI.Hud
             {
                 foreach (IReadOnlyOrderItem item in items)
                 {
+                    ids.Add(item.ItemDefinitionId);
                     if (item.Status == OrderItemStatus.Ready) { ready++; }
                     lines.Add(HudText.Of(HudKeys.OrderItemStatus, HudText.Of(HudKeys.ItemName(item.ItemDefinitionId)), HudText.Of(HudKeys.Status(item.Status))));
                 }
@@ -176,7 +182,7 @@ namespace TramChanh.UI.Hud
             {
                 stage = HudText.Of(HudKeys.OrderStageProgress, stage, ready, items.Count);
             }
-            return new OrderRow(order.Id, order.Status, origin, stage, lines.AsReadOnly(), NextStep(order, origin), ready, items.Count, isPrimary);
+            return new OrderRow(order.Id, order.Status, origin, stage, lines.AsReadOnly(), NextStep(order, origin), ready, items.Count, isPrimary, ids.AsReadOnly());
         }
 
         public static HudText NextStep(IReadOnlyOrder order, HudText origin)

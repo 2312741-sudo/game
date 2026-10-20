@@ -96,3 +96,6 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] While open, with the scarcest ingredient at 0, press R: 5 units arrive, cost is 2x unit price, notice appears.
 - [ ] Press R again within 30 s: refused with a notice. Not enough cash: refused, no stock added.
 - [ ] R does nothing in a menu, pause or title screen.
+
+## Flavour colours
+- [ ] On the active-order list, a drink order shows a round swatch in its liquid colour (basic drink amber; chanh dây yellow; xoài; đào; quả mọng dark red; mãng cầu pale green). Cake-only orders show no swatch.

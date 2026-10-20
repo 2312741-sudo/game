@@ -49,5 +49,20 @@ namespace TramChanh.Tests.EditMode.Core
         {
             Assert.That(MenuBook.UnlockedDrinkIds(null, 2), Is.EqualTo(new[] { MenuBook.PassionfruitId }));
         }
+
+        [Test]
+        public void LiquidColor_EveryFlavourHasItsOwnColour_AndNonDrinksHaveNone()
+        {
+            var seen = new System.Collections.Generic.HashSet<int>();
+            foreach (string id in MenuBook.ExtraIds())
+            {
+                int color = MenuBook.LiquidColor(id);
+                Assert.That(color, Is.GreaterThanOrEqualTo(0), id);
+                Assert.That(seen.Add(color), Is.True, id + " repeats a colour");
+            }
+            Assert.That(MenuBook.LiquidColor(MenuBook.PassionfruitId), Is.EqualTo(0xEDA417));
+            Assert.That(MenuBook.LiquidColor("item.cake.dev.tbd"), Is.EqualTo(-1));
+            Assert.That(MenuBook.LiquidColor(null), Is.EqualTo(-1));
+        }
     }
 }
