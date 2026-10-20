@@ -42,6 +42,10 @@ namespace TramChanh.UI.Prompt
         private Label _hint;
         private Label _heldHint;
         private Label _status;
+        private Label _notice;
+        private string _noticeText = string.Empty;
+        private bool _noticePositive = true;
+        private float _noticeUntil;
         private Label _credits;
         private PauseMenu _pauseMenu;
         private PauseMenu _titleMenu;
@@ -156,6 +160,22 @@ namespace TramChanh.UI.Prompt
             _status.style.paddingTop = 5f;
             _status.style.paddingBottom = 5f;
             root.Add(_status);
+            _notice = new Label();
+            _notice.pickingMode = PickingMode.Ignore;
+            _notice.style.position = Position.Absolute;
+            _notice.style.top = 100f;
+            _notice.style.left = Length.Percent(50f);
+            _notice.style.width = 620f;
+            _notice.style.marginLeft = -310f;
+            _notice.style.fontSize = 20f;
+            _notice.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _notice.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _notice.style.whiteSpace = WhiteSpace.Normal;
+            _notice.style.paddingTop = 8f;
+            _notice.style.paddingBottom = 8f;
+            _notice.style.display = DisplayStyle.None;
+            root.Add(_notice);
+            ApplyNotice();
             _credits = new Label(CreditsText.Build() + "\n\n[F1] close");
             _credits.pickingMode = PickingMode.Ignore;
             _credits.style.position = Position.Absolute;
@@ -355,8 +375,34 @@ namespace TramChanh.UI.Prompt
             _credits.BringToFront();
         }
 
+        /// <summary>Shows a short message under the clock for a few seconds (stock ran out, a star was won, the critic came...).</summary>
+        public void ShowNotice(string text, bool positive = true, float seconds = 4f)
+        {
+            _noticeText = text ?? string.Empty;
+            _noticePositive = positive;
+            _noticeUntil = Time.unscaledTime + Mathf.Max(0.5f, seconds);
+            ApplyNotice();
+        }
+
+        private void ApplyNotice()
+        {
+            if (_notice == null) { return; }
+            bool show = !string.IsNullOrEmpty(_noticeText) && Time.unscaledTime < _noticeUntil;
+            _notice.text = _noticeText;
+            _notice.style.color = Color.white;
+            _notice.style.backgroundColor = _noticePositive ? new Color(0.1f, 0.45f, 0.2f, 0.9f) : new Color(0.55f, 0.15f, 0.1f, 0.9f);
+            _notice.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        public string NoticeText => _notice != null && _notice.style.display.value == DisplayStyle.Flex ? _notice.text : string.Empty;
+
         private void Update()
         {
+            if (_notice != null && !string.IsNullOrEmpty(_noticeText) && Time.unscaledTime >= _noticeUntil)
+            {
+                _noticeText = string.Empty;
+                ApplyNotice();
+            }
             _hud?.Tick();
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) { ToggleCredits(); }

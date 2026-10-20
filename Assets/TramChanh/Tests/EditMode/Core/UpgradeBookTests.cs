@@ -81,9 +81,9 @@ namespace TramChanh.Tests.EditMode.Core
         }
 
         [Test]
-        public void Catalogue_HasFiveUpgradesWithRisingStarRequirements()
+        public void Catalogue_HasSixUpgradesWithRisingStarRequirements()
         {
-            Assert.That(UpgradeBook.All.Count, Is.EqualTo(5));
+            Assert.That(UpgradeBook.All.Count, Is.EqualTo(6));
             for (int i = 0; i < UpgradeBook.All.Count; i++) { Assert.That((int)UpgradeBook.All[i].Id, Is.EqualTo(i)); }
             Assert.That(UpgradeBook.Info(UpgradeId.GoldenMenuBoard).RequiredStars, Is.EqualTo(4));
         }

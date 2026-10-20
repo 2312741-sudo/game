@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TramChanh.Core
 {
-    public enum UpgradeId { BiggerIceBin = 0, Pantry = 1, StringLights = 2, WholesaleDeal = 3, GoldenMenuBoard = 4 }
+    public enum UpgradeId { BiggerIceBin = 0, Pantry = 1, StringLights = 2, WholesaleDeal = 3, GoldenMenuBoard = 4, HelperWorker = 5 }
 
     public enum UpgradeStatus { Owned, NeedsStars, NeedsMoney, Available }
 
@@ -36,8 +36,9 @@ namespace TramChanh.Core
             new UpgradeInfo(UpgradeId.StringLights, "Đèn dây", "Khách kiên nhẫn hơn 15%", 250000, 2),
             new UpgradeInfo(UpgradeId.WholesaleDeal, "Mối nhập sỉ", "Nguyên liệu rẻ hơn 10%", 300000, 3),
             new UpgradeInfo(UpgradeId.GoldenMenuBoard, "Bảng menu vàng", "Mọi đơn trả thêm 10%", 400000, 4),
+            new UpgradeInfo(UpgradeId.HelperWorker, "Nhân viên phụ", "Tự nhận đơn ở bàn (lương 30.000đ mỗi đêm)", 350000, 3),
         };
-        private readonly bool[] _owned = new bool[5];
+        private readonly bool[] _owned = new bool[6];
 
         public static IReadOnlyList<UpgradeInfo> All => Infos;
         public static UpgradeInfo Info(UpgradeId id) => Infos[(int)id];
@@ -49,6 +50,7 @@ namespace TramChanh.Core
         public double PatienceMultiplier => Owns(UpgradeId.StringLights) ? 1.15 : 1d;
         public int SupplierDiscountPercent => Owns(UpgradeId.WholesaleDeal) ? 10 : 0;
         public int PriceBonusPercent => Owns(UpgradeId.GoldenMenuBoard) ? 10 : 0;
+        public bool HasHelper => Owns(UpgradeId.HelperWorker);
 
         public UpgradeStatus StatusOf(UpgradeId id, GameProgress wallet, Reputation reputation)
         {

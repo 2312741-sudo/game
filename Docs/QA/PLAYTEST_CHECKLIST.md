@@ -66,6 +66,12 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] Festival night, 20:00 to 21:00: the lamps are brighter.
 - [ ] Clear, hot and inspector nights look the same as before.
 
+## Critic, helper worker, notices, real names (new)
+- [ ] The first order list shows "Trà Olong - Chanh tươi" and "Lăn Truyền Thống" instead of the old placeholder names.
+- [ ] From 3 stars a customer can be "Nhà phê bình" (rare): a notice says so. Serve him Perfect and fast: double pay and +25 reputation. Poor or slow: half pay and -20. If he leaves unserved: -15.
+- [ ] The shop sells the upgrade "Nhân viên phụ" (3 stars, 350.000đ). With it, an order waiting at a table for about 8 seconds is taken and sent to the stall by itself (a notice shows). It costs 30.000đ at the end of every night (shown on the summary card). It has no icon yet.
+- [ ] Short notices appear under the clock: ingredient ran out and the customer left, goal reached, a new star and the drinks it opens, helper took an order.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 

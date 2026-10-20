@@ -38,7 +38,8 @@ namespace TramChanh.UI.Menu
                 case UpgradeId.Pantry: return "IC_Up_Pantry";
                 case UpgradeId.StringLights: return "IC_Up_StringLights";
                 case UpgradeId.WholesaleDeal: return "IC_Up_WholesaleDeal";
-                default: return "IC_Up_GoldenMenuBoard";
+                case UpgradeId.GoldenMenuBoard: return "IC_Up_GoldenMenuBoard";
+                default: return null; // no icon yet for the helper worker
             }
         }
 
@@ -62,7 +63,8 @@ namespace TramChanh.UI.Menu
                 case CustomerKind.Student: return "IC_Cust_Student";
                 case CustomerKind.Family: return "IC_Cust_Family";
                 case CustomerKind.Office: return "IC_Cust_Office";
-                default: return "IC_Cust_Regular";
+                case CustomerKind.Regular: return "IC_Cust_Regular";
+                default: return null; // no icon yet for the critic
             }
         }
 

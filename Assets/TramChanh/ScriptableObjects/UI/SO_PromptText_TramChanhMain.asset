@@ -32,8 +32,8 @@ MonoBehaviour:
     _en: Send to stall
     _vi: "G\u1EEDi t\u1EDBi qu\u1EA7y"
   - _key: item.drink.slice
-    _en: Drink (menu name pending)
-    _vi: "\u0110\u1ED3 u\u1ED1ng (t\xEAn t\u1EA1m)"
+    _en: Oolong tea - Fresh lemon
+    _vi: "Tr\xE0 Olong - Chanh t\u01B0\u01A1i"
   - _key: item.drink.chanh_day
     _en: Oolong tea - Passionfruit
     _vi: "Tr\xE0 Olong - Chanh d\xE2y"
@@ -434,8 +434,8 @@ MonoBehaviour:
     _en: Held item changed
     _vi: "V\u1EADt \u0111ang c\u1EA7m \u0111\xE3 \u0111\u1ED5i"
   - _key: item.cake.dev.tbd
-    _en: Test cake (recipe TBD)
-    _vi: "B\xE1nh th\u1EED nghi\u1EC7m"
+    _en: Traditional roll cake
+    _vi: "L\u0103n Truy\u1EC1n Th\u1ED1ng"
   - _key: held.TeaBagItem
     _en: Tea bag
     _vi: "T\xFAi tr\xE0"
