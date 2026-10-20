@@ -1,0 +1,8 @@
+=== 500M Street Performance Audit (ART-FIX-016 Task E) ===
+Position   | Triangles in View  | Draw Calls   | Lights Near (<=30m) | Budget Status
+----------------------------------------------------------------------------------
+x = -240m  | 204,228            | 644          | 2                   | PASS
+x = -120m  | 204,228            | 541          | 3                   | PASS
+x = 0m     | 44,610             | 275          | 8                   | PASS
+x = +120m  | 0                  | 113          | 3                   | PASS
+x = +240m  | 0                  | 10           | 2                   | PASS
