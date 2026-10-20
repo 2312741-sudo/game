@@ -394,6 +394,9 @@ namespace TramChanh.UI.Prompt
             _notice.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
+        /// <summary>The player pressed R: buy a small pack at the corner shop. The game decides whether it works right now.</summary>
+        public event Action EmergencyRestockRequested;
+
         public string NoticeText => _notice != null && _notice.style.display.value == DisplayStyle.Flex ? _notice.text : string.Empty;
 
         private void Update()
@@ -406,6 +409,7 @@ namespace TramChanh.UI.Prompt
             _hud?.Tick();
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) { ToggleCredits(); }
+            if (keyboard != null && keyboard.rKey.wasPressedThisFrame) { EmergencyRestockRequested?.Invoke(); }
             if (_pauseMenu != null)
             {
                 bool paused = _pauseInput != null && _pauseInput.IsPausedByUser;
