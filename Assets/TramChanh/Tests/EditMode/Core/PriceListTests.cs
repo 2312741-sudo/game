@@ -26,7 +26,7 @@ namespace TramChanh.Tests.EditMode.Core
         public void GoodDrinkAndCake_PayTheBasePrice()
         {
             var prices = new PriceList();
-            Assert.That(prices.Price(Drink, 75).Amount, Is.EqualTo(25000));
+            Assert.That(prices.Price(Drink, 75).Amount, Is.EqualTo(20000));
             Assert.That(prices.Price(Cake, 75).Amount, Is.EqualTo(20000));
         }
 
@@ -34,16 +34,18 @@ namespace TramChanh.Tests.EditMode.Core
         public void PoorQuality_PaysLessAndPerfectPaysMore()
         {
             var prices = new PriceList();
-            Assert.That(prices.Price(Drink, 20).Amount, Is.EqualTo(15000));   // 25000 * 0.6
-            Assert.That(prices.Price(Drink, 100).Amount, Is.EqualTo(32500));  // 25000 * 1.3
+            Assert.That(prices.Price(Drink, 20).Amount, Is.EqualTo(12000));   // 20000 * 0.6
+            Assert.That(prices.Price(Drink, 100).Amount, Is.EqualTo(26000));  // 20000 * 1.3
         }
 
         [Test]
         public void Combo_GetsTheDiscountOnlyWhenBothKindsArePresent()
         {
             var prices = new PriceList();
-            Assert.That(prices.Price(Combo, 75).Amount, Is.EqualTo(40500)); // 45000 * 0.9 = 40500
-            Assert.That(prices.Price(new[] { ItemKind.Drink, ItemKind.Drink }, 75).Amount, Is.EqualTo(50000));
+            Assert.That(prices.Price(Combo, 75).Amount, Is.EqualTo(40000), "The real menu has no discount for the basic drink and cake.");
+            var withDiscount = new PriceList(comboDiscountPercent: 10);
+            Assert.That(withDiscount.Price(Combo, 75).Amount, Is.EqualTo(36000)); // 40000 * 0.9
+            Assert.That(withDiscount.Price(new[] { ItemKind.Drink, ItemKind.Drink }, 75).Amount, Is.EqualTo(40000), "No discount without a cake.");
         }
 
         [Test]
@@ -76,10 +78,25 @@ namespace TramChanh.Tests.EditMode.Core
         public void FastService_AddsTheSpeedBonus_AndTheKindMultiplierApplies()
         {
             var prices = new PriceList();
-            Assert.That(prices.Price(Drink, 75, 0.9d, 1f).Amount, Is.EqualTo(29000));   // 25000 * 1.15 = 28750 -> 29000
-            Assert.That(prices.Price(Drink, 75, 0.5d, 1f).Amount, Is.EqualTo(25000));   // too slow for the bonus
-            Assert.That(prices.Price(Drink, 75, 0.5d, 1.2f).Amount, Is.EqualTo(30000)); // regular customer tip
-            Assert.That(prices.Price(Drink, 75).Amount, Is.EqualTo(25000), "The short overload has no bonus.");
+            Assert.That(prices.Price(Drink, 75, 0.9d, 1f).Amount, Is.EqualTo(23000));   // 20000 * 1.15
+            Assert.That(prices.Price(Drink, 75, 0.5d, 1f).Amount, Is.EqualTo(20000));   // too slow for the bonus
+            Assert.That(prices.Price(Drink, 75, 0.5d, 1.2f).Amount, Is.EqualTo(24000)); // regular customer tip
+            Assert.That(prices.Price(Drink, 75).Amount, Is.EqualTo(20000), "The short overload has no bonus.");
+        }
+
+        [Test]
+        public void EachItemCanCarryItsOwnUnitPrice()
+        {
+            var prices = new PriceList();
+            var order = new[]
+            {
+                new System.Collections.Generic.KeyValuePair<ItemKind, int>(ItemKind.Drink, 30000),
+                new System.Collections.Generic.KeyValuePair<ItemKind, int>(ItemKind.Cake, 20000),
+            };
+            Assert.That(prices.PriceItems(order, 75, 0d, 1f).Amount, Is.EqualTo(50000));
+            Assert.That(MenuBook.UnitPrice(MenuBook.PassionfruitId, ItemKind.Drink, prices), Is.EqualTo(30000));
+            Assert.That(MenuBook.UnitPrice("drink.slice", ItemKind.Drink, prices), Is.EqualTo(20000));
+            Assert.That(MenuBook.UnitPrice("cake.dev.tbd", ItemKind.Cake, prices), Is.EqualTo(20000));
         }
     }
 }

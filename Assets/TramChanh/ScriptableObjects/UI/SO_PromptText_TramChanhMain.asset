@@ -35,11 +35,20 @@ MonoBehaviour:
     _en: Drink (menu name pending)
     _vi: "\u0110\u1ED3 u\u1ED1ng (t\xEAn t\u1EA1m)"
   - _key: item.drink.chanh_day
-    _en: Passionfruit tea
-    _vi: "Tr\xE0 chanh d\xE2y"
-  - _key: item.drink.o_long_chanh_tuoi
-    _en: Oolong tea with fresh lemon
-    _vi: "Tr\xE0 \xF4 long chanh t\u01B0\u1EDBi"
+    _en: Oolong tea - Passionfruit
+    _vi: "Tr\xE0 Olong - Chanh d\xE2y"
+  - _key: item.drink.xoai
+    _en: Oolong tea - Mango
+    _vi: "Tr\xE0 Olong - Xo\xE0i"
+  - _key: item.drink.dao
+    _en: Oolong tea - Peach
+    _vi: "Tr\xE0 Olong - \u0110\xE0o"
+  - _key: item.drink.qua_mong
+    _en: Oolong tea - Mixed berries
+    _vi: "Tr\xE0 Olong - Qu\u1EA3 m\u1ECDng"
+  - _key: item.drink.mang_cau
+    _en: Oolong tea - Soursop
+    _vi: "Tr\xE0 Olong - M\xE3ng c\u1EA7u"
   - _key: order.point.take
     _en: Take order
     _vi: "Nh\u1EADn \u0111\u01A1n c\u1EE7a kh\xE1ch"

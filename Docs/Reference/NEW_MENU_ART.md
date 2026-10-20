@@ -16,6 +16,8 @@ Note: the mesh inside `SM_Drink_OolongFreshLemonTea.obj` still carries the old i
 ## Not taken
 The cakes, `LOGO_TramChanh`, `BG_Title`, `T_MenuBoard_Prices`: no real source or redrawn text. The real logo is `IMG_5205`, the real price board is `IMG_4932 2`; use those files, never a redrawn version.
 
-## How they are wired (2026-10-20)
+## How they are wired (updated 2026-10-20, real prices)
 - Icons are loaded from `Resources/UI/Icons` (`UiIcons`): shop rows, shop stars and night icon, end-of-day stars, and the customer icon in the order list.
-- The two drinks are order labels of kind Drink: `drink.chanh_day` (2 stars) and `drink.o_long_chanh_tuoi` (3 stars), defined in `MenuBook`; their names are in `SO_PromptText_TramChanhMain.asset`. The prefabs `PF_Item_Drink_*` are not placed anywhere yet. Making a different tea bag per flavour (its own bag on the rack, its own cup colour) is later art and station work.
+- The real menu (`T_Menu_Board_BaseColor.png`, photo `IMG_4932 2`, prices in thousand VND): the basic drink is "Trà Olong - Chanh tươi" at 20k; "Trà Olong - Chanh dây / Xoài / Quả mọng / Mãng cầu / Đào" are 30k; the roll cake "Lăn Truyền Thống" is 20k. `MenuBook` holds the flavours as drink order labels (kind Drink): Chanh dây at 2 stars, Xoài at 3, Đào at 4, Quả mọng and Mãng cầu at 5 (the unlock order is the lead's choice); their names are in `SO_PromptText_TramChanhMain.asset`.
+- The art item `PF_Item_Drink_OolongFreshLemonTea` is the cup picture of the basic drink (Trà Olong - Chanh tươi); `PF_Item_Drink_PassionfruitTea` is the cup of Chanh dây. They are not placed anywhere yet. A different tea bag and cup colour per flavour is later art and station work.
+- The base items still show the placeholder names "Đồ uống (tên tạm)" and "Bánh thử nghiệm" in the HUD because tests lock those names; they should become "Trà Olong - Chanh tươi" and "Lăn Truyền Thống" together with the tests that read them.
