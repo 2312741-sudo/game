@@ -741,6 +741,75 @@ namespace TramChanh.App
             return _prices.PriceItems(items, quality, _patience.LeftFraction(id, _patienceNow), payMultiplier);
         }
 
+        /// <summary>Third status line: tonight's event, stars and how far the daily goal is.</summary>
+        private string NightLine()
+        {
+            string line = NightPlan.Name(_night) + "  |  " + Reputation.StarText(_reputation.Stars);
+            if (_goal.ServedTarget > 0) { line += "  |  Mục tiêu " + _progress.ServedToday + "/" + _goal.ServedTarget; }
+            return line;
+        }
+
+        private int StatusKey() => (_progress.ServedToday * 31 + _reputation.Stars) * 31 + (int)_night;
+
+        /// <summary>Picks tonight's event and goal for the current day.</summary>
+        private void BeginNight()
+        {
+            _night = SuppressTitleScreen ? NightEvent.Clear : NightPlan.ForDay(_progress.Day, _customerSeed);
+            _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
+            _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
+            ApplyUpgrades();
+        }
+
+        private void ApplyUpgrades()
+        {
+            _stock.SetCapacityBonus(_upgrades.IceCapacityBonus, _upgrades.OtherCapacityBonus);
+            _supplier.DiscountPercent = _upgrades.SupplierDiscountPercent;
+            _supplier.PriceScale = Difficulties.Profile(_difficulty).SupplierPriceScale;
+        }
+
+        private void SaveAll()
+        {
+            var store = new PlayerPrefsSettingsStore();
+            _progress.Save(store);
+            _stock.Save(store);
+            _reputation.Save(store);
+            _upgrades.Save(store);
+            Difficulties.Save(store, _difficulty);
+        }
+
+        /// <summary>Which extra drinks the stall sells at this star count, and when the next one comes.</summary>
+        private static string MenuNote(int stars)
+        {
+            var have = new List<string>();
+            string next = null;
+            foreach (MenuEntry entry in MenuBook.Extra)
+            {
+                if (stars >= entry.RequiredStars) { have.Add(entry.DisplayName); }
+                else if (next == null) { next = entry.DisplayName + " (" + entry.RequiredStars + " sao)"; }
+            }
+            string note = have.Count > 0 ? "\nMón thêm đang bán: " + string.Join(", ", have) : string.Empty;
+            if (next != null) { note += "\nMón kế tiếp: " + next; }
+            return note;
+        }
+
+        private string StockLine()
+        {
+            var line = new System.Text.StringBuilder("Kho: ");
+            foreach (Ingredient ingredient in StockBook.Ingredients)
+            {
+                if (ingredient != StockBook.Ingredients[0]) { line.Append("  "); }
+                line.Append(IngredientUse.DisplayName(ingredient)).Append(' ').Append(_stock.Level(ingredient));
+            }
+            return line.ToString();
+        }
+
+        private int StockHash()
+        {
+            int hash = 17;
+            foreach (Ingredient ingredient in StockBook.Ingredients) { hash = hash * 31 + _stock.Level(ingredient); }
+            return hash;
+        }
+
         private void EndOfDay()
         {
             DaySummary summary = _progress.EndDay();
