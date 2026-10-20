@@ -1033,31 +1033,7 @@ namespace TramChanh.EditorTools
                 }
             }
 
-            // Ambient Pedestrians on Sidewalk (PF_Person_07 & PF_Person_08)
-            GameObject person07Pf = AssetDatabase.LoadAssetAtPath<GameObject>(Person07PrefabPath);
-            GameObject person08Pf = AssetDatabase.LoadAssetAtPath<GameObject>(Person08PrefabPath);
-            if (person07Pf != null || person08Pf != null)
-            {
-                var pedsNode = new GameObject("AmbientPedestrians");
-                pedsNode.layer = LayerMask.NameToLayer("Characters") >= 0 ? LayerMask.NameToLayer("Characters") : 0;
-                pedsNode.transform.SetParent(parent, false);
-
-                if (person07Pf != null)
-                {
-                    var ped1 = (GameObject)PrefabUtility.InstantiatePrefab(person07Pf, pedsNode.transform);
-                    ped1.name = "PF_Person_07_AmbientEast";
-                    ped1.transform.position = new Vector3(23.5f, 0.0f, 1.2f);
-                    ped1.transform.rotation = Quaternion.Euler(0f, -40f, 0f);
-                }
-
-                if (person08Pf != null)
-                {
-                    var ped2 = (GameObject)PrefabUtility.InstantiatePrefab(person08Pf, pedsNode.transform);
-                    ped2.name = "PF_Person_08_AmbientWest";
-                    ped2.transform.position = new Vector3(-13.2f, 0.0f, 1.2f);
-                    ped2.transform.rotation = Quaternion.Euler(0f, 60f, 0f);
-                }
-            }
+            // No static ambient pedestrians: they ended up at the stall origin and stood in the counter. Walking people come from PeopleController.
         }
 
         private static void PopulateNightLighting(Transform parent)
