@@ -33,5 +33,27 @@ namespace TramChanh.UI.Menu
             e.style.paddingTop = padding; e.style.paddingBottom = padding;
             e.style.paddingLeft = padding + 4f; e.style.paddingRight = padding + 4f;
         }
+
+        public static readonly Color Orange = new Color(0.95f, 0.48f, 0.10f, 1f);
+        public static readonly Color OrangeHover = new Color(1f, 0.58f, 0.22f, 1f);
+        public static readonly Color Green = new Color(0.12f, 0.24f, 0.18f, 0.95f);
+        public static readonly Color GreenHover = new Color(0.18f, 0.34f, 0.25f, 0.98f);
+
+        /// <summary>Gives a button the shared look: rounded, edged, bold when primary, lighter on hover.</summary>
+        public static void StyleButton(Button button, bool primary)
+        {
+            Color normal = primary ? Orange : Green;
+            Color hover = primary ? OrangeHover : GreenHover;
+            button.style.backgroundColor = normal;
+            button.style.color = primary ? Color.white : Cream;
+            button.style.unityFontStyleAndWeight = primary ? FontStyle.Bold : FontStyle.Normal;
+            button.style.minHeight = 38f;
+            Round(button, 9f);
+            Border(button, primary ? new Color(1f, 0.68f, 0.28f, 1f) : new Color(0.24f, 0.44f, 0.34f, 0.8f), 1.5f);
+            button.style.marginLeft = 4f;
+            button.style.marginRight = 4f;
+            button.RegisterCallback<PointerEnterEvent>(_ => button.style.backgroundColor = hover);
+            button.RegisterCallback<PointerLeaveEvent>(_ => button.style.backgroundColor = normal);
+        }
     }
 }
