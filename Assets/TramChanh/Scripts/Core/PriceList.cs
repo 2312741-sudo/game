@@ -44,7 +44,7 @@ namespace TramChanh.Core
         public int SpeedBonusPercent { get; }
         public double FastLeftFraction { get; }
 
-        public PriceList(int drinkPrice = 25000, int cakePrice = 20000, int comboDiscountPercent = 10,
+        public PriceList(int drinkPrice = 20000, int cakePrice = 20000, int comboDiscountPercent = 0,
             int poorBelow = 60, int perfectFrom = 90,
             float poorMultiplier = 0.6f, float goodMultiplier = 1.0f, float perfectMultiplier = 1.3f,
             int speedBonusPercent = 15, double fastLeftFraction = 2d / 3d)
@@ -91,6 +91,14 @@ namespace TramChanh.Core
         /// </summary>
         public Sale Price(IReadOnlyList<ItemKind> items, int quality, double patienceLeft, float payMultiplier)
         {
+            var priced = new List<KeyValuePair<ItemKind, int>>();
+            if (items != null) { foreach (ItemKind kind in items) { priced.Add(new KeyValuePair<ItemKind, int>(kind, BasePrice(kind))); } }
+            return PriceItems(priced, quality, patienceLeft, payMultiplier);
+        }
+
+        /// <summary>Same as the other prices, but every item brings its own unit price (drink flavours cost different amounts).</summary>
+        public Sale PriceItems(IReadOnlyList<KeyValuePair<ItemKind, int>> items, int quality, double patienceLeft, float payMultiplier)
+        {
             quality = Math.Min(100, Math.Max(0, quality));
             QualityTier tier = TierFor(quality);
             if (items == null || items.Count == 0) { return new Sale(0, tier, quality); }
@@ -98,10 +106,10 @@ namespace TramChanh.Core
             long subtotal = 0;
             bool hasDrink = false;
             bool hasCake = false;
-            foreach (ItemKind kind in items)
+            foreach (KeyValuePair<ItemKind, int> item in items)
             {
-                subtotal += BasePrice(kind);
-                if (kind == ItemKind.Cake) { hasCake = true; } else { hasDrink = true; }
+                subtotal += Math.Max(0, item.Value);
+                if (item.Key == ItemKind.Cake) { hasCake = true; } else { hasDrink = true; }
             }
             double amount = subtotal;
             if (hasDrink && hasCake) { amount *= (100 - ComboDiscountPercent) / 100.0; }

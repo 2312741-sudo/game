@@ -358,7 +358,7 @@ namespace TramChanh.Tests.EditMode.Customers
 
             FakeCustomerSeat[] seats = FakeCustomerSeat.Tables();
             var director = new CustomerDirector(seats, new CustomerDirectorSettings(10, 6f, 2f, 1f, 0f, 0f), Drink, Cake, 3, 600);
-            director.DrinkChoices = new[] { Drink, "drink.chanh_day", "drink.o_long_chanh_tuoi" };
+            director.DrinkChoices = new[] { Drink, "drink.chanh_day", "drink.xoai" };
             for (int i = 0; i < 10; i++) { director.SpawnNow(); }
             var asked = new HashSet<string>();
             foreach (FakeCustomerSeat seat in seats)
@@ -366,7 +366,7 @@ namespace TramChanh.Tests.EditMode.Customers
                 foreach (var request in seat.Requests) { asked.Add(request.Items[0].ItemDefinitionId); }
             }
             Assert.That(asked.Count, Is.GreaterThan(1), "With several choices more than one drink id is requested.");
-            Assert.That(asked.IsSubsetOf(new HashSet<string> { Drink, "drink.chanh_day", "drink.o_long_chanh_tuoi" }), Is.True);
+            Assert.That(asked.IsSubsetOf(new HashSet<string> { Drink, "drink.chanh_day", "drink.xoai" }), Is.True);
         }
 
         private static int Spawned(CustomerDirector director)

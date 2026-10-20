@@ -21,7 +21,7 @@ Report anything that fails with a screenshot and the Console text.
 
 ## Money (G1, new)
 - [ ] Top centre reads "Ngày 1  18:00  Mở cửa  |  0đ".
-- [ ] Serving a drink adds about 25.000đ, a cake about 20.000đ, a drink plus cake 40.500đ (10 percent combo discount) at Good quality.
+- [ ] Serving the basic drink (Trà Olong - Chanh tươi) adds 20.000đ, a cake 20.000đ, a drink plus cake 40.000đ (no combo discount, as on the real menu), a flavour drink 30.000đ, all at Good quality.
 - [ ] A wrongly prepared or ruined item pays less (Poor x0.6); a perfect one pays more (x1.3).
 - [ ] The end-of-day card shows "Doanh thu", "Chất lượng trung bình", "Hoàn hảo" and "Tiền đang có".
 - [ ] Stop and Play again: the cash in hand is still there.
@@ -58,8 +58,7 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] The shop between days shows an icon on every ingredient row and every upgrade row, a money icon beside the cash, five star icons (full and empty) under "Uy tín", and tomorrow's night icon above the forecast text.
 - [ ] The end-of-day card shows five star icons above the "Ngày mới" button.
 - [ ] Every order in the top-left list has a small customer icon (student, family, office, regular) left of its patience bar.
-- [ ] At 2 stars customers can also ask for "Trà chanh dây"; at 3 stars also "Trà ô long chanh tươi". The shop forecast lists "Món thêm đang bán" and "Món kế tiếp". Any of the drinks is made the same way at the station (the flavour is only the order label for now); the order list and the held-item panel show the flavour name.
-- [ ] Prices are the same for all drinks until the owner gives the real prices.
+- [ ] Customers also ask for the real menu flavours: Chanh dây at 2 stars, Xoài at 3, Đào at 4, Quả mọng and Mãng cầu at 5 (all "Trà Olong - ..." at 30.000đ). The shop forecast lists "Món thêm đang bán" and "Món kế tiếp". Any of the drinks is made the same way at the station (the flavour is only the order label for now); the order list and the held-item panel show the flavour name.
 
 ## Night light (new)
 - [ ] Rain night: the street is noticeably darker and greyer all night, lamps unchanged.

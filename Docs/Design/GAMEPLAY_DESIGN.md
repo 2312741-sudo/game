@@ -31,7 +31,7 @@ Already built and kept: ordering UI, ready shelf, 10 tables, takeaway vehicles, 
 - Each item gets a quality 0-100 from the steps: correct jelly and ice portion (inside tolerance), shake time, wiped cup, cake not burnt, wrapped neatly.
 - Price = base x quality tier (Poor 0.6, Good 1.0, Perfect 1.3). Perfect streaks add a small combo tip.
 - Speed bonus: served in the first third of patience = +15 percent.
-- Starting prices TBD: drink 25k VND, cake 20k, combo discount 10 percent.
+- Prices are the owner's real menu (VND): basic drink Trà Olong - Chanh tươi 20k, other Trà Olong flavours 30k, roll cake (Lăn Truyền Thống) 20k, no combo discount.
 - Costs: tea bags, jelly, ice, batter, sauce, wrap. Running out is a real problem (tea rack already has capacity and stock).
 
 ## 5. Stock and restock (the planning layer)
