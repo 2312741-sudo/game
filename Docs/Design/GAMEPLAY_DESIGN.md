@@ -78,7 +78,7 @@ Keep E / F / hold actions. Add: audio cues per step, ticket pile that grows phys
 | G2 (done, awaiting owner playtest) | Patience, customer kinds, arrival curve, speed bonus, failure assist | Core + Customers + Bootstrap | EditMode: patience book, kinds, arrival plan, price bonus, director scale |
 | G3 (done, awaiting owner playtest) | Stock for ice, jelly, batter, wrap + supplier screen + save (tea bags stay on the rack; corner-shop walk not built) | Core + Bootstrap + UI Menu | EditMode: stock book, supplier, panel text |
 | G4 (done, awaiting owner playtest) | Reputation stars + five upgrades gated by stars (menu unlocks with new recipes not built: they need art) | Core + UI Menu | EditMode: reputation, upgrade book |
-| G5 (done, awaiting owner playtest) | Rain, hot night, power cut, festival, inspector (no weather visuals yet) | Core + Bootstrap | EditMode: night plan |
+| G5 (done, awaiting owner playtest) | Rain, hot night, power cut, festival, inspector (light only: rain darker, power cut dims the lamps, festival brightens them; no rain particles yet) | Core + Bootstrap | EditMode: night plan |
 | G6 (goal and difficulty done; balance pass needs the owner playtest; PlayMode full-night smoke not written) | Daily goal + three difficulties | Core + UI Menu | EditMode: goal, difficulty |
 Each step ships on its own branch, EditMode/PlayMode green, and the owner plays it before the next step.
 

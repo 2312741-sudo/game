@@ -61,6 +61,12 @@ Report anything that fails with a screenshot and the Console text.
 - [ ] At 2 stars customers can also ask for "Trà chanh dây"; at 3 stars also "Trà ô long chanh tươi". The shop forecast lists "Món thêm đang bán" and "Món kế tiếp". Any of the drinks is made the same way at the station (the flavour is only the order label for now); the order list and the held-item panel show the flavour name.
 - [ ] Prices are the same for all drinks until the owner gives the real prices.
 
+## Night light (new)
+- [ ] Rain night: the street is noticeably darker and greyer all night, lamps unchanged.
+- [ ] Power cut night, 21:00 to 21:20: the lamps go almost out and the light drops; no customers arrive; at 21:20 the light comes back smoothly.
+- [ ] Festival night, 20:00 to 21:00: the lamps are brighter.
+- [ ] Clear, hot and inspector nights look the same as before.
+
 ## Sound
 - [ ] A soft bell when a drink is ready, a bright ding when a customer is served, a low buzz when a customer leaves.
 
