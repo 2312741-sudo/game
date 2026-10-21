@@ -667,4 +667,28 @@ MonoBehaviour:
   - _key: settings.look_scale
     _en: Look Sensitivity
     _vi: 'Tốc độ xoay chuột'
+  - _key: save.missing
+    _en: No saved game found
+    _vi: 'Chưa có dữ liệu đã lưu'
+  - _key: save.corrupt
+    _en: Saved game is damaged
+    _vi: 'Dữ liệu đã lưu bị hỏng'
+  - _key: save.version
+    _en: Saved game is from another version
+    _vi: 'Dữ liệu đã lưu thuộc phiên bản khác'
+  - _key: save.io
+    _en: Could not read the saved game
+    _vi: 'Không đọc được dữ liệu đã lưu'
+  - _key: save.write.io
+    _en: Could not write the saved game
+    _vi: 'Không ghi được dữ liệu đã lưu'
+  - _key: save.write.null
+    _en: Nothing to save
+    _vi: 'Không có gì để lưu'
+  - _key: save.delete.io
+    _en: Could not delete the saved game
+    _vi: 'Không xoá được dữ liệu đã lưu'
+  - _key: save.capture
+    _en: Could not collect the game state to save
+    _vi: 'Không thu được trạng thái game để lưu'
 
