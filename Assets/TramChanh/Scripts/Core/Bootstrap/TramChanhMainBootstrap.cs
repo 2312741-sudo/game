@@ -53,6 +53,8 @@ namespace TramChanh.App
         [SerializeField] private GameObject _drinkStationPrefab;
         [SerializeField] private GameObject _cakeStationPrefab;
         [SerializeField] private GameObject _tablePointPrefab;
+        [SerializeField, Tooltip("Visible stall helper: shown only once the Helper upgrade is owned. Visual only, no colliders.")] private GameObject _helperPrefab;
+        [SerializeField, Tooltip("Helper position relative to PlayerSpawn.")] private Vector3 _helperOffset = new Vector3(1.1f, 0f, 0f);
         [Tooltip("Plastic stool the red tea rack stands on behind the counter. Optional.")]
         [SerializeField] private GameObject _teaRackStoolPrefab;
         [SerializeField] private GameObject _vehiclePointPrefab;
@@ -167,6 +169,7 @@ namespace TramChanh.App
             foreach (ItemDefinition definition in definitions) { kinds.Add(new KeyValuePair<string, ItemKind>(definition.Id, definition.Kind)); }
             foreach (string flavourId in MenuBook.ExtraIds()) { kinds.Add(new KeyValuePair<string, ItemKind>(flavourId, ItemKind.Drink)); }
             var service = new OrderService(_clock, _events, _ids, new ContentDatabase(kinds), 1, 1, error => UnityEngine.Debug.LogException(error));
+            _delivery = service;
             Orders = service;
             var queue = new StallTicketQueue(service);
             Tickets = queue;
@@ -308,6 +311,7 @@ namespace TramChanh.App
             CaptureSun();
             Transform spawn = RequireAnchor(PlayerSpawnAnchor);
             Teleport(spawn.position, spawn.rotation);
+            CreateHelperVisual(spawn);
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
             _runtime.SetActive(true);
             // The takeaway customer arrives by motorbike (see UpdateVehicleSeat); only walking-in seats are served immediately.
@@ -550,6 +554,7 @@ namespace TramChanh.App
             Customers.ArrivalIntervalScale = Math.Min(4d, Math.Max(0.2d,
                 ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak) * _reputation.ArrivalFactor
                 * NightPlan.ArrivalScaleAt(_night, hour) * Difficulties.Profile(_difficulty).ArrivalIntervalScale));
+            if (_helperVisual != null && _helperVisual.activeSelf != _upgrades.HasHelper) { _helperVisual.SetActive(_upgrades.HasHelper); }
             if (open) { TickPatience(); }
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
@@ -635,6 +640,10 @@ namespace TramChanh.App
         private DailyGoal _goal;
         private IReadOnlyList<string> _unlockedDrinks;
         private readonly HelperWorker _helper = new HelperWorker();
+        /// <summary>The helper's second job: carry a ready order from the shelf to its customer, after a short wait so the player can still do it first.</summary>
+        private readonly HelperWorker _helperDelivery = new HelperWorker(5d, 4d);
+        private IOrderDelivery _delivery;
+        private GameObject _helperVisual;
         private readonly Dictionary<OrderId, string> _noStockWhy = new Dictionary<OrderId, string>();
         private bool _goalAnnounced;
         private double _nextEmergencyAt;
@@ -712,6 +721,8 @@ namespace TramChanh.App
         private void OnOrderStatus(OrderStatusChanged change)
         {
             if (change.Status != OrderStatus.WaitingForLobby) { _helper.Forget(change.OrderId); }
+            if (change.Status == OrderStatus.Ready) { if (_upgrades.HasHelper) { _helperDelivery.Observe(change.OrderId, _patienceNow); } }
+            else { _helperDelivery.Forget(change.OrderId); }
             TrackPatience(change);
             TrackStock(change);
             switch (change.Status)
@@ -772,6 +783,7 @@ namespace TramChanh.App
             }
             _patienceNow += _clock.DeltaTime;
             if (_upgrades.HasHelper && _helper.TryNext(_patienceNow, out OrderId helperOrder)) { HelperTakeOrder(helperOrder); }
+            if (_upgrades.HasHelper && _helperDelivery.TryNext(_patienceNow, out OrderId helperDelivery)) { HelperDeliverOrder(helperDelivery); }
             _expired.Clear();
             _patience.CollectExpired(_patienceNow, _expired);
             foreach (OrderId id in _expired) { Orders.Fail(id, FailureReason.CustomerLeft); }
@@ -842,6 +854,29 @@ namespace TramChanh.App
         }
 
         /// <summary>The helper worker takes a waiting order for the player: take it, enter what the customer asked for, send it to the stall.</summary>
+        /// <summary>The helper stands beside the player at the counter; hidden until the upgrade is bought.</summary>
+        private void CreateHelperVisual(Transform spawn)
+        {
+            if (_helperPrefab == null) { return; }
+            _helperVisual = Instantiate(_helperPrefab, _runtime.transform, false);
+            _helperVisual.name = "StallHelper";
+            _helperVisual.transform.SetPositionAndRotation(spawn.TransformPoint(_helperOffset), spawn.rotation);
+            foreach (Collider collider in _helperVisual.GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
+            _helperVisual.SetActive(_upgrades.HasHelper);
+        }
+
+        /// <summary>Takes a ready order off the shelf and hands it to the customer who ordered it (shelf pickup, deliver, complete).</summary>
+        private void HelperDeliverOrder(OrderId id)
+        {
+            IReadOnlyOrder order = Orders?.Get(id);
+            if (order == null || order.Status != OrderStatus.Ready || _delivery == null) { return; }
+            var helperActor = new ActorRef(2);
+            if (!Shelf.PickUp(id, helperActor).IsSuccess) { return; }
+            if (!_delivery.Deliver(id, helperActor, new DeliveryTarget(order.Origin, order.CustomerId)).IsSuccess) { return; }
+            if (Orders.Get(id)?.Status != OrderStatus.Completed) { _delivery.Complete(id); }
+            _prompt?.ShowNotice("Nhân viên phụ đã giao món cho khách.", true, 2.5f);
+        }
+
         private void HelperTakeOrder(OrderId id)
         {
             IReadOnlyOrder order = Orders?.Get(id);
@@ -889,6 +924,7 @@ namespace TramChanh.App
             _goalAnnounced = false;
             _combo.NewNight();
             _helper.Clear();
+            _helperDelivery.Clear();
             _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
             ApplyUpgrades();
         }

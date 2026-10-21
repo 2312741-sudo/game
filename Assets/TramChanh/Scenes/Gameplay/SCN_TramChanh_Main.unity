@@ -373,6 +373,8 @@ MonoBehaviour:
   _drinkStationPrefab: {fileID: 6505927981593460591, guid: 96acb90e76ac543cda093f50680d1a4b, type: 3}
   _cakeStationPrefab: {fileID: 8943831326368599622, guid: 3f49b381ad9d14e119ebdf6813e6313d, type: 3}
   _tablePointPrefab: {fileID: 3363350997845005691, guid: b3ce8d04b0a404d43b9091c2b1336e22, type: 3}
+  _helperPrefab: {fileID: 203820146488527063, guid: 2ccf026ed280c47f0a6cbe028a925768, type: 3}
+  _helperOffset: {x: 1.1, y: 0, z: 0}
   _teaRackStoolPrefab: {fileID: 5023653642298891178, guid: be0630dbaa2dd448abde9bed48e119b9, type: 3}
   _vehiclePointPrefab: {fileID: 8660045410336674729, guid: 6652ef7685e4f4047b9c17367c78fec4, type: 3}
   _cakeStationLocalPosition: {x: -0.51, y: 1, z: -0.08}
