@@ -3,6 +3,7 @@
   "rootNamespace": "TramChanh.Tests.EditMode",
   "references": [
     "TramChanh.Core",
+    "TramChanh.Save",
     "TramChanh.Content",
     "TramChanh.Interaction",
     "TramChanh.Orders",
