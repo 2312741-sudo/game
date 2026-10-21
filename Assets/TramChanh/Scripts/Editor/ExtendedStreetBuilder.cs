@@ -21,6 +21,7 @@ namespace TramChanh.EditorTools
         public const string ExtendedStreetPrefabPath = "Assets/TramChanh/Prefabs/Environment/PF_TramChanh_StreetExtended.prefab";
 
         public const float StreetHalfLength = 250f;
+        private const float TreeSpacing = 36f;
         public static readonly float[] AlleyPositions = new float[] { -221.5f, -101.5f, 18.5f, 138.5f };
 
         public const string StallPrefabPath = "Assets/TramChanh/Prefabs/Stall/PF_Stall_TramChanh.prefab";
@@ -691,11 +692,11 @@ namespace TramChanh.EditorTools
             GameObject polePf = AssetDatabase.LoadAssetAtPath<GameObject>(UtilityPolePrefabPath);
             GameObject bikePf = AssetDatabase.LoadAssetAtPath<GameObject>(MotorbikePrefabPath);
 
-            // Street Trees along South sidewalk curb (z = 3.2m) every 12m
+            // Street Trees along South sidewalk curb (z = 3.2m), sparse: every 36m
             var southTrees = new List<float>();
-            for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += 12.0f)
+            for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += TreeSpacing)
             {
-                if (Mathf.Abs(x) < 9.0f) continue;
+                if (Mathf.Abs(x) < 14.0f) continue;
                 bool nearAlley = false;
                 foreach (float al in AlleyPositions)
                 {
@@ -703,7 +704,6 @@ namespace TramChanh.EditorTools
                 }
                 if (!nearAlley) southTrees.Add(x);
             }
-            southTrees.AddRange(new float[] { -13.0f, -11.0f, 11.0f, 13.0f, 14.0f });
 
             if (treePf != null)
             {
@@ -714,10 +714,11 @@ namespace TramChanh.EditorTools
                     t.transform.rotation = Quaternion.Euler(0f, (i * 47f) % 360f, 0f);
                 }
 
-                // Trees along North sidewalk curb (z = 13.0m) every 12m
+                // Trees along North sidewalk curb (z = 13.0m), sparse: every 36m
                 int tIdx = 0;
-                for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += 12.0f)
+                for (float x = -StreetHalfLength + 10f; x <= StreetHalfLength - 10f; x += TreeSpacing)
                 {
+                    if (Mathf.Abs(x) < 14.0f) continue;
                     var t = (GameObject)PrefabUtility.InstantiatePrefab(treePf, parent);
                     t.transform.position = new Vector3(x, 0.0f, 13.0f);
                     t.transform.rotation = Quaternion.Euler(0f, (tIdx * 63f) % 360f, 0f);
