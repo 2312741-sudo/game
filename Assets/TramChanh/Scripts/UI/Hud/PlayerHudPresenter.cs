@@ -12,13 +12,12 @@ namespace TramChanh.UI.Hud
     /// Builds the held-item panel, the active-order list and the order toast into an existing UIDocument root
     /// (the InteractionHUD document) with minimal inline styling. Model events only mark the view dirty;
     /// rendering happens in <see cref="Tick"/>, so a HUD fault can never interrupt a gameplay publish.
-    /// Visual design (USS/UXML/fonts/art) is intentionally out of scope.
+    /// All colours and sizes come from <see cref="HudTheme"/>.
     /// </summary>
     public sealed class PlayerHudPresenter : IDisposable
     {
-        private static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.6f);
-        private static readonly Color HintColor = new Color(0.99f, 0.82f, 0.28f);
-        private static readonly Color DimColor = new Color(0.78f, 0.86f, 0.80f);
+        private static readonly Color HintColor = HudTheme.Hint;
+        private static readonly Color DimColor = HudTheme.TextDim;
         private readonly Func<string, string> _resolve;
         private readonly HeldItemFeedbackModel _held;
         private readonly ActiveOrderListModel _orders;
@@ -133,16 +132,16 @@ namespace TramChanh.UI.Hud
         {
             if (_held != null)
             {
-                _heldPanel = Panel();
-                _heldPanel.style.right = 20f;
-                _heldPanel.style.top = 20f;
-                _heldPanel.style.width = 330f;
-                var title = NewLabel(13f, DimColor);
+                _heldPanel = Panel(330f);
+                _heldPanel.style.right = HudTheme.Margin;
+                _heldPanel.style.top = HudTheme.RightColumnTop;
+                var title = NewLabel(HudTheme.SmallSize, DimColor);
                 title.text = Text(HudText.Of(HudKeys.HeldTitle));
-                _heldName = NewLabel(20f, Color.white);
+                _heldName = NewLabel(20f, HudTheme.Text);
                 _heldName.style.unityFontStyleAndWeight = FontStyle.Bold;
-                _heldState = NewLabel(15f, Color.white);
-                _heldNext = NewLabel(15f, HintColor);
+                _heldState = NewLabel(HudTheme.BodySize, HudTheme.Text);
+                _heldNext = NewLabel(HudTheme.BodySize, HintColor);
+                _heldNext.style.unityFontStyleAndWeight = FontStyle.Bold;
                 _heldOrder = NewLabel(14f, DimColor);
                 _heldPanel.Add(title);
                 _heldPanel.Add(_heldName);
@@ -153,13 +152,13 @@ namespace TramChanh.UI.Hud
             }
             if (_orders != null)
             {
-                _ordersPanel = Panel();
-                _ordersPanel.style.left = 20f;
-                _ordersPanel.style.top = 52f;
-                _ordersPanel.style.width = 380f;
-                _ordersTitle = NewLabel(17f, TramChanh.UI.Menu.UiStyle.Gold);
+                _ordersPanel = Panel(380f);
+                _ordersPanel.style.left = HudTheme.Margin;
+                _ordersPanel.style.top = HudTheme.LeftColumnTop;
+                _ordersTitle = NewLabel(HudTheme.TitleSize, TramChanh.UI.Menu.UiStyle.Gold);
                 _ordersTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
                 _ordersNext = NewLabel(16f, HintColor);
+                _ordersNext.style.unityFontStyleAndWeight = FontStyle.Bold;
                 _ordersNext.style.marginBottom = 6f;
                 _ordersRows = new VisualElement();
                 _ordersMore = NewLabel(13f, DimColor);
@@ -170,17 +169,8 @@ namespace TramChanh.UI.Hud
                 root.Add(_ordersPanel);
 
                 _toastLabel = NewLabel(22f, Color.white);
-                _toastLabel.style.position = Position.Absolute;
-                _toastLabel.style.top = Length.Percent(18f);
-                _toastLabel.style.left = Length.Percent(50f);
-                _toastLabel.style.width = 560f;
-                _toastLabel.style.marginLeft = -280f;
-                _toastLabel.style.paddingTop = 10f;
-                _toastLabel.style.paddingBottom = 10f;
-                _toastLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-                _toastLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                TramChanh.UI.Menu.UiStyle.Round(_toastLabel, 14f);
-                TramChanh.UI.Menu.UiStyle.Border(_toastLabel, new Color(1f, 1f, 1f, 0.35f), 1.5f);
+                HudTheme.StyleToast(_toastLabel, 560f, true);
+                _toastLabel.style.top = Length.Percent(20f);
                 root.Add(_toastLabel);
             }
         }
@@ -210,11 +200,13 @@ namespace TramChanh.UI.Hud
                 card.pickingMode = PickingMode.Ignore;
                 card.style.marginTop = 6f;
                 card.style.paddingTop = 5f; card.style.paddingBottom = 5f; card.style.paddingLeft = 8f; card.style.paddingRight = 8f;
-                card.style.backgroundColor = row.IsPrimary ? new Color(0.95f, 0.48f, 0.10f, 0.22f) : new Color(1f, 1f, 1f, 0.06f);
+                card.style.backgroundColor = row.IsPrimary ? HudTheme.PrimaryCard : HudTheme.PlainCard;
                 TramChanh.UI.Menu.UiStyle.Round(card, 8f);
-                if (row.IsPrimary) { card.style.borderLeftWidth = 3f; card.style.borderLeftColor = new Color(0.95f, 0.48f, 0.10f, 1f); }
+                // The coloured left edge tells the stage at a glance; the primary order gets a thicker one.
+                card.style.borderLeftWidth = row.IsPrimary ? 5f : 3f;
+                card.style.borderLeftColor = HudTheme.ToneColor(HudTheme.ToneFor(row.Status));
                 _ordersRows.Add(card);
-                Label header = NewLabel(16f, row.IsPrimary ? HintColor : Color.white);
+                Label header = NewLabel(16f, row.IsPrimary ? HintColor : HudTheme.Text);
                 header.style.unityFontStyleAndWeight = FontStyle.Bold;
                 header.text = Text(row.Header);
                 card.Add(header);
@@ -285,7 +277,7 @@ namespace TramChanh.UI.Hud
             track.name = "PatienceTrack";
             track.style.height = 6f;
             track.style.flexGrow = 1f;
-            track.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
+            track.style.backgroundColor = HudTheme.Track;
             track.style.height = 8f;
             TramChanh.UI.Menu.UiStyle.Round(track, 4f);
             track.style.overflow = Overflow.Hidden;
@@ -309,8 +301,7 @@ namespace TramChanh.UI.Hud
                 if (track != null) { SetVisible(track, bar.IsVisible); }
                 if (!bar.IsVisible) { continue; }
                 fill.style.width = Length.Percent(bar.WidthPercent);
-                fill.style.backgroundColor = bar.Level == PatienceLevel.Danger ? new Color(0.9f, 0.2f, 0.15f, 0.95f)
-                    : (bar.Level == PatienceLevel.Warning ? new Color(0.98f, 0.65f, 0.1f, 0.95f) : new Color(0.3f, 0.8f, 0.35f, 0.95f));
+                fill.style.backgroundColor = HudTheme.PatienceColor(bar.Level);
             }
         }
 
@@ -318,28 +309,13 @@ namespace TramChanh.UI.Hud
         {
             if (_toast == null || _toastLabel == null) { return; }
             _toastLabel.text = Text(_toast.Current);
-            _toastLabel.style.backgroundColor = _toast.IsPositive ? new Color(0.1f, 0.45f, 0.2f, 0.85f) : new Color(0.55f, 0.15f, 0.1f, 0.85f);
+            _toastLabel.style.backgroundColor = HudTheme.ToastColor(_toast.IsPositive);
             SetVisible(_toastLabel, _toast.IsVisible);
         }
 
-        private static VisualElement Panel()
-        {
-            var panel = new VisualElement();
-            panel.pickingMode = PickingMode.Ignore;
-            panel.style.position = Position.Absolute;
-            TramChanh.UI.Menu.UiStyle.MakeCard(panel, 12f, 9f);
-            return panel;
-        }
+        private static VisualElement Panel(float width) => HudTheme.NewPanel(width);
 
-        private static Label NewLabel(float size, Color color)
-        {
-            var label = new Label();
-            label.pickingMode = PickingMode.Ignore;
-            label.style.fontSize = size;
-            label.style.color = color;
-            label.style.whiteSpace = WhiteSpace.Normal;
-            return label;
-        }
+        private static Label NewLabel(float size, Color color) => HudTheme.NewLabel(size, color);
 
         private static void SetVisible(VisualElement element, bool visible) => element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
 
