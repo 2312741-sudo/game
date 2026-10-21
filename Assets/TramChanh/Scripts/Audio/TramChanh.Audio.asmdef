@@ -1,0 +1,20 @@
+{
+  "name": "TramChanh.Audio",
+  "rootNamespace": "TramChanh.Audio",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Cakes",
+    "TramChanh.Drinks"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
