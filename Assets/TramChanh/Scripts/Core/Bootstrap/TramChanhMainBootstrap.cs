@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TramChanh.Audio;
 using TramChanh.Cakes;
 using TramChanh.Content;
 using TramChanh.App.People;
@@ -648,10 +649,6 @@ namespace TramChanh.App
         private int _shownMoney = -1;
         private IDisposable _orderSubscription;
         private bool _wasOpen = true;
-        private AudioSource _sfx;
-        private AudioClip _readyClip;
-        private AudioClip _servedClip;
-        private AudioClip _failedClip;
 
         /// <summary>Tests set this before loading the scene so the game starts running instead of waiting on the title screen.</summary>
         public static bool SuppressTitleScreen { get; set; }
@@ -703,27 +700,25 @@ namespace TramChanh.App
 
         private void SetUpSound()
         {
-            _sfx = gameObject.AddComponent<AudioSource>();
-            _sfx.playOnAwake = false;
-            _sfx.spatialBlend = 0f;
-            _readyClip = Resources.Load<AudioClip>("Audio/sfx_ready");
-            _servedClip = Resources.Load<AudioClip>("Audio/sfx_served");
-            _failedClip = Resources.Load<AudioClip>("Audio/sfx_failed");
+            // Master volume stays on AudioListener.volume (ApplySettings), so the manager keeps its default master of 1.
+            // Only these three clips exist; every other cue stays silent until a clip is assigned in a library asset.
+            var library = ScriptableObject.CreateInstance<AudioCueLibrary>();
+            library.SetEntry(AudioCue.TicketBell, Resources.Load<AudioClip>("Audio/sfx_ready"));
+            library.SetEntry(AudioCue.OrderServed, Resources.Load<AudioClip>("Audio/sfx_served"));
+            library.SetEntry(AudioCue.OrderFailed, Resources.Load<AudioClip>("Audio/sfx_failed"));
+            AudioManager.Create(_events, library);
         }
 
         private void OnOrderStatus(OrderStatusChanged change)
         {
-            AudioClip clip = null;
             if (change.Status != OrderStatus.WaitingForLobby) { _helper.Forget(change.OrderId); }
             TrackPatience(change);
             TrackStock(change);
             switch (change.Status)
             {
-                case OrderStatus.Ready: clip = _readyClip; break;
-                case OrderStatus.Completed: CompleteOrder(change.OrderId); clip = _servedClip; break;
-                case OrderStatus.Failed: FailOrder(change.OrderId); clip = _failedClip; break;
+                case OrderStatus.Completed: CompleteOrder(change.OrderId); break;
+                case OrderStatus.Failed: FailOrder(change.OrderId); break;
             }
-            if (clip != null && _sfx != null) { _sfx.PlayOneShot(clip); }
         }
 
         private void TrackPatience(OrderStatusChanged change)
