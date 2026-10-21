@@ -1,0 +1,29 @@
+{
+  "name": "TramChanh.Tests.EditMode.Audio",
+  "rootNamespace": "TramChanh.Tests.EditMode.Audio",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Interaction",
+    "TramChanh.Orders",
+    "TramChanh.Cakes",
+    "TramChanh.Drinks",
+    "TramChanh.Audio",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
