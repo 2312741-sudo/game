@@ -47,6 +47,7 @@ namespace TramChanh.UI.Prompt
         private bool _noticePositive = true;
         private float _noticeUntil;
         private Label _credits;
+        private VisualElement _crosshair;
         private PauseMenu _pauseMenu;
         private PauseMenu _titleMenu;
         private DaySummaryPanel _summary;
@@ -127,58 +128,15 @@ namespace TramChanh.UI.Prompt
             _hasRenderedQuery = false;
             root.pickingMode = PickingMode.Ignore;
             var instructions = new Label(_table.Resolve("preview.controls", _language));
-            instructions.style.position = Position.Absolute;
-            instructions.style.left = 20f;
-            instructions.style.top = 20f;
-            instructions.style.fontSize = 16f;
-            instructions.style.color = UiStyle.Dim;
-            instructions.style.top = 20f;
-            instructions.style.backgroundColor = new Color(0.07f, 0.16f, 0.12f, 0.6f);
-            instructions.style.paddingTop = 4f; instructions.style.paddingBottom = 4f;
-            instructions.style.paddingLeft = 9f; instructions.style.paddingRight = 9f;
-            UiStyle.Round(instructions, 8f);
-            instructions.pickingMode = PickingMode.Ignore;
+            HudTheme.StyleChip(instructions, 14f);
+            instructions.style.left = HudTheme.Margin;
             root.Add(instructions);
             _status = new Label(_statusText);
-            _status.pickingMode = PickingMode.Ignore;
-            _status.style.position = Position.Absolute;
-            _status.style.top = 14f;
-            _status.style.left = Length.Percent(50f);
-            _status.style.width = 580f;
-            _status.style.marginLeft = -290f;
-            _status.style.fontSize = 20f;
-            _status.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _status.style.color = new Color(0.99f, 0.85f, 0.35f, 1f); // Lime gold
-            _status.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _status.style.backgroundColor = new Color(0.08f, 0.18f, 0.13f, 0.90f); // Deep Tea Green
-            _status.style.borderTopWidth = 1.5f;
-            _status.style.borderBottomWidth = 1.5f;
-            _status.style.borderLeftWidth = 1.5f;
-            _status.style.borderRightWidth = 1.5f;
-            _status.style.borderTopColor = new Color(0.95f, 0.48f, 0.10f, 0.80f);
-            _status.style.borderBottomColor = new Color(0.95f, 0.48f, 0.10f, 0.80f);
-            _status.style.borderLeftColor = new Color(0.95f, 0.48f, 0.10f, 0.80f);
-            _status.style.borderRightColor = new Color(0.95f, 0.48f, 0.10f, 0.80f);
-            _status.style.borderTopLeftRadius = 18f;
-            _status.style.borderTopRightRadius = 18f;
-            _status.style.borderBottomLeftRadius = 18f;
-            _status.style.borderBottomRightRadius = 18f;
-            _status.style.paddingTop = 5f;
-            _status.style.paddingBottom = 5f;
+            HudTheme.StyleReadout(_status);
             root.Add(_status);
             _notice = new Label();
-            _notice.pickingMode = PickingMode.Ignore;
-            _notice.style.position = Position.Absolute;
-            _notice.style.top = 100f;
-            _notice.style.left = Length.Percent(50f);
-            _notice.style.width = 620f;
-            _notice.style.marginLeft = -310f;
-            _notice.style.fontSize = 20f;
-            _notice.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _notice.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _notice.style.whiteSpace = WhiteSpace.Normal;
-            _notice.style.paddingTop = 8f;
-            _notice.style.paddingBottom = 8f;
+            HudTheme.StyleToast(_notice, 620f, _noticePositive);
+            _notice.style.top = HudTheme.NoticeTop;
             _notice.style.display = DisplayStyle.None;
             root.Add(_notice);
             ApplyNotice();
@@ -212,34 +170,15 @@ namespace TramChanh.UI.Prompt
             _credits.style.display = DisplayStyle.None;
             root.Add(_credits);
             var creditsHint = new Label("[F1] Credits");
-            creditsHint.pickingMode = PickingMode.Ignore;
-            creditsHint.style.position = Position.Absolute;
-            creditsHint.style.right = 20f;
-            creditsHint.style.top = 20f;
-            creditsHint.style.fontSize = 14f;
-            creditsHint.style.color = new Color(0.90f, 0.95f, 0.90f, 0.85f);
-            creditsHint.style.backgroundColor = new Color(0.08f, 0.18f, 0.13f, 0.70f);
-            creditsHint.style.paddingTop = 4f;
-            creditsHint.style.paddingBottom = 4f;
-            creditsHint.style.paddingLeft = 8f;
-            creditsHint.style.paddingRight = 8f;
-            creditsHint.style.borderTopLeftRadius = 6f;
-            creditsHint.style.borderTopRightRadius = 6f;
-            creditsHint.style.borderBottomLeftRadius = 6f;
-            creditsHint.style.borderBottomRightRadius = 6f;
+            HudTheme.StyleChip(creditsHint, 13f);
+            creditsHint.style.right = HudTheme.Margin;
             root.Add(creditsHint);
             var crosshair = new VisualElement();
-            crosshair.pickingMode = PickingMode.Ignore;
             crosshair.style.position = Position.Absolute;
             crosshair.style.left = Length.Percent(50f);
             crosshair.style.top = Length.Percent(50f);
-            crosshair.style.width = 8f;
-            crosshair.style.height = 8f;
-            crosshair.style.marginLeft = -4f;
-            crosshair.style.marginTop = -4f;
-            crosshair.style.backgroundColor = new Color(1f, 1f, 1f, 0.9f);
-            UiStyle.Round(crosshair, 4f);
-            UiStyle.Border(crosshair, new Color(0f, 0f, 0f, 0.55f), 1.5f);
+            _crosshair = crosshair;
+            HudTheme.StyleCrosshair(crosshair, false);
             root.Add(crosshair);
             _panel = new VisualElement();
             _panel.style.position = Position.Absolute;
@@ -249,22 +188,23 @@ namespace TramChanh.UI.Prompt
             _panel.style.marginLeft = -310f;
             UiStyle.MakeCard(_panel, 14f, 10f);
             _text = new Label();
-            _text.style.fontSize = 22f;
+            _text.style.fontSize = HudTheme.PromptSize;
             _text.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _text.style.color = Color.white;
+            _text.style.color = HudTheme.Text;
             _text.style.unityTextAlign = TextAnchor.MiddleCenter;
             _panel.Add(_text);
             _reason = new Label();
-            _reason.style.fontSize = 16f;
-            _reason.style.color = UiStyle.Dim;
-            _reason.style.unityTextAlign = TextAnchor.MiddleCenter;
+            HudTheme.StyleReason(_reason);
+            _reason.style.display = DisplayStyle.None;
             _panel.Add(_reason);
             _progress = new ProgressBar { lowValue = 0f, highValue = 100f };
+            HudTheme.StyleProgress(_progress);
             _panel.Add(_progress);
             _heldPanel = new VisualElement();
-            _heldText = new Label(); _heldText.style.fontSize = 22f; _heldText.style.color = Color.white; _heldText.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _heldReason = new Label(); _heldReason.style.fontSize = 16f; _heldReason.style.color = Color.gray; _heldReason.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _heldText = new Label(); _heldText.style.fontSize = HudTheme.PromptSize; _heldText.style.unityFontStyleAndWeight = FontStyle.Bold; _heldText.style.color = HudTheme.Text; _heldText.style.marginTop = 6f; _heldText.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _heldReason = new Label(); HudTheme.StyleReason(_heldReason); _heldReason.style.display = DisplayStyle.None;
             _heldProgress = new ProgressBar { lowValue = 0f, highValue = 100f };
+            HudTheme.StyleProgress(_heldProgress);
             _heldPanel.Add(_heldText); _heldPanel.Add(_heldReason); _heldPanel.Add(_heldProgress);
             _panel.Add(_heldPanel);
             _hasRenderedHeldQuery = false;
@@ -285,13 +225,13 @@ namespace TramChanh.UI.Prompt
                 return;
             }
             _hint = new Label();
-            _hint.style.fontSize = 15f;
-            _hint.style.color = new Color(1f, 0.85f, 0.4f);
+            _hint.style.fontSize = HudTheme.BodySize;
+            _hint.style.color = HudTheme.Hint;
             _hint.style.unityTextAlign = TextAnchor.MiddleCenter;
             _panel.Insert(_panel.IndexOf(_progress) + 1, _hint);
             _heldHint = new Label();
-            _heldHint.style.fontSize = 15f;
-            _heldHint.style.color = new Color(1f, 0.85f, 0.4f);
+            _heldHint.style.fontSize = HudTheme.BodySize;
+            _heldHint.style.color = HudTheme.Hint;
             _heldHint.style.unityTextAlign = TextAnchor.MiddleCenter;
             _heldPanel.Add(_heldHint);
             IHeldItemSlot hands = _source != null && _source.Context != null ? _source.Context.Hands : null;
@@ -399,7 +339,7 @@ namespace TramChanh.UI.Prompt
             bool show = !string.IsNullOrEmpty(_noticeText) && Time.unscaledTime < _noticeUntil;
             _notice.text = _noticeText;
             _notice.style.color = Color.white;
-            _notice.style.backgroundColor = _noticePositive ? new Color(0.1f, 0.45f, 0.2f, 0.9f) : new Color(0.55f, 0.15f, 0.1f, 0.9f);
+            _notice.style.backgroundColor = HudTheme.ToastColor(_noticePositive);
             _notice.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
@@ -437,10 +377,12 @@ namespace TramChanh.UI.Prompt
         private void Render(InteractionPromptChanged state)
         {
             _panel.style.display = state.IsVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (state.IsVisible && _crosshair != null) { HudTheme.StyleCrosshair(_crosshair, string.IsNullOrEmpty(state.Query.BlockedReasonKey)); }
             if (!state.IsVisible)
             {
                 _text.text = string.Empty;
                 _heldText.text = string.Empty;
+                if (_crosshair != null) { HudTheme.StyleCrosshair(_crosshair, false); }
                 _hasRenderedQuery = false;
                 _hasRenderedHeldQuery = false;
                 return;
@@ -448,7 +390,7 @@ namespace TramChanh.UI.Prompt
             if (!_hasRenderedQuery || !_renderedQuery.Equals(state.Query) || _renderedHeldUse != state.IsHeldUse)
             {
                 _text.text = _table.Resolve(state.IsHeldUse ? "preview.held_key" : "preview.key", _language) + "  " + _table.Resolve(state.Query.PromptKey, _language);
-                _reason.text = _table.Resolve(state.Query.BlockedReasonKey, _language);
+                HudTheme.SetReasonText(_reason, string.IsNullOrEmpty(state.Query.BlockedReasonKey) ? string.Empty : _table.Resolve(state.Query.BlockedReasonKey, _language));
                 _progress.style.display = state.Query.Kind == InteractionKind.Hold ? DisplayStyle.Flex : DisplayStyle.None;
                 _renderedQuery = state.Query;
                 _renderedHeldUse = state.IsHeldUse;
@@ -467,7 +409,7 @@ namespace TramChanh.UI.Prompt
             if (!_hasRenderedHeldQuery || !_renderedHeldQuery.Equals(state.HeldQuery))
             {
                 _heldText.text = _table.Resolve("preview.held_key", _language) + "  " + _table.Resolve(state.HeldQuery.PromptKey, _language);
-                _heldReason.text = _table.Resolve(state.HeldQuery.BlockedReasonKey, _language);
+                HudTheme.SetReasonText(_heldReason, string.IsNullOrEmpty(state.HeldQuery.BlockedReasonKey) ? string.Empty : _table.Resolve(state.HeldQuery.BlockedReasonKey, _language));
                 _heldProgress.style.display = state.HeldQuery.Kind == InteractionKind.Hold ? DisplayStyle.Flex : DisplayStyle.None;
                 _renderedHeldQuery = state.HeldQuery; _hasRenderedHeldQuery = true;
             }
