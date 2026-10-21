@@ -26,6 +26,19 @@ namespace TramChanh.Tests.EditMode.UI
         // Long by design: the controls legend and the order-entry hint that tells the player to enter before sending.
         private static readonly HashSet<string> LongTextAllowed = new HashSet<string> { "preview.controls", "order.transition.invalid" };
 
+        /// <summary>
+        /// Dotted literals that look like keys but are never shown to the player: item ids (their text is "item." + id),
+        /// persistence keys, the save file name and a prefix compared with StartsWith. Add a literal here only with a reason.
+        /// </summary>
+        private static readonly HashSet<string> NotDisplayText = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "drink.chanh_day", "drink.xoai", "drink.dao", "drink.qua_mong", "drink.mang_cau", // MenuBook item ids
+            "item.drink", // MenuBook prefix test
+            "progress.money_units", "progress.total_earned_units", "progress.best_earned_units", // GameProgress storage keys
+            "reputation.points", "settings.difficulty", "settings.input_overrides", // Reputation, Difficulties, rebinding storage keys
+            "tramchanh_save.json", // JsonFileSaveStore file name
+        };
+
         private PromptTableFile _table;
 
         [SetUp]
@@ -108,6 +121,7 @@ namespace TramChanh.Tests.EditMode.UI
             foreach (KeyValuePair<string, string> composed in ComposedKeys()) { if (!used.ContainsKey(composed.Key)) { used.Add(composed.Key, composed.Value); } }
             foreach (KeyValuePair<string, string> pair in used.OrderBy(p => p.Key, StringComparer.Ordinal))
             {
+                if (NotDisplayText.Contains(pair.Key)) { continue; }
                 if (!_table.Contains(pair.Key)) { missing.Add(pair.Key + "  (" + pair.Value + ")"); continue; }
                 foreach (string language in new[] { "en", "vi" })
                 {
