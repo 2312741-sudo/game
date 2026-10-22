@@ -42,11 +42,11 @@ namespace TramChanh.Core
 
         public static CustomerKinds Default { get; } = new CustomerKinds(new[]
         {
-            new CustomerProfile(CustomerKind.Student, "Học sinh", 120d, 1.0f, 40),
-            new CustomerProfile(CustomerKind.Family, "Gia đình", 180d, 1.0f, 25),
-            new CustomerProfile(CustomerKind.Office, "Nhân viên văn phòng", 90d, 1.15f, 25),
-            new CustomerProfile(CustomerKind.Regular, "Khách quen", 150d, 1.2f, 10),
-            new CustomerProfile(CustomerKind.Critic, "Nhà phê bình", 100d, 1.0f, 5),
+            new CustomerProfile(CustomerKind.Student, "Học sinh", 180d, 1.0f, 40),
+            new CustomerProfile(CustomerKind.Family, "Gia đình", 270d, 1.0f, 25),
+            new CustomerProfile(CustomerKind.Office, "Nhân viên văn phòng", 135d, 1.15f, 25),
+            new CustomerProfile(CustomerKind.Regular, "Khách quen", 225d, 1.2f, 10),
+            new CustomerProfile(CustomerKind.Critic, "Nhà phê bình", 150d, 1.0f, 5),
         });
 
         public int Count => _profiles.Length;

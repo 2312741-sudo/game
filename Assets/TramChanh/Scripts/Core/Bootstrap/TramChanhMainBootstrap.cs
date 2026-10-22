@@ -270,6 +270,12 @@ namespace TramChanh.App
             }
             foreach (ReadyCounterPoint ready in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { ready.Initialize(Shelf, _events); }
             foreach (ReadyOrderPickupPoint pickup in DrinkStation.GetComponentsInChildren<ReadyOrderPickupPoint>(true)) { pickup.Initialize(Shelf, Orders, _events); }
+            // Aiming at the counter with empty hands also picks up a finished order (two neighbouring points were hard to hit).
+            ReadyOrderPickupPoint firstPickup = DrinkStation.GetComponentInChildren<ReadyOrderPickupPoint>(true);
+            if (firstPickup != null)
+            {
+                foreach (ReadyCounterPoint counter in DrinkStation.GetComponentsInChildren<ReadyCounterPoint>(true)) { counter.SetPickupFallback(firstPickup); }
+            }
             CakeStation.Initialize(queue, _ids, _events, _clock, new CakeRecipeCatalog(queue, _cakeRecipes), Shelf);
 
             var mixed = new[] { new ItemRequest(_drinkDefinition.Id, 1), new ItemRequest(_cakeRecipes[0].ItemDefinition.Id, 1) };
@@ -653,6 +659,7 @@ namespace TramChanh.App
         private Quaternion _helperHomeRotation;
         private bool _helperBusy;
         private readonly List<Vector3> _helperPath = new List<Vector3>();
+        private readonly List<GameObject> _helperCarry = new List<GameObject>();
         private readonly Dictionary<OrderId, string> _noStockWhy = new Dictionary<OrderId, string>();
         private bool _goalAnnounced;
         private double _nextEmergencyAt;
@@ -927,6 +934,7 @@ namespace TramChanh.App
         private void ResetHelperPost()
         {
             _helperBusy = false;
+            DiscardHelperCarry();
             if (_helperView != null) { _helperView.Place(_helperHome, _helperHomeRotation); }
         }
 
@@ -937,13 +945,40 @@ namespace TramChanh.App
         {
             IReadOnlyOrder order = Orders?.Get(id);
             if (order == null || order.Status != OrderStatus.Ready || _delivery == null) { return; }
-            if (!Shelf.PickUp(id, new ActorRef(2)).IsSuccess) { return; }
+            var picked = Shelf.PickUp(id, new ActorRef(2));
+            if (!picked.IsSuccess) { return; }
+            TakeFromCounter(picked.Value);
             if (!HelperCanWalk) { HelperHandOver(id); return; }
             HelperWalkTo(HelperTargetFor(order), () => { HelperHandOver(id); HelperGoHome(); });
         }
 
+        /// <summary>Products leave the counter the moment the helper takes them; the helper carries them until the handover.</summary>
+        private void TakeFromCounter(IReadOnlyList<IPreparedItem> items)
+        {
+            foreach (IPreparedItem item in items)
+            {
+                if (!(item is Component visual) || visual == null) { continue; }
+                foreach (Collider collider in visual.GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
+                if (_helperVisual != null)
+                {
+                    visual.transform.SetParent(_helperVisual.transform, false);
+                    visual.transform.localPosition = new Vector3(0f, 1f, 0.35f);
+                    visual.transform.localRotation = Quaternion.identity;
+                }
+                else { visual.gameObject.SetActive(false); }
+                _helperCarry.Add(visual.gameObject);
+            }
+        }
+
+        private void DiscardHelperCarry()
+        {
+            foreach (GameObject carried in _helperCarry) { if (carried != null) { Destroy(carried); } }
+            _helperCarry.Clear();
+        }
+
         private void HelperHandOver(OrderId id)
         {
+            DiscardHelperCarry();
             IReadOnlyOrder order = Orders?.Get(id);
             if (order == null || order.Status != OrderStatus.PickedUpByLobby) { return; }
             var helperActor = new ActorRef(2);

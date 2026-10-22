@@ -14,6 +14,7 @@ namespace TramChanh.Stall.Runtime
         [SerializeField] private Transform _drinkPlacementPoint;
         [SerializeField] private Transform _cakePlacementPoint;
         private IReadyShelfPlacement _shelf;
+        private IInteractable _pickupFallback;
         private IEventBus _events;
         private IDisposable _subscription;
         private Component _drinkVisual;
@@ -27,6 +28,12 @@ namespace TramChanh.Stall.Runtime
         public Transform DrinkPlacementPoint => _drinkPlacementPoint;
         public Transform CakePlacementPoint => _cakePlacementPoint;
 
+        /// <summary>
+        /// With empty hands the counter itself picks up a finished order, so the player does not have to aim at a second,
+        /// neighbouring point. The fallback is queried first and only wins when it has something to hand out.
+        /// </summary>
+        public void SetPickupFallback(IInteractable pickup) { _pickupFallback = pickup; }
+
         public void Initialize(IReadyShelfPlacement shelf, IEventBus events)
         {
             Disconnect();
@@ -37,6 +44,7 @@ namespace TramChanh.Stall.Runtime
 
         public InteractionQuery Query(InteractionContext context)
         {
+            if (CanPickUpHere(context)) { return _pickupFallback.Query(context); }
             Availability available;
             if (_shelf == null || _drinkPlacementPoint == null || _cakePlacementPoint == null)
             {
@@ -61,8 +69,14 @@ namespace TramChanh.Stall.Runtime
             return new InteractionQuery(available, "ready.place_item");
         }
 
+        private bool CanPickUpHere(InteractionContext context)
+        {
+            return _pickupFallback != null && context.Hands.Current == null && _pickupFallback.Query(context).Availability.IsAvailable;
+        }
+
         public void Execute(InteractionContext context)
         {
+            if (CanPickUpHere(context)) { _pickupFallback.Execute(context); return; }
             InteractionQuery query = Query(context);
             if (!query.Availability.IsAvailable)
             {

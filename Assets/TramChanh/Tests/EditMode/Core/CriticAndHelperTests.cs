@@ -52,7 +52,7 @@ namespace TramChanh.Tests.EditMode.Core
             {
                 Assert.That(kinds.Pick(roll, false).Kind, Is.Not.EqualTo(CustomerKind.Critic));
             }
-            Assert.That(kinds.Profile(CustomerKind.Critic).PatienceSeconds, Is.EqualTo(100d));
+            Assert.That(kinds.Profile(CustomerKind.Critic).PatienceSeconds, Is.EqualTo(150d)); // owner asked for longer waits (x1.5 on 2026-10-22)
         }
 
         [Test]

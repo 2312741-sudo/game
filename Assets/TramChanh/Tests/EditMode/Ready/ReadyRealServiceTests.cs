@@ -140,6 +140,39 @@ namespace TramChanh.Tests.EditMode.Ready
         }
 
         [Test]
+        public void B3_CounterAlsoPicksUpAFinishedOrderWhenTheHandsAreEmpty()
+        {
+            OrderId id = NewOrder(1, "drink");
+            Bag bag = NewBag(ItemKind.Drink);
+            PlaceFromHand(bag);
+            Assert.That(_counter.Query(_context).Availability.IsAvailable, Is.False, "Without the fallback the counter only places.");
+            _counter.SetPickupFallback(_pickup);
+            InteractionQuery query = _counter.Query(_context);
+            Assert.That(query.Availability.IsAvailable, Is.True, "Empty hands and a finished order: the counter hands it out.");
+            Assert.That(query.PromptKey, Is.EqualTo("ready.pick_up_order"));
+            _counter.Execute(_context);
+            var bundle = _hands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null);
+            Assert.That(bundle.OrderId, Is.EqualTo(id));
+            Assert.That(_drinkPlacement.childCount, Is.Zero, "The picked up product leaves the counter.");
+        }
+
+        [Test]
+        public void B3_CounterStillPlacesWhenAPreparedItemIsHeldEvenWithAFinishedOrderWaiting()
+        {
+            NewOrder(1, "drink");
+            PlaceFromHand(NewBag(ItemKind.Drink));
+            _counter.SetPickupFallback(_pickup);
+            NewOrder(2, "cake");
+            Bag cake = NewBag(ItemKind.Cake);
+            Assert.That(_hands.TryPickUp(cake), Is.True);
+            Assert.That(_counter.Query(_context).PromptKey, Is.EqualTo("ready.place_item"), "Holding a product, the counter is for placing.");
+            _counter.Execute(_context);
+            Assert.That(_hands.Current, Is.Null);
+            Assert.That(_cakePlacement.childCount, Is.EqualTo(1));
+        }
+
+        [Test]
         public void B3_PartialOrderIsNotWholeButItsReadyItemsCanBeCarried()
         {
             OrderId id = NewOrder(1, "cake", "drink");
