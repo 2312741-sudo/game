@@ -42,10 +42,15 @@ namespace TramChanh.UI.Menu
         private VisualElement _starRow;
         private Image _nightIcon;
         private Button _difficulty;
+        private readonly DragSession _drag;
+        private VisualElement _basket;
+        private Label _basketText;
+        private Label _ghost;
 
         public SupplierPanel(VisualElement root, SupplierContext context, Action onDone)
         {
             _context = context;
+            _drag = new DragSession(new DragRules(context));
             Func<Ingredient, bool> onBuy = ingredient =>
             {
                 bool bought = context.Supplier.TryBuyPack(context.Stock, context.Wallet, ingredient);
@@ -63,6 +68,20 @@ namespace TramChanh.UI.Menu
             _panel.style.alignItems = Align.Center;
             _panel.style.justifyContent = Justify.Center;
             _panel.style.display = DisplayStyle.None;
+
+            _ghost = new Label();
+            _ghost.pickingMode = PickingMode.Ignore;
+            _ghost.style.position = Position.Absolute;
+            _ghost.style.display = DisplayStyle.None;
+            _ghost.style.fontSize = 16f;
+            _ghost.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _ghost.style.color = Color.white;
+            _ghost.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 0.9f);
+            _ghost.style.paddingLeft = 12f;
+            _ghost.style.paddingRight = 12f;
+            _ghost.style.paddingTop = 6f;
+            _ghost.style.paddingBottom = 6f;
+            SetBorder(_ghost, new Color(1f, 0.85f, 0.4f, 1f), 1.5f, 10f);
 
             var box = new VisualElement();
             box.style.width = 560f;
@@ -110,13 +129,15 @@ namespace TramChanh.UI.Menu
                 label.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
                 Image ingredientIcon = UiIcons.Make(UiIcons.NameFor(ingredient), 30f);
                 ingredientIcon.style.marginRight = 8f;
-                row.Add(ingredientIcon);
+                VisualElement card = MakeDragCard(DragPayload.ForIngredient(ingredient));
+                card.Add(ingredientIcon);
+                card.Add(label);
+                row.Add(card);
                 var buy = new Button(() => { if (onBuy != null) { onBuy(captured); } }) { text = "Mua " + Supplier.PackSize };
                 buy.style.width = 96f;
                 buy.style.height = 32f;
                 buy.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f);
                 buy.style.color = Color.white;
-                row.Add(label);
                 row.Add(buy);
                 box.Add(row);
                 _rowLabels[ingredient] = label;
@@ -149,7 +170,10 @@ namespace TramChanh.UI.Menu
                 label.style.color = new Color(0.95f, 0.96f, 0.94f, 1f);
                 Image upgradeIcon = UiIcons.Make(UiIcons.NameFor(info.Id), 30f);
                 upgradeIcon.style.marginRight = 8f;
-                row.Add(upgradeIcon);
+                VisualElement card = MakeDragCard(DragPayload.ForUpgrade(captured));
+                card.Add(upgradeIcon);
+                card.Add(label);
+                row.Add(card);
                 var buy = new Button(() =>
                 {
                     bool bought = context.Upgrades.TryBuy(captured, context.Wallet, context.Reputation);
@@ -160,12 +184,23 @@ namespace TramChanh.UI.Menu
                 buy.style.height = 30f;
                 buy.style.backgroundColor = new Color(0.95f, 0.48f, 0.10f, 1f);
                 buy.style.color = Color.white;
-                row.Add(label);
                 row.Add(buy);
                 box.Add(row);
                 _upgradeLabels[info.Id] = label;
                 _upgradeButtons[info.Id] = buy;
             }
+
+            _basket = new VisualElement { name = "SupplierBasket" };
+            _basket.style.marginTop = 12f;
+            _basket.style.height = 46f;
+            _basket.style.justifyContent = Justify.Center;
+            _basket.style.alignItems = Align.Center;
+            _basketText = new Label(IdleBasketText);
+            _basketText.style.fontSize = 15f;
+            _basketText.pickingMode = PickingMode.Ignore;
+            _basket.Add(_basketText);
+            SetBasket(null, false);
+            box.Add(_basket);
 
             _difficulty = new Button(() => { context.CycleDifficulty?.Invoke(); Refresh(string.Empty); context.Changed?.Invoke(); });
             _difficulty.style.height = 32f;
@@ -196,7 +231,54 @@ namespace TramChanh.UI.Menu
             done.style.color = Color.white;
             box.Add(done);
 
+            _panel.Add(_ghost);
+
             root.Add(_panel);
+        }
+
+        private const string IdleBasketText = "Giỏ mua: kéo thẻ vào đây";
+        private static readonly Color BasketIdle = new Color(0.18f, 0.34f, 0.25f, 0.9f);
+        private static readonly Color BasketReady = new Color(0.95f, 0.48f, 0.10f, 0.9f);
+        private static readonly Color BasketValid = new Color(0.2f, 0.7f, 0.35f, 1f);
+        private static readonly Color BasketInvalid = new Color(0.8f, 0.2f, 0.2f, 1f);
+
+        /// <summary>A draggable card (icon plus text). Dropping it on the basket buys through <see cref="DragRules"/>.</summary>
+        private VisualElement MakeDragCard(DragPayload payload)
+        {
+            var card = new VisualElement();
+            card.style.flexDirection = FlexDirection.Row;
+            card.style.alignItems = Align.Center;
+            card.style.flexGrow = 1f;
+            var drag = new DragCardManipulator(_drag, payload, _panel, _ghost, ZoneAt);
+            drag.DragStarted += () => { card.style.opacity = 0.45f; SetBasket(null); };
+            drag.Hovering += (zone, verdict) =>
+            {
+                if (zone == DropZone.Basket) { SetBasket(verdict); }
+                else { SetBasket(null); }
+            };
+            drag.Dropped += outcome =>
+            {
+                Refresh(outcome.Message);
+                if (outcome.Bought) { _context.Changed?.Invoke(); }
+            };
+            drag.Ended += () => { card.style.opacity = 1f; SetBasket(null, false); };
+            card.AddManipulator(drag);
+            return card;
+        }
+
+        private DropZone ZoneAt(Vector2 panelPosition)
+        {
+            return _basket.worldBound.Contains(panelPosition) ? DropZone.Basket : DropZone.None;
+        }
+
+        /// <summary>Basket look: null = nothing hovering (lit orange while a drag runs), Valid = green, any refusal = red.</summary>
+        private void SetBasket(DropVerdict? verdict, bool dragging = true)
+        {
+            Color color = !dragging ? BasketIdle : verdict == null ? BasketReady : verdict.Value == DropVerdict.Valid ? BasketValid : BasketInvalid;
+            _basket.style.backgroundColor = new Color(color.r, color.g, color.b, 0.35f);
+            SetBorder(_basket, color, 2f, 10f);
+            _basketText.text = verdict == null || !dragging ? IdleBasketText : DragRules.MessageFor(verdict.Value);
+            _basketText.style.color = Color.white;
         }
 
         public bool IsVisible => _panel.style.display.value == DisplayStyle.Flex;
