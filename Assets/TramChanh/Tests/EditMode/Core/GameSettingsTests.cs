@@ -79,5 +79,55 @@ namespace TramChanh.Tests.EditMode.Core
             Assert.That(s.MasterVolume, Is.EqualTo(GameSettings.DefaultVolume));
             Assert.That(s.LookScale, Is.EqualTo(GameSettings.DefaultLookScale));
         }
+
+        [Test]
+        public void NewOptions_DefaultsAndClamp()
+        {
+            var s = new GameSettings { SfxVolume = 9f, AmbientVolume = -1f, QualityLevel = -50 };
+            Assert.That(s.SfxVolume, Is.EqualTo(1f));
+            Assert.That(s.AmbientVolume, Is.EqualTo(0f));
+            Assert.That(s.QualityLevel, Is.EqualTo(GameSettings.DefaultQualityLevel));
+            s.QualityLevel = 999;
+            Assert.That(s.QualityLevel, Is.EqualTo(GameSettings.MaxQualityLevel));
+            Assert.That(new GameSettings().ShowKeyHints, Is.True);
+        }
+
+        [Test]
+        public void NewOptions_SaveThenLoad_RoundTrips()
+        {
+            var store = new MemoryStore();
+            new GameSettings { SfxVolume = 0.4f, AmbientVolume = 0.15f, ShowKeyHints = false, QualityLevel = 2 }.Save(store);
+            var loaded = new GameSettings();
+            loaded.Load(store);
+            Assert.That(loaded.SfxVolume, Is.EqualTo(0.4f).Within(1e-6f));
+            Assert.That(loaded.AmbientVolume, Is.EqualTo(0.15f).Within(1e-6f));
+            Assert.That(loaded.ShowKeyHints, Is.False);
+            Assert.That(loaded.QualityLevel, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void NewOptions_LoadFromOldStore_UsesDefaults()
+        {
+            var store = new MemoryStore();
+            store.Values[GameSettings.VolumeKey] = 0.5f;
+            var s = new GameSettings { SfxVolume = 0.1f, AmbientVolume = 0.1f, ShowKeyHints = false, QualityLevel = 3 };
+            s.Load(store);
+            Assert.That(s.MasterVolume, Is.EqualTo(0.5f).Within(1e-6f));
+            Assert.That(s.SfxVolume, Is.EqualTo(GameSettings.DefaultSfxVolume));
+            Assert.That(s.AmbientVolume, Is.EqualTo(GameSettings.DefaultAmbientVolume));
+            Assert.That(s.ShowKeyHints, Is.True);
+            Assert.That(s.QualityLevel, Is.EqualTo(GameSettings.DefaultQualityLevel));
+        }
+
+        [Test]
+        public void NewOptions_ResetToDefaults()
+        {
+            var s = new GameSettings { SfxVolume = 0f, AmbientVolume = 0f, ShowKeyHints = false, QualityLevel = 4 };
+            s.ResetToDefaults();
+            Assert.That(s.SfxVolume, Is.EqualTo(GameSettings.DefaultSfxVolume));
+            Assert.That(s.AmbientVolume, Is.EqualTo(GameSettings.DefaultAmbientVolume));
+            Assert.That(s.ShowKeyHints, Is.True);
+            Assert.That(s.QualityLevel, Is.EqualTo(GameSettings.DefaultQualityLevel));
+        }
     }
 }

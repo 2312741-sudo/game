@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace TramChanh.UI.Menu
 {
     /// <summary>
-    /// Pause overlay: Resume, volume and look-speed sliders, Credits, Quit. Pure view; the owner decides when to show it
+    /// Pause overlay: Resume, volume (master, effects, ambient) and look-speed sliders, key-hint toggle, graphics quality dropdown, Defaults, Credits, Quit. Pure view; the owner decides when to show it
     /// and what Resume, Credits and Quit do, so it can be tested without a scene.
     /// </summary>
     public sealed class PauseMenu
@@ -14,13 +14,23 @@ namespace TramChanh.UI.Menu
         private readonly VisualElement _panel;
         private readonly Slider _volume;
         private readonly Slider _look;
+        private readonly Slider _sfx;
+        private readonly Slider _ambient;
+        private readonly Toggle _hints;
+        private readonly DropdownField _quality;
+        private readonly Action _changed;
+        private readonly Action<int> _applyQuality;
+        private readonly int _qualityCount;
         private readonly Label _info;
         private readonly GameSettings _settings;
 
         public PauseMenu(VisualElement root, GameSettings settings, Action onResume, Action onCredits, Action onQuit, Action onSettingsChanged,
-            string titleText = "TẠM DỪNG", string primaryText = "Tiếp tục", string hintText = "Esc: tiếp tục")
+            string titleText = "TẠM DỪNG", string primaryText = "Tiếp tục", string hintText = "Esc: tiếp tục",
+            Action<int> applyQuality = null, string[] qualityNames = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _changed = onSettingsChanged;
+            _applyQuality = applyQuality ?? GraphicsQuality.Apply;
             _panel = new VisualElement { name = "PauseMenu" };
             _panel.style.position = Position.Absolute;
             _panel.style.left = 0f;
@@ -106,17 +116,41 @@ namespace TramChanh.UI.Menu
 
             box.Add(MakeButton(primaryText, onResume, true));
 
-            _volume = MakeSlider(box, "Âm lượng", GameSettings.MinVolume, GameSettings.MaxVolume, settings.MasterVolume,
-                value => { _settings.MasterVolume = value; onSettingsChanged?.Invoke(); });
-            _look = MakeSlider(box, "Tốc độ xoay chuột", GameSettings.MinLookScale, GameSettings.MaxLookScale, settings.LookScale,
-                value => { _settings.LookScale = value; onSettingsChanged?.Invoke(); });
+            // Options scroll when the window is short, so the buttons below always stay reachable.
+            var options = new ScrollView(ScrollViewMode.Vertical);
+            options.style.maxHeight = 330f;
+            box.Add(options);
 
-            box.Add(MakeButton("Mặc định", () =>
-            {
-                _settings.ResetToDefaults();
-                SyncSliders();
-                onSettingsChanged?.Invoke();
-            }, false));
+            _volume = MakeSlider(options, "Âm lượng", GameSettings.MinVolume, GameSettings.MaxVolume, settings.MasterVolume,
+                value => { _settings.MasterVolume = value; onSettingsChanged?.Invoke(); }, "MasterVolume");
+            _sfx = MakeSlider(options, "Âm hiệu ứng", GameSettings.MinVolume, GameSettings.MaxVolume, settings.SfxVolume,
+                SetSfxVolume, "SfxVolume");
+            _ambient = MakeSlider(options, "Âm nền", GameSettings.MinVolume, GameSettings.MaxVolume, settings.AmbientVolume,
+                SetAmbientVolume, "AmbientVolume");
+            _look = MakeSlider(options, "Tốc độ xoay chuột", GameSettings.MinLookScale, GameSettings.MaxLookScale, settings.LookScale,
+                value => { _settings.LookScale = value; onSettingsChanged?.Invoke(); }, "LookScale");
+
+            _hints = new Toggle("Hiện gợi ý phím") { name = "ShowKeyHints", value = settings.ShowKeyHints };
+            _hints.style.marginTop = 12f;
+            _hints.style.color = UiStyle.Gold;
+            _hints.style.fontSize = 15f;
+            _hints.RegisterValueChangedCallback(e => SetShowKeyHints(e.newValue));
+            options.Add(_hints);
+
+            string[] names = qualityNames ?? QualitySettings.names ?? new string[0];
+            _qualityCount = names.Length;
+            var qualityLabel = new Label("Chất lượng đồ hoạ");
+            qualityLabel.style.color = new Color(0.99f, 0.85f, 0.45f, 1f);
+            qualityLabel.style.fontSize = 15f;
+            qualityLabel.style.marginTop = 10f;
+            qualityLabel.style.marginBottom = 2f;
+            options.Add(qualityLabel);
+            _quality = new DropdownField(new System.Collections.Generic.List<string>(names), QualityIndex(settings.QualityLevel)) { name = "QualityLevel" };
+            _quality.SetEnabled(names.Length > 1);
+            _quality.RegisterValueChangedCallback(e => SetQualityLevel(_quality.index));
+            options.Add(_quality);
+
+            box.Add(MakeButton("Mặc định", ResetToDefaults, false));
             box.Add(MakeButton("Ghi công (Credits)", onCredits, false));
             box.Add(MakeButton("Thoát game", onQuit, false));
 
@@ -137,6 +171,47 @@ namespace TramChanh.UI.Menu
             _info.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
+        /// <summary>Sets and saves-through the effects volume (the owner saves in onSettingsChanged).</summary>
+        public void SetSfxVolume(float value)
+        {
+            _settings.SfxVolume = value;
+            _sfx.SetValueWithoutNotify(_settings.SfxVolume);
+            _changed?.Invoke();
+        }
+
+        public void SetAmbientVolume(float value)
+        {
+            _settings.AmbientVolume = value;
+            _ambient.SetValueWithoutNotify(_settings.AmbientVolume);
+            _changed?.Invoke();
+        }
+
+        public void SetShowKeyHints(bool value)
+        {
+            _settings.ShowKeyHints = value;
+            _hints.SetValueWithoutNotify(_settings.ShowKeyHints);
+            _changed?.Invoke();
+        }
+
+        /// <summary>Picks a quality level (index into the dropdown), applies it and reports the change. Ignored when the project has fewer than two levels.</summary>
+        public void SetQualityLevel(int level)
+        {
+            if (_qualityCount <= 1) { return; }
+            _settings.QualityLevel = level;
+            _applyQuality(_settings.QualityLevel);
+            _quality.SetValueWithoutNotify(_quality.choices[QualityIndex(_settings.QualityLevel)]);
+            _changed?.Invoke();
+        }
+
+        /// <summary>What the Defaults button does: every option, including effects, ambient, key hints and quality, goes back to its default.</summary>
+        public void ResetToDefaults()
+        {
+            _settings.ResetToDefaults();
+            if (_qualityCount > 1) { _applyQuality(_settings.QualityLevel); }
+            SyncSliders();
+            _changed?.Invoke();
+        }
+
         public bool IsVisible => _panel.style.display.value == DisplayStyle.Flex;
 
         public void SetVisible(bool visible)
@@ -150,6 +225,17 @@ namespace TramChanh.UI.Menu
         {
             _volume.SetValueWithoutNotify(_settings.MasterVolume);
             _look.SetValueWithoutNotify(_settings.LookScale);
+            _sfx.SetValueWithoutNotify(_settings.SfxVolume);
+            _ambient.SetValueWithoutNotify(_settings.AmbientVolume);
+            _hints.SetValueWithoutNotify(_settings.ShowKeyHints);
+            if (_qualityCount > 0) { _quality.SetValueWithoutNotify(_quality.choices[QualityIndex(_settings.QualityLevel)]); }
+        }
+
+        private int QualityIndex(int saved)
+        {
+            if (_qualityCount <= 0) { return 0; }
+            int level = saved >= 0 ? saved : GraphicsQuality.Resolve(saved);
+            return level >= _qualityCount ? _qualityCount - 1 : (level < 0 ? 0 : level);
         }
 
         private static Button MakeButton(string text, Action onClick, bool isPrimary = false)
@@ -190,7 +276,7 @@ namespace TramChanh.UI.Menu
             return button;
         }
 
-        private static Slider MakeSlider(VisualElement parent, string caption, float min, float max, float value, Action<float> onChanged)
+        private static Slider MakeSlider(VisualElement parent, string caption, float min, float max, float value, Action<float> onChanged, string name = null)
         {
             var label = new Label(caption);
             label.style.color = new Color(0.99f, 0.85f, 0.45f, 1f); // Warm Lime Accent
@@ -200,6 +286,7 @@ namespace TramChanh.UI.Menu
             parent.Add(label);
 
             var slider = new Slider(min, max) { value = value };
+            if (name != null) { slider.name = name; }
             slider.style.height = 24f;
             slider.RegisterValueChangedCallback(e => onChanged(e.newValue));
             parent.Add(slider);
