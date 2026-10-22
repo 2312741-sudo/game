@@ -1264,9 +1264,9 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 2
-  m_Color: {r: 1, g: 0.82, b: 0.5, a: 1}
-  m_Intensity: 3.8
-  m_Range: 6
+  m_Color: {r: 1, g: 0.6816786, b: 0.4031851, a: 1}
+  m_Intensity: 4
+  m_Range: 6.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.802082
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -1307,7 +1307,7 @@ Light:
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
-  m_BounceIntensity: 1
+  m_BounceIntensity: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
@@ -20102,9 +20102,9 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 2
-  m_Color: {r: 1, g: 0.86, b: 0.65, a: 1}
-  m_Intensity: 3.2
-  m_Range: 22
+  m_Color: {r: 1, g: 0.7200783, b: 0.48282114, a: 1}
+  m_Intensity: 2.8
+  m_Range: 18
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.802082
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -20145,7 +20145,7 @@ Light:
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
-  m_BounceIntensity: 1
+  m_BounceIntensity: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
@@ -28025,6 +28025,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5522611
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7550344
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -30567,6 +30587,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.431048
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.694903
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -31248,6 +31292,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -32055,6 +32123,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -32550,6 +32642,26 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5522611
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7550344
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -34107,6 +34219,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.431048
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.694903
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -35160,6 +35296,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -36277,6 +36437,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5522611
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7550344
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -36896,6 +37076,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -40679,6 +40883,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.431048
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.694903
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -40864,6 +41092,26 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5522611
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7550344
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -41610,6 +41858,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5522611
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7550344
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -41942,6 +42210,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_Stall_TramChanh
       objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Range
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1053315066683735504, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3477632210496456756, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -41980,6 +42272,86 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3477632210496456756, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Range
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437716806093445891, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Range
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7564203386339886459, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Range
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128674090695493917, guid: 153dd7212f5914aaab4983d4f31fc5af, type: 3}
+      propertyPath: m_BounceIntensity
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -42725,6 +43097,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -43966,6 +44362,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -44089,6 +44509,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -45268,6 +45712,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -46266,6 +46734,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -46761,6 +47253,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.431048
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.694903
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -49448,6 +49964,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_StreetLamp
       objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.34276658
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.6538038
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -50129,6 +50669,30 @@ PrefabInstance:
     - target: {fileID: 6035353063394943782, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
       propertyPath: m_Name
       value: PF_StreetLamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Range
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.b
+      value: 0.431048
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Color.g
+      value: 0.694903
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_Intensity
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_InnerSpotAngle
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7884936518857532955, guid: 6edc4c9b66f1d4183a594109f14021d6, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
