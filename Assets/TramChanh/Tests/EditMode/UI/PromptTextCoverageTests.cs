@@ -36,6 +36,7 @@ namespace TramChanh.Tests.EditMode.UI
             "item.drink", // MenuBook prefix test
             "progress.money_units", "progress.total_earned_units", "progress.best_earned_units", // GameProgress storage keys
             "reputation.points", "settings.difficulty", "settings.input_overrides", // Reputation, Difficulties, rebinding storage keys
+            "settings.sfx_volume", "settings.ambient_volume", "settings.show_key_hints_flag", "settings.quality_level_index", // GameSettings storage keys (PlayerPrefs)
             "tramchanh_save.json", // JsonFileSaveStore file name
         };
 

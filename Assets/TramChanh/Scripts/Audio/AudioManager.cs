@@ -1,6 +1,7 @@
 using System;
 using TramChanh.Core;
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace TramChanh.Audio
 {
@@ -19,15 +20,23 @@ namespace TramChanh.Audio
         private AudioMixModel _model;
         private AudioSource[] _sources;
         private AudioEventRouter _router;
+        private AudioMixerBridge _mixerBridge;
+        private AudioMixerController _mixerControl;
+        private AudioMixer _mixerOverride;
+        private bool _mixerRouted;
 
         public AudioMixModel Model => _model;
 
+        /// <summary>True once ApplySettings sent every volume to the AudioMixer; false means the old AudioListener.volume path is in use.</summary>
+        public bool UsesMixer => _mixerRouted;
+
         /// <summary>Creates the manager on a new GameObject and hooks it to the event bus. Library may be null (silent until set).</summary>
-        public static AudioManager Create(IEventBus events, AudioCueLibrary library)
+        public static AudioManager Create(IEventBus events, AudioCueLibrary library, AudioMixer mixer = null)
         {
             var go = new GameObject("AudioManager");
             var manager = go.AddComponent<AudioManager>();
             manager._library = library;
+            manager._mixerOverride = mixer;
             manager.Initialize();
             if (events != null) { manager.Connect(events); }
             return manager;
@@ -39,6 +48,32 @@ namespace TramChanh.Audio
             Initialize();
             if (_router != null) { _router.Dispose(); }
             _router = new AudioEventRouter(events, this);
+        }
+
+        /// <summary>
+        /// Applies the three player volumes (0..1). With the AudioMixer asset present they go to the mixer in dB and
+        /// AudioListener.volume stays at 1; without it (or when a parameter is not exposed) the previous behaviour is kept:
+        /// master on AudioListener.volume, bus volumes on the sources.
+        /// </summary>
+        public void ApplySettings(float master, float sfx, float ambient)
+        {
+            Initialize();
+            _mixerRouted = _mixerControl.Apply(master, sfx, ambient);
+            if (_mixerRouted)
+            {
+                AudioListener.volume = 1f;
+                _model.MasterVolume = 1f;
+                _model.SetBusVolume(AudioBus.Sfx, 1f);
+                _model.SetBusVolume(AudioBus.Ambient, 1f);
+            }
+            else
+            {
+                AudioListener.volume = Mathf.Clamp01(master);
+                _model.MasterVolume = 1f;
+                _model.SetBusVolume(AudioBus.Sfx, sfx);
+                _model.SetBusVolume(AudioBus.Ambient, ambient);
+            }
+            RefreshPlayingVolumes();
         }
 
         /// <summary>Master volume from GameSettings. Leave at 1 if AudioListener.volume already carries the master volume.</summary>
@@ -66,7 +101,9 @@ namespace TramChanh.Audio
             AudioSource source = _sources[d.Slot];
             if (d.StoleSlot) { source.Stop(); }
             source.clip = clip;
-            source.loop = _model.GetProfile(cue).Loop;
+            AudioCueProfile profile = _model.GetProfile(cue);
+            source.outputAudioMixerGroup = _mixerBridge.GroupFor(profile.Bus);
+            source.loop = profile.Loop;
             source.volume = d.Volume;
             source.Play();
         }
@@ -80,6 +117,9 @@ namespace TramChanh.Audio
         private void Initialize()
         {
             if (_model != null) { return; }
+            _mixerBridge = gameObject.AddComponent<AudioMixerBridge>();
+            _mixerBridge.SetMixer(_mixerOverride != null ? _mixerOverride : AudioMixerBridge.LoadDefaultMixer());
+            _mixerControl = new AudioMixerController(_mixerBridge.HasMixer ? _mixerBridge : null);
             int count = Mathf.Max(1, _voices);
             _model = new AudioMixModel(count);
             _sources = new AudioSource[count];
