@@ -555,6 +555,7 @@ namespace TramChanh.App
                 ArrivalPlan.IntervalScale(hour, _progress.Day, _failureStreak) * _reputation.ArrivalFactor
                 * NightPlan.ArrivalScaleAt(_night, hour) * Difficulties.Profile(_difficulty).ArrivalIntervalScale));
             if (_helperVisual != null && _helperVisual.activeSelf != _upgrades.HasHelper) { _helperVisual.SetActive(_upgrades.HasHelper); }
+            if (_helperView != null && _helperVisual.activeSelf) { _helperView.Step(_clock.DeltaTime); }
             if (open) { TickPatience(); }
             if (_wasOpen && !open) { _wasOpen = false; EndOfDay(); return; }
             _wasOpen = open;
@@ -643,7 +644,15 @@ namespace TramChanh.App
         /// <summary>The helper's second job: carry a ready order from the shelf to its customer, after a short wait so the player can still do it first.</summary>
         private readonly HelperWorker _helperDelivery = new HelperWorker(5d, 4d);
         private IOrderDelivery _delivery;
+        /// <summary>Orders waiting to be taken / waiting on the shelf, so a helper bought mid-night still sees the ones already there.</summary>
+        private readonly HashSet<OrderId> _waitingForHelper = new HashSet<OrderId>();
+        private readonly HashSet<OrderId> _readyForHelper = new HashSet<OrderId>();
         private GameObject _helperVisual;
+        private PersonView _helperView;
+        private Vector3 _helperHome;
+        private Quaternion _helperHomeRotation;
+        private bool _helperBusy;
+        private readonly List<Vector3> _helperPath = new List<Vector3>();
         private readonly Dictionary<OrderId, string> _noStockWhy = new Dictionary<OrderId, string>();
         private bool _goalAnnounced;
         private double _nextEmergencyAt;
@@ -721,8 +730,9 @@ namespace TramChanh.App
         private void OnOrderStatus(OrderStatusChanged change)
         {
             if (change.Status != OrderStatus.WaitingForLobby) { _helper.Forget(change.OrderId); }
-            if (change.Status == OrderStatus.Ready) { if (_upgrades.HasHelper) { _helperDelivery.Observe(change.OrderId, _patienceNow); } }
-            else { _helperDelivery.Forget(change.OrderId); }
+            if (change.Status == OrderStatus.WaitingForLobby) { _waitingForHelper.Add(change.OrderId); } else { _waitingForHelper.Remove(change.OrderId); }
+            if (change.Status == OrderStatus.Ready) { _readyForHelper.Add(change.OrderId); }
+            else { _readyForHelper.Remove(change.OrderId); _helperDelivery.Forget(change.OrderId); }
             TrackPatience(change);
             TrackStock(change);
             switch (change.Status)
@@ -782,8 +792,14 @@ namespace TramChanh.App
                 }
             }
             _patienceNow += _clock.DeltaTime;
-            if (_upgrades.HasHelper && _helper.TryNext(_patienceNow, out OrderId helperOrder)) { HelperTakeOrder(helperOrder); }
-            if (_upgrades.HasHelper && _helperDelivery.TryNext(_patienceNow, out OrderId helperDelivery)) { HelperDeliverOrder(helperDelivery); }
+            if (_upgrades.HasHelper)
+            {
+                // Observe keeps the first time an order was seen, so calling it every tick only starts the wait once.
+                foreach (OrderId waiting in _waitingForHelper) { _helper.Observe(waiting, _patienceNow); }
+                foreach (OrderId ready in _readyForHelper) { _helperDelivery.Observe(ready, _patienceNow); }
+            }
+            if (_upgrades.HasHelper && !_helperBusy && _helperDelivery.TryNext(_patienceNow, out OrderId helperDelivery)) { HelperDeliverOrder(helperDelivery); }
+            if (_upgrades.HasHelper && !_helperBusy && _helper.TryNext(_patienceNow, out OrderId helperOrder)) { HelperTakeOrder(helperOrder); }
             _expired.Clear();
             _patience.CollectExpired(_patienceNow, _expired);
             foreach (OrderId id in _expired) { Orders.Fail(id, FailureReason.CustomerLeft); }
@@ -861,23 +877,91 @@ namespace TramChanh.App
             _helperVisual = Instantiate(_helperPrefab, _runtime.transform, false);
             _helperVisual.name = "StallHelper";
             _helperVisual.transform.SetPositionAndRotation(spawn.TransformPoint(_helperOffset), spawn.rotation);
-            foreach (Collider collider in _helperVisual.GetComponentsInChildren<Collider>(true)) { collider.enabled = false; }
+            _helperHome = _helperVisual.transform.position;
+            _helperHomeRotation = _helperVisual.transform.rotation;
+            _helperView = _helperVisual.GetComponent<PersonView>();
+            if (_helperView == null) { _helperView = _helperVisual.AddComponent<PersonView>(); }
+            _helperView.Prepare(); // visual only: disables colliders, finds the animator
             _helperVisual.SetActive(_upgrades.HasHelper);
         }
 
-        /// <summary>Takes a ready order off the shelf and hands it to the customer who ordered it (shelf pickup, deliver, complete).</summary>
+        /// <summary>The helper walks to the customer's table (or the vehicle stop) before acting; without a people layer it acts at once.</summary>
+        private Vector3 HelperTargetFor(IReadOnlyOrder order)
+        {
+            if (order.Origin.Type == OrderType.TakeawayVehicle) { return VehicleStopPoint(); }
+            TramChanh.People.WaypointGraph graph = People != null ? People.Graph : null;
+            string approach = PeopleLayout.TableApproachPrefix + order.Origin.TableId.Value.ToString("00");
+            return graph != null && graph.TryFind(approach, out int node) ? graph.PositionOf(node) : _helperHome;
+        }
+
+        private void BuildHelperPath(Vector3 from, Vector3 to)
+        {
+            _helperPath.Clear();
+            _helperPath.Add(from);
+            TramChanh.People.WaypointGraph graph = People != null ? People.Graph : null;
+            if (graph != null)
+            {
+                int a = graph.Nearest(from, null);
+                int b = graph.Nearest(to, null);
+                var route = new List<Vector3>();
+                if (a >= 0 && b >= 0 && graph.TryFindPath(a, b, route)) { _helperPath.AddRange(route); }
+            }
+            _helperPath.Add(to);
+        }
+
+        private void HelperWalkTo(Vector3 target, Action arrived)
+        {
+            _helperBusy = true;
+            BuildHelperPath(_helperView.transform.position, target);
+            float speed = People != null ? People.Settings.WalkSpeed : 1.4f;
+            _helperView.Walk(_helperPath, speed, view => arrived?.Invoke());
+        }
+
+        private void HelperGoHome()
+        {
+            BuildHelperPath(_helperView.transform.position, _helperHome);
+            float speed = People != null ? People.Settings.WalkSpeed : 1.4f;
+            _helperView.Walk(_helperPath, speed, view => { view.Place(_helperHome, _helperHomeRotation); _helperBusy = false; });
+        }
+
+        private void ResetHelperPost()
+        {
+            _helperBusy = false;
+            if (_helperView != null) { _helperView.Place(_helperHome, _helperHomeRotation); }
+        }
+
+        private bool HelperCanWalk => _helperView != null && _helperVisual != null && _helperVisual.activeInHierarchy;
+
+        /// <summary>Takes a ready order off the shelf at the counter, carries it to its customer and hands it over (deliver, complete).</summary>
         private void HelperDeliverOrder(OrderId id)
         {
             IReadOnlyOrder order = Orders?.Get(id);
             if (order == null || order.Status != OrderStatus.Ready || _delivery == null) { return; }
+            if (!Shelf.PickUp(id, new ActorRef(2)).IsSuccess) { return; }
+            if (!HelperCanWalk) { HelperHandOver(id); return; }
+            HelperWalkTo(HelperTargetFor(order), () => { HelperHandOver(id); HelperGoHome(); });
+        }
+
+        private void HelperHandOver(OrderId id)
+        {
+            IReadOnlyOrder order = Orders?.Get(id);
+            if (order == null || order.Status != OrderStatus.PickedUpByLobby) { return; }
             var helperActor = new ActorRef(2);
-            if (!Shelf.PickUp(id, helperActor).IsSuccess) { return; }
             if (!_delivery.Deliver(id, helperActor, new DeliveryTarget(order.Origin, order.CustomerId)).IsSuccess) { return; }
             if (Orders.Get(id)?.Status != OrderStatus.Completed) { _delivery.Complete(id); }
             _prompt?.ShowNotice("Nhân viên phụ đã giao món cho khách.", true, 2.5f);
         }
 
+        /// <summary>Walks to the waiting customer, then takes the order, enters it and sends it to the stall.</summary>
         private void HelperTakeOrder(OrderId id)
+        {
+            IReadOnlyOrder order = Orders?.Get(id);
+            if (order == null || order.Status != OrderStatus.WaitingForLobby) { return; }
+            if (!HelperCanWalk) { HelperTakeOrderNow(id); return; }
+            HelperWalkTo(HelperTargetFor(order), () => { HelperTakeOrderNow(id); HelperGoHome(); });
+        }
+
+        private void HelperTakeOrderNow(OrderId id)
         {
             IReadOnlyOrder order = Orders?.Get(id);
             if (order == null || order.Status != OrderStatus.WaitingForLobby) { return; }
@@ -925,6 +1009,9 @@ namespace TramChanh.App
             _combo.NewNight();
             _helper.Clear();
             _helperDelivery.Clear();
+            _waitingForHelper.Clear();
+            _readyForHelper.Clear();
+            ResetHelperPost();
             _unlockedDrinks = MenuBook.UnlockedDrinkIds(_drinkDefinition != null ? _drinkDefinition.Id : null, _reputation.Stars);
             ApplyUpgrades();
         }
