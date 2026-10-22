@@ -132,13 +132,47 @@ namespace TramChanh.EditorTools.ProjectSetup
                 AssetDatabase.CreateAsset(rendererData, UrpRendererPath);
                 urp = UniversalRenderPipelineAsset.Create(rendererData);
                 AssetDatabase.CreateAsset(urp, UrpAssetPath);
+                ApplyLookDefaults(urp, rendererData);
                 AssetDatabase.SaveAssets();
-                changes.Add("created " + UrpAssetPath);
+                changes.Add("created " + UrpAssetPath + " with the Tram Chanh look (MSAA 4x, soft shadows, SSAO)");
             }
 
             GraphicsSettings.defaultRenderPipeline = urp;
             QualitySettings.renderPipeline = urp;
             changes.Add("default render pipeline = URP_TramChanh");
+        }
+
+        /// <summary>
+        /// Quality settings the night look was built with. The URP asset is generated here (it is not tracked in Git), so a fresh
+        /// clone gets the same look. Applied only when the asset is first created; later hand edits are never overwritten.
+        /// </summary>
+        private static void ApplyLookDefaults(UniversalRenderPipelineAsset urp, UniversalRendererData rendererData)
+        {
+            urp.msaaSampleCount = 4;
+            urp.shadowCascadeCount = 2;
+            urp.shadowDistance = 40f;
+            var asset = new SerializedObject(urp);
+            SerializedProperty softShadows = asset.FindProperty("m_SoftShadowsSupported");
+            if (softShadows != null)
+            {
+                softShadows.boolValue = true;
+                asset.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            var ssao = ScriptableObject.CreateInstance<ScreenSpaceAmbientOcclusion>();
+            ssao.name = "SSAO";
+            AssetDatabase.AddObjectToAsset(ssao, rendererData);
+            var renderer = new SerializedObject(rendererData);
+            SerializedProperty features = renderer.FindProperty("m_RendererFeatures");
+            SerializedProperty featureMap = renderer.FindProperty("m_RendererFeatureMap");
+            features.arraySize++;
+            features.GetArrayElementAtIndex(features.arraySize - 1).objectReferenceValue = ssao;
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ssao, out string _, out long localId);
+            featureMap.arraySize++;
+            featureMap.GetArrayElementAtIndex(featureMap.arraySize - 1).longValue = localId;
+            renderer.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(rendererData);
+            EditorUtility.SetDirty(urp);
         }
     }
 }
