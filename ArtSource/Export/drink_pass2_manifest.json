@@ -1,0 +1,603 @@
+{
+  "version": 1,
+  "generator": "ArtSource/Scripts/generate_drink_meshes_v2.py",
+  "license": "Project Original (procedurally generated, generate_drink_meshes_v2.py), CC0",
+  "importer": {
+    "globalScale": 1,
+    "materialImportMode": "None",
+    "generateSecondaryUV": false,
+    "isReadable": false,
+    "meshCompression": "Off"
+  },
+  "textures": [
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_Ice_v2_Normal.png",
+      "type": "NormalMap",
+      "sRGB": false
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_Jelly_v2_Normal.png",
+      "type": "NormalMap",
+      "sRGB": false
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_LemonSlice_v2_BaseColor.png",
+      "type": "Default",
+      "sRGB": true
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_BaseColor.png",
+      "type": "Default",
+      "sRGB": true
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_Normal.png",
+      "type": "NormalMap",
+      "sRGB": false
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_WipeCloth_v2_BaseColor.png",
+      "type": "Default",
+      "sRGB": true
+    },
+    {
+      "path": "Assets/TramChanh/Art/Textures/Drink_v2/T_WipeCloth_v2_Normal.png",
+      "type": "NormalMap",
+      "sRGB": false
+    }
+  ],
+  "materials": [
+    {
+      "name": "MAT_TeaBag_Film_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_TeaBag_Film_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        1,
+        1,
+        1,
+        0.92
+      ],
+      "baseMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_BaseColor.png",
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_Normal.png",
+      "normalScale": 0.8,
+      "metallic": 0.0,
+      "smoothness": 0.88,
+      "cull": "Off",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 3000,
+      "note": "outer plastic film: transparent so the contents show; sticker is opaque in the albedo alpha"
+    },
+    {
+      "name": "MAT_TeaBag_Seal_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_TeaBag_Seal_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        0.95,
+        0.97,
+        1,
+        0.62
+      ],
+      "baseMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_BaseColor.png",
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_TeaBag_Pouch_v2_Normal.png",
+      "normalScale": 1.0,
+      "metallic": 0.0,
+      "smoothness": 0.55,
+      "cull": "Off",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 3001,
+      "note": "frosted heat sealed header with the die-cut handle holes (real holes in the mesh)"
+    },
+    {
+      "name": "MAT_TeaLiquid_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_TeaLiquid_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        0.85,
+        0.42,
+        0.08,
+        0.8
+      ],
+      "baseMap": null,
+      "normalMap": null,
+      "normalScale": 1.0,
+      "metallic": 0.0,
+      "smoothness": 0.95,
+      "cull": "Back",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 2995,
+      "note": "same amber as MAT_TeaLiquid_Amber, slightly more transparent"
+    },
+    {
+      "name": "MAT_CoconutJelly_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_CoconutJelly_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        0.96,
+        0.97,
+        0.98,
+        0.78
+      ],
+      "baseMap": null,
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_Jelly_v2_Normal.png",
+      "normalScale": 0.6,
+      "metallic": 0.0,
+      "smoothness": 0.8,
+      "cull": "Back",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 2998,
+      "note": "colour taken from MAT_CoconutJelly"
+    },
+    {
+      "name": "MAT_LemonJelly_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_LemonJelly_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        0.98,
+        0.9,
+        0.35,
+        0.78
+      ],
+      "baseMap": null,
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_Jelly_v2_Normal.png",
+      "normalScale": 0.6,
+      "metallic": 0.0,
+      "smoothness": 0.8,
+      "cull": "Back",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 2998,
+      "note": "pale lemon yellow jelly"
+    },
+    {
+      "name": "MAT_Ice_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_Ice_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Transparent",
+      "blend": "Alpha",
+      "baseColor": [
+        0.9,
+        0.95,
+        1,
+        0.45
+      ],
+      "baseMap": null,
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_Ice_v2_Normal.png",
+      "normalScale": 0.8,
+      "metallic": 0.0,
+      "smoothness": 0.92,
+      "cull": "Back",
+      "zWrite": false,
+      "receiveShadows": false,
+      "queue": 2999,
+      "note": "same tint as MAT_Ice_Cubes"
+    },
+    {
+      "name": "MAT_LemonSlice_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_LemonSlice_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Opaque",
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "baseMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_LemonSlice_v2_BaseColor.png",
+      "normalMap": null,
+      "normalScale": 1.0,
+      "metallic": 0.0,
+      "smoothness": 0.5,
+      "cull": "Back",
+      "note": "submeshes Rind, Pith, Flesh share this atlas"
+    },
+    {
+      "name": "MAT_WipeCloth_v2",
+      "path": "Assets/TramChanh/Art/Materials/MAT_WipeCloth_v2.mat",
+      "shader": "Universal Render Pipeline/Lit",
+      "surface": "Opaque",
+      "baseColor": [
+        0.08,
+        0.28,
+        0.55,
+        1
+      ],
+      "baseMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_WipeCloth_v2_BaseColor.png",
+      "normalMap": "Assets/TramChanh/Art/Textures/Drink_v2/T_WipeCloth_v2_Normal.png",
+      "normalScale": 0.9,
+      "metallic": 0.0,
+      "smoothness": 0.15,
+      "cull": "Back",
+      "tiling": [
+        1,
+        1
+      ],
+      "note": "blue is the colour of the existing MAT_WipeCloth"
+    }
+  ],
+  "meshes": [
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Closed_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Closed.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Closed.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/Bag_Closed",
+          "materials": [
+            "MAT_TeaBag_Film_v2",
+            "MAT_TeaBag_Seal_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 2212,
+        "triangles": 2426,
+        "submeshes": 2,
+        "boundsMin": [
+          -0.07,
+          0.0,
+          -0.0315
+        ],
+        "boundsMax": [
+          0.07,
+          0.22,
+          0.0314
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Open_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Open.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Open.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/Bag_Open",
+          "materials": [
+            "MAT_TeaBag_Film_v2",
+            "MAT_TeaBag_Seal_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 4322,
+        "triangles": 4658,
+        "submeshes": 2,
+        "boundsMin": [
+          -0.07,
+          0.0,
+          -0.0405
+        ],
+        "boundsMax": [
+          0.07,
+          0.2191,
+          0.0405
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Liquid_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Liquid.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Liquid.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/TeaLiquid",
+          "materials": [
+            "MAT_TeaLiquid_v2"
+          ],
+          "replaceBuiltinPrimitive": true,
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "localScale": [
+            1,
+            1,
+            1
+          ],
+          "note": "the node is a scaled builtin Cube today (pos y -0.125); the v2 mesh is authored in bag space, so position resets to 0 and scale to 1"
+        }
+      ],
+      "stats": {
+        "vertices": 522,
+        "triangles": 880,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.067,
+          0.0045,
+          -0.0272
+        ],
+        "boundsMax": [
+          0.067,
+          0.128,
+          0.0272
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/Contents/CoconutJelly",
+          "materials": [
+            "MAT_CoconutJelly_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 1944,
+        "triangles": 2700,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.0433,
+          0.0225,
+          -0.0159
+        ],
+        "boundsMax": [
+          0.0446,
+          0.112,
+          0.0132
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_LemonJelly_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/Contents/LemonJelly",
+          "materials": [
+            "MAT_LemonJelly_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 1728,
+        "triangles": 2400,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.0449,
+          0.0352,
+          -0.0133
+        ],
+        "boundsMax": [
+          0.048,
+          0.1058,
+          0.0143
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Ice_Cubes_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_Ice_Cubes.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_Ice_Cubes.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab",
+          "node": "Visual/Contents/Ice",
+          "materials": [
+            "MAT_Ice_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 1296,
+        "triangles": 1800,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.0476,
+          0.0936,
+          -0.0179
+        ],
+        "boundsMax": [
+          0.0454,
+          0.1343,
+          0.0185
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_LemonSlice_v2.obj",
+      "oldMesh": null,
+      "footprintReference": null,
+      "prefabs": [],
+      "note": "extra prop (fresh lemon slice with visible segments). Not placed on any prefab: the owner has not asked for it on the bag.",
+      "stats": {
+        "vertices": 1110,
+        "triangles": 1844,
+        "submeshes": 3,
+        "boundsMin": [
+          -0.0235,
+          -0.0002,
+          -0.0235
+        ],
+        "boundsMax": [
+          0.0235,
+          0.0047,
+          0.0235
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_IceScoop_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_IceScoop.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/DrinkStation/SM_IceScoop.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Tools/PF_IceScoop.prefab",
+          "node": "",
+          "materials": [
+            "@existing:Assets/TramChanh/Art/Materials/MAT_Steel_Brushed.mat"
+          ],
+          "note": "the mesh lives on the prefab root today; the animated Visual cube is left alone"
+        }
+      ],
+      "stats": {
+        "vertices": 948,
+        "triangles": 1488,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.045,
+          0.0,
+          -0.1543
+        ],
+        "boundsMax": [
+          0.045,
+          0.042,
+          0.085
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_RedTeaRack_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Workstations/PF_RedTeaRack.prefab",
+          "node": "Rack",
+          "materials": [
+            "@existing:Assets/TramChanh/Art/Materials/MAT_TeaRack_RedPlastic.mat"
+          ],
+          "note": "base prefab (the DrinkWave variant inherits it). Replaces the third party fruit crate on the Rack node."
+        }
+      ],
+      "stats": {
+        "vertices": 1224,
+        "triangles": 612,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.232,
+          0.0,
+          -0.175
+        ],
+        "boundsMax": [
+          0.232,
+          0.22,
+          0.175
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingBin_v2.obj",
+      "oldMesh": null,
+      "footprintReference": null,
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Workstations/PF_ToppingStation.prefab",
+          "node": "LemonJellyBin/Bin",
+          "addChild": "BinVisual_v2",
+          "optional": true,
+          "materials": [
+            "@existing:Assets/TramChanh/Art/Materials/MAT_Steel_Brushed.mat"
+          ]
+        },
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Workstations/PF_ToppingStation.prefab",
+          "node": "CoconutJellyBin/Bin",
+          "addChild": "BinVisual_v2",
+          "optional": true,
+          "materials": [
+            "@existing:Assets/TramChanh/Art/Materials/MAT_Steel_Brushed.mat"
+          ]
+        }
+      ],
+      "note": "the bins are cubes with renderers disabled, so there is no mesh to swap. The applier only adds the BinVisual_v2 child when the 'Include optional' toggle is passed; colliders are untouched.",
+      "stats": {
+        "vertices": 1290,
+        "triangles": 1904,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.0717,
+          0.0,
+          -0.1317
+        ],
+        "boundsMax": [
+          0.0717,
+          0.07,
+          0.1317
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/Tools/SM_WipeCloth_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/Tools/SM_WipeCloth.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/Tools/SM_WipeCloth.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Tools/PF_WipeCloth.prefab",
+          "node": "Visual",
+          "materials": [
+            "MAT_WipeCloth_v2"
+          ]
+        }
+      ],
+      "stats": {
+        "vertices": 2584,
+        "triangles": 5164,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.078,
+          0.0,
+          -0.068
+        ],
+        "boundsMax": [
+          0.078,
+          0.0135,
+          0.068
+        ]
+      }
+    },
+    {
+      "mesh": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml_v2.obj",
+      "oldMesh": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj",
+      "footprintReference": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj",
+      "prefabs": [
+        {
+          "prefab": "Assets/TramChanh/Prefabs/Tools/PF_BatterMeasureCup_500ml.prefab",
+          "node": "Visual",
+          "materials": [
+            "@existing:Assets/TramChanh/Art/Materials/MAT_MeasuringCup_Translucent.mat"
+          ],
+          "note": "same cylindrical UV as the old cup, so T_BatterMeasureCup_BaseColor graduations still line up"
+        }
+      ],
+      "stats": {
+        "vertices": 3992,
+        "triangles": 7408,
+        "submeshes": 1,
+        "boundsMin": [
+          -0.0541,
+          0.0,
+          -0.067
+        ],
+        "boundsMax": [
+          0.0541,
+          0.132,
+          0.0858
+        ]
+      }
+    }
+  ]
+}
