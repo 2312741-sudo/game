@@ -14,7 +14,7 @@ Writes NEW files with the suffix _v2 next to the old ones (old OBJ files are nev
   Assets/TramChanh/Art/Models/DrinkStation/SM_RedTeaRack_v2.obj
   Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingBin_v2.obj            (optional, see manifest)
   Assets/TramChanh/Art/Models/Tools/SM_WipeCloth_v2.obj
-  Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml_v2.obj
+  Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj
   Assets/TramChanh/Art/Textures/Drink_v2/T_*_v2.png
   ArtSource/Export/drink_pass2_manifest.json
 
@@ -920,7 +920,7 @@ def build_cloth():
 # 7. Measuring cup / shaker cup (batter cup) : lip, base ring, spout, handle, graduation ridges
 # ----------------------------------------------------------------------------------------------
 def build_cup():
-    m = Mesh("SM_BatterMeasureCup_500ml_v2")
+    m = Mesh("SM_BatterMeasureCup_500ml")
     h = 0.125
     segs = 44
     ys = sorted(set([0.0, 0.0012, 0.0032, 0.005, 0.0075, 0.012] + [round(y, 4) for y in np.linspace(0.02, 0.112, 20)]
@@ -1208,7 +1208,7 @@ def manifest(stats):
              note="the bins are cubes with renderers disabled, so there is no mesh to swap. The applier only adds the BinVisual_v2 child when the 'Include optional' toggle is passed; colliders are untouched."),
         dict(mesh=TOOLS + "/SM_WipeCloth_v2.obj", oldMesh=TOOLS + "/SM_WipeCloth.obj", footprintReference=TOOLS + "/SM_WipeCloth.obj",
              prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Tools/PF_WipeCloth.prefab", node="Visual", materials=["MAT_WipeCloth_v2"])]),
-        dict(mesh=PROPS + "/SM_BatterMeasureCup_500ml_v2.obj", oldMesh=PROPS + "/SM_BatterMeasureCup_500ml.obj",
+        dict(mesh=PROPS + "/SM_BatterMeasureCup_500ml.obj", oldMesh=PROPS + "/SM_BatterMeasureCup_500ml.obj",
              footprintReference=PROPS + "/SM_BatterMeasureCup_500ml.obj",
              prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Tools/PF_BatterMeasureCup_500ml.prefab", node="Visual",
                            materials=["@existing:" + existing("MAT_MeasuringCup_Translucent.mat")],
@@ -1270,7 +1270,7 @@ def main():
             "SM_TeaBag_Liquid_v2": DRINK + "/SM_TeaBag_Liquid.obj", "SM_Topping_CoconutJellyCubes_v2": DRINK + "/SM_Topping_CoconutJellyCubes.obj",
             "SM_Topping_LemonJelly_v2": DRINK + "/SM_Topping_CoconutJellyCubes.obj", "SM_Ice_Cubes_v2": DRINK + "/SM_Ice_Cubes.obj",
             "SM_IceScoop_v2": DRINK + "/SM_IceScoop.obj", "SM_RedTeaRack_v2": "Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
-            "SM_WipeCloth_v2": TOOLS + "/SM_WipeCloth.obj", "SM_BatterMeasureCup_500ml_v2": PROPS + "/SM_BatterMeasureCup_500ml.obj",
+            "SM_WipeCloth_v2": TOOLS + "/SM_WipeCloth.obj", "SM_BatterMeasureCup_500ml": PROPS + "/SM_BatterMeasureCup_500ml.obj",
             "SM_ToppingBin_v2": None, "SM_LemonSlice_v2": None}
     print("%-34s %6s %6s %3s  %-22s %-22s %7s %7s  %s" % ("mesh", "verts", "tris", "sub", "min xyz (m)", "max xyz (m)", "open", "volume", "footprint vs old (+-10%)"))
     fails = 0

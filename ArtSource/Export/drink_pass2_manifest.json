@@ -570,7 +570,7 @@
       }
     },
     {
-      "mesh": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml_v2.obj",
+      "mesh": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj",
       "oldMesh": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj",
       "footprintReference": "Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml.obj",
       "prefabs": [

@@ -101,8 +101,12 @@ All runtime code lives under `Assets/TramChanh/Scripts/<Module>/` ([WF] §7), on
 | `TramChanh.Cakes` | `Scripts/Cakes` | `CakePreparation`, `GrillModel` (domain) + batter, grill, spatula, scissors, sauce, roll, wrap adapters | Core, Content, Interaction, Orders |
 | `TramChanh.Lobby` | `Scripts/Lobby` | `TableOrderPoint`, `VehicleOrderPoint`, `LobbyOrderController`, delivery targets | Core, Interaction, Orders |
 | `TramChanh.Customers` | `Scripts/Customers` | Slice customer controller (scripted) | Core, Orders, Lobby |
+| `TramChanh.People` | `Scripts/People` | Waypoint graph, path follower, crowd scheduler (pure path logic for ambient people and vehicles) | Core |
+| `TramChanh.Stall.Layout` | `Scripts/Stall/Layout` | Stall anchor layout data | — |
+| `TramChanh.Save` | `Scripts/Save` | `SaveService`, JSON file store, versioned `SaveData` (not wired into the game: progress is saved through `PlayerPrefsSettingsStore`) | Core |
+| `TramChanh.Audio` | `Scripts/Audio` | `AudioManager`, cue library, mix model and event router: order, drink and cake events become sound cues | Core, Interaction, Orders, Drinks, Cakes |
 | `TramChanh.UI` | `Scripts/UI` | Interaction prompt, order entry UI, stall ticket UI, ready list, debug HUD | Core, Interaction, Orders, Content |
-| `TramChanh.App` | `Scripts/Core/Bootstrap` *(own asmdef)* | `GameBootstrap` (composition root), `SceneLoader` | all of the above |
+| `TramChanh.App` | `Scripts/Core/Bootstrap` *(own asmdef)* | `GameBootstrap` (composition root), `SceneLoader` | all runtime assemblies above |
 | `TramChanh.DevTools` | `Scripts/Debug` | Dev cheats (spawn customer, skip cook timer), only in Editor/Development builds (define constraint) | all of the above |
 | `TramChanh.Editor` | `Scripts/Editor` | Project setup, placeholder builders, prefab/asset validators, scale-test tools (namespace `TramChanh.EditorTools`) | all runtime assemblies |
 | `TramChanh.Tests.EditMode` | `Tests/EditMode` | Domain unit tests, GT tests, asset validators | all runtime + Editor |
