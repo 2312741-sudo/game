@@ -160,7 +160,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", default=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     ap.add_argument("--scope", default="Assets/TramChanh", help="folder whose .unity/.prefab/.asset files are scanned")
-    ap.add_argument("--allow-external", help="file of GUIDs known to live in registry packages")
+    default_allow = os.path.join(os.path.dirname(os.path.abspath(__file__)), "preflight_external_guids.txt")
+    ap.add_argument("--allow-external", default=default_allow if os.path.isfile(default_allow) else None,
+                    help="file of GUIDs known to live in registry packages (default: Automation/preflight_external_guids.txt)")
     ap.add_argument("--json", help="also write machine-readable findings here")
     ap.add_argument("--include-untracked", action="store_true",
                     help="also scan files Git does not track (default: tracked only, so locally generated "

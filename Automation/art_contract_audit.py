@@ -26,6 +26,23 @@ import os
 import re
 import sys
 
+
+_EXTERNAL_GUIDS = None
+
+
+def external_package_guids():
+    """GUIDs of registry-package scripts (not in Assets); shared with static_preflight.py."""
+    global _EXTERNAL_GUIDS
+    if _EXTERNAL_GUIDS is None:
+        _EXTERNAL_GUIDS = set()
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "preflight_external_guids.txt")
+        if os.path.isfile(path):
+            for raw in open(path, encoding="utf-8"):
+                guid = raw.split("#", 1)[0].strip().lower()
+                if re.fullmatch(r"[0-9a-f]{32}", guid):
+                    _EXTERNAL_GUIDS.add(guid)
+    return _EXTERNAL_GUIDS
+
 MASK = 0x7FFFFFFFFFFFFFFF
 LAYERS = {8: "Environment", 9: "Interactable", 10: "Player", 11: "NPC", 12: "HeldItem"}
 COLLIDERS = {"BoxCollider", "SphereCollider", "CapsuleCollider", "MeshCollider", "CharacterController"}
@@ -756,6 +773,8 @@ class Audit:
         for node in prefab.root.walk():
             for comp in node.components:
                 if comp.type == "MonoBehaviour" and comp.script is None:
+                    if comp.script_guid in external_package_guids():
+                        continue  # a script of a registry package (URP...), listed in Automation/preflight_external_guids.txt
                     bad += 1
                     self.add(F, label, "MonoBehaviour on '%s' references script GUID %s with no .cs in Assets" % (node.path(prefab.root), comp.script_guid))
         if not bad:

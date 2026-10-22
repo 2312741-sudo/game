@@ -1,0 +1,16 @@
+# GUIDs of scripts that live in registry packages (Library/PackageCache), not in this repository.
+# static_preflight.py reads this file by default. Format: <guid> # <package> <script>
+# Add a line only for a script you checked in the package cache:
+#   grep -rl "guid: <GUID>" Library/PackageCache | grep "\.cs\.meta$"
+66f335fb1ffd8684294ad653bf1c7564 # com.unity.render-pipelines.universal ColorAdjustments
+899c54efeace73346a0a16faa3afe726 # com.unity.render-pipelines.universal Vignette
+97c23e3b12dc18c42a140437e53d3951 # com.unity.render-pipelines.universal Tonemapping
+a79441f348de89743a2939f4d699eac1 # com.unity.render-pipelines.universal UniversalAdditionalCameraData
+d7fd9488000d3734a9e00ee676215985 # com.unity.render-pipelines.core VolumeProfile
+0b2db86121404754db890f4c8dfe81b2 # com.unity.render-pipelines.universal Bloom
+221518ef91623a7438a71fef23660601 # com.unity.render-pipelines.universal WhiteBalance
+172515602e62fb746b5d573b38a5fe58 # com.unity.render-pipelines.core Volume
+29fa0085f50d5e54f8144f766051a691 # com.unity.render-pipelines.universal FilmGrain
+5485954d14dfb9a4c8ead8edb0ded5b1 # com.unity.render-pipelines.universal LiftGammaGain
+70afe9e12c7a7ed47911bb608a23a8ff # com.unity.render-pipelines.universal SplitToning
+81180773991d8724ab7f2d216912b564 # com.unity.render-pipelines.universal ChromaticAberration
