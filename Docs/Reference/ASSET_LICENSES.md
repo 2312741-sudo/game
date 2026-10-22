@@ -113,3 +113,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 |---|---|---|---|---|
 | Trà chanh dây and trà ô long chanh tươi cups (models, materials, atlas, prefabs) | Project Trạm Chanh (Anti, from the owner's photos IMG_5213 and IMG_5214) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Art/Models/Food/SM_Drink_*.obj`, `Assets/TramChanh/Art/Materials/Food/MAT_Drink_*.mat`, `Assets/TramChanh/Art/Textures/Food/T_NewDrinks_BaseColor.png`, `Assets/TramChanh/Prefabs/Items/NewMenu/*` |
 | UI icon set (24 icons) | Project Trạm Chanh (Anti) | Internal / self-authored | CC0 1.0 | `Assets/TramChanh/Resources/UI/Icons/IC_*.png` |
+
+## Character And Animal PBR Pass 2 (generated 2026-10-22)
+| Asset | Author | Source | Licence | Paths |
+|---|---|---|---|---|
+| Detail normal maps and animal atlas mask map (cloth weave, skin micro, fur micro, hair strand, leather grain, rubber sole, `T_Animal_Atlas_Mask_v2`) | Project Original (procedurally generated) | `ArtSource/Scripts/generate_character_pbr_v2.py` (numpy + PIL, deterministic, no third-party source material) | CC0 1.0 | `Assets/TramChanh/Art/Textures/Characters/T_Cloth_Weave_Normal_v2.png`, `T_Skin_Micro_Normal_v2.png`, `T_Fur_Micro_Normal_v2.png`, `T_Hair_Strand_Normal_v2.png`, `T_Leather_Grain_Normal_v2.png`, `T_Rubber_Sole_Normal_v2.png`, `T_Animal_Atlas_Mask_v2.png` |
