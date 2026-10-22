@@ -338,7 +338,7 @@ namespace TramChanh.Effects
             for (int i = 0; i < _vehicleRoot.childCount; i++)
             {
                 Transform child = _vehicleRoot.GetChild(i);
-                if (!_scanned.Add(child.GetInstanceID()))
+                if (!_scanned.Add(child.GetEntityId().GetHashCode()))
                 {
                     continue;
                 }

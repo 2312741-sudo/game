@@ -48,7 +48,8 @@ namespace TramChanh.Tests.EditMode.Effects
         public void FX_WIRE_004_ZeroSagIsAStraightLine()
         {
             Vector3[] p = CatenaryCurve.Sample(Vector3.zero, new Vector3(4f, 2f, 0f), 0f, 4);
-            Assert.AreEqual(1f, p[2].x, 1e-5f);
+            // Five points for four segments: the middle one is the midpoint of (0,0) and (4,2).
+            Assert.AreEqual(2f, p[2].x, 1e-5f);
             Assert.AreEqual(1f, p[2].y, 1e-5f);
         }
 

@@ -53,7 +53,8 @@ REQUIRED_PACKAGES = [
 
 # ARCHITECTURE.md §4 — project-internal references only.
 RUNTIME = ["Core", "Content", "Interaction", "Orders", "Stall", "Drinks", "Cakes", "Lobby", "Customers", "UI"]
-# People (path graph), Stall.Layout (anchor layout), Audio (cue router) and Save (JSON save) were added after the first map;
+# People (path graph), Stall.Layout (anchor layout), Audio (cue router), Save (JSON save), Effects (particles) and Props (physics props)
+# were added after the first map;
 # the table below is the real graph as of 2026-10-22.
 EXPECTED_REFS = {
     "TramChanh.Core": [],
@@ -70,11 +71,15 @@ EXPECTED_REFS = {
     "TramChanh.People": ["Core"],
     "TramChanh.Save": ["Core"],
     "TramChanh.Audio": ["Core", "Interaction", "Orders", "Drinks", "Cakes"],
-    "TramChanh.App": RUNTIME + ["People", "Audio"],
+    "TramChanh.Effects": ["Core", "Cakes"],
+    "TramChanh.Props": ["Core"],
+    "TramChanh.App": RUNTIME + ["People", "Audio", "Effects", "Props"],
     "TramChanh.DevTools": RUNTIME + ["App"],
-    "TramChanh.Editor": RUNTIME + ["App", "DevTools", "Stall.Layout"],
+    "TramChanh.Editor": RUNTIME + ["App", "DevTools", "Stall.Layout", "Effects"],
     "TramChanh.Tests.EditMode": RUNTIME + ["App", "DevTools", "Editor", "People", "Save", "Stall.Layout"],
     "TramChanh.Tests.EditMode.Audio": ["Core", "Interaction", "Orders", "Drinks", "Cakes", "Audio"],
+    "TramChanh.Tests.EditMode.Effects": ["Core", "Cakes", "Effects"],
+    "TramChanh.Tests.EditMode.Props": ["Core", "Props"],
     "TramChanh.Tests.PlayMode": RUNTIME + ["App", "DevTools", "People"],
 }
 FORBIDDEN = [  # (assembly, must not reference) — ARCHITECTURE.md §4 rules

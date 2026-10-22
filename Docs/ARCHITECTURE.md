@@ -105,8 +105,10 @@ All runtime code lives under `Assets/TramChanh/Scripts/<Module>/` ([WF] §7), on
 | `TramChanh.Stall.Layout` | `Scripts/Stall/Layout` | Stall anchor layout data | — |
 | `TramChanh.Save` | `Scripts/Save` | `SaveService`, JSON file store, versioned `SaveData` (not wired into the game: progress is saved through `PlayerPrefsSettingsStore`) | Core |
 | `TramChanh.Audio` | `Scripts/Audio` | `AudioManager`, cue library, mix model and event router: order, drink and cake events become sound cues | Core, Interaction, Orders, Drinks, Cakes |
+| `TramChanh.Effects` | `Scripts/Effects` | Night effects: rain, steam, tail-light trails and the sagging power cord (Particle System, Trail Renderer, Line Renderer); logic split from the thin MonoBehaviours | Core, Cakes |
+| `TramChanh.Props` | `Scripts/Props` | Physics props: discarded debris (Rigidbody + Physics Material), puddle triggers (OnTrigger), hanging signs and bulbs (Hinge and Spring Joints) | Core |
 | `TramChanh.UI` | `Scripts/UI` | Interaction prompt, order entry UI, stall ticket UI, ready list, debug HUD | Core, Interaction, Orders, Content |
-| `TramChanh.App` | `Scripts/Core/Bootstrap` *(own asmdef)* | `GameBootstrap` (composition root), `SceneLoader` | all runtime assemblies above |
+| `TramChanh.App` | `Scripts/Core/Bootstrap` *(own asmdef)* | `TramChanhMainBootstrap` (composition root), street animals (AI view) | all runtime assemblies above |
 | `TramChanh.DevTools` | `Scripts/Debug` | Dev cheats (spawn customer, skip cook timer), only in Editor/Development builds (define constraint) | all of the above |
 | `TramChanh.Editor` | `Scripts/Editor` | Project setup, placeholder builders, prefab/asset validators, scale-test tools (namespace `TramChanh.EditorTools`) | all runtime assemblies |
 | `TramChanh.Tests.EditMode` | `Tests/EditMode` | Domain unit tests, GT tests, asset validators | all runtime + Editor |

@@ -39,7 +39,7 @@ namespace TramChanh.Props
         private void Awake()
         {
             _body = GetComponent<Rigidbody>();
-            _phase = GetInstanceID() % 97 * 0.1f; // de-synchronise several hanging props
+            _phase = (GetEntityId().GetHashCode() & 0x7fffffff) % 97 * 0.1f; // de-synchronise several hanging props
         }
 
         private void FixedUpdate()

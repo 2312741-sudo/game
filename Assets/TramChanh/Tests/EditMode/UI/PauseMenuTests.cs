@@ -17,6 +17,7 @@ namespace TramChanh.Tests.EditMode.UI
             _settings = new GameSettings();
             _root = new VisualElement();
             _appliedQuality = -999;
+            _changed = 0; // NUnit reuses one fixture instance, so the counter must not carry over from other tests
             return new PauseMenu(_root, _settings, null, null, null, () => _changed++, applyQuality: l => _appliedQuality = l, qualityNames: quality);
         }
 

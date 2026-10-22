@@ -289,6 +289,33 @@ namespace TramChanh.EditorTools
             log.AppendLine($"  detail prototype: {texName}");
         }
 
+        public const string TerrainTreePrefabPath = "Assets/TramChanh/Art/Terrain/PF_StreetTree_Terrain.prefab";
+
+        /// <summary>
+        /// Unity draws a Terrain tree only when the prototype prefab has a renderer or an LODGroup on its ROOT. The street tree keeps its
+        /// meshes on children, so this variant adds a single-level LODGroup on the root that lists all of them. The street tree itself is untouched.
+        /// </summary>
+        private static GameObject EnsureTerrainTreePrefab(GameObject source, StringBuilder log)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(TerrainTreePrefabPath);
+            if (existing != null) { return existing; }
+            string folder = System.IO.Path.GetDirectoryName(TerrainTreePrefabPath).Replace('\\', '/');
+            if (!AssetDatabase.IsValidFolder(folder)) { return source; }
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            try
+            {
+                Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+                var group = instance.GetComponent<LODGroup>();
+                if (group == null) { group = instance.AddComponent<LODGroup>(); }
+                group.SetLODs(new[] { new LOD(0.01f, renderers) });
+                group.RecalculateBounds();
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, TerrainTreePrefabPath);
+                log.AppendLine($"  created terrain tree variant {TerrainTreePrefabPath} (LODGroup on the root, {renderers.Length} renderers)");
+                return saved;
+            }
+            finally { Object.DestroyImmediate(instance); }
+        }
+
         private static TreePrototype[] BuildTreePrototypes(StringBuilder log)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TreePrefabPath);
@@ -307,7 +334,8 @@ namespace TramChanh.EditorTools
                 log.AppendLine($"  WARNING: {tris} triangles > {MaxTreeTriangles}, trees skipped (budget)");
                 return new TreePrototype[0];
             }
-            return new[] { new TreePrototype { prefab = prefab, bendFactor = 0.6f } };
+            GameObject terrainTree = EnsureTerrainTreePrefab(prefab, log);
+            return new[] { new TreePrototype { prefab = terrainTree != null ? terrainTree : prefab, bendFactor = 0.6f } };
         }
 
         // ------------------------------------------------------------------------------------
@@ -416,7 +444,15 @@ namespace TramChanh.EditorTools
             if (col != null)
             {
                 col.terrainData = data;
-                col.enableTreeColliders = false;   // far outside the playable limit; saves physics work
+                // Far outside the playable limit: tree colliders only cost physics work. The setting has no public property
+                // in this Unity version, so it is written through the serialized field when it exists.
+                var colliderObject = new SerializedObject(col);
+                SerializedProperty treeColliders = colliderObject.FindProperty("m_EnableTreeColliders");
+                if (treeColliders != null)
+                {
+                    treeColliders.boolValue = false;
+                    colliderObject.ApplyModifiedPropertiesWithoutUndo();
+                }
             }
 
             Undo.RegisterCreatedObjectUndo(go, "Create Terrain");

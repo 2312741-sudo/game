@@ -14,3 +14,4 @@ d7fd9488000d3734a9e00ee676215985 # com.unity.render-pipelines.core VolumeProfile
 5485954d14dfb9a4c8ead8edb0ded5b1 # com.unity.render-pipelines.universal LiftGammaGain
 70afe9e12c7a7ed47911bb608a23a8ff # com.unity.render-pipelines.universal SplitToning
 81180773991d8724ab7f2d216912b564 # com.unity.render-pipelines.universal ChromaticAberration
+594ea882c5a793440b60ff72d896021e # com.unity.render-pipelines.universal TerrainLit material (Terrain default material template)

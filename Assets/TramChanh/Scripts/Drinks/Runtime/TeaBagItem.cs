@@ -140,6 +140,7 @@ namespace TramChanh.Drinks.Runtime
                 return;
             }
             _stateView?.SetShaking(false);
+            ItemDiscardHook.Raise(gameObject);
             if (ReferenceEquals(context.Hands.Current, this))
             {
                 context.Hands.TryRelease();

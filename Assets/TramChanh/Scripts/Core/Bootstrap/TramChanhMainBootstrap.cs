@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using TramChanh.Audio;
+using TramChanh.Effects;
+using TramChanh.Props;
 using TramChanh.Cakes;
 using TramChanh.Content;
 using TramChanh.App.People;
@@ -55,6 +57,12 @@ namespace TramChanh.App
         [SerializeField] private GameObject _tablePointPrefab;
         [SerializeField, Tooltip("Visible stall helper: shown only once the Helper upgrade is owned. Visual only, no colliders.")] private GameObject _helperPrefab;
         [SerializeField, Tooltip("Helper position relative to PlayerSpawn.")] private Vector3 _helperOffset = new Vector3(1.1f, 0f, 0f);
+        [SerializeField, Tooltip("PF_NightEffects: rain, steam, tail-light trails and the sagging power cord (course lesson 7).")] private GameObject _nightEffectsPrefab;
+        [SerializeField, Tooltip("PF_Physics_DiscardedPropSpawner: debris with Rigidbody and Physics Material for discarded items (lessons 4 and 6).")] private GameObject _debrisSpawnerPrefab;
+        [SerializeField, Tooltip("PF_Physics_HangingSign_Hinge: a small sign on a Hinge Joint that sways in the wind.")] private GameObject _hangingSignPrefab;
+        [SerializeField, Tooltip("PF_Physics_HangingBulb_Spring: a bulb on a Spring Joint beside the stall.")] private GameObject _hangingBulbPrefab;
+        [SerializeField, Tooltip("Puddle mesh and material used when the street has no puddles of its own (SM_Puddle_Oval, MAT_Puddle_Water).")] private Mesh _puddleMesh;
+        [SerializeField] private Material _puddleMaterial;
         [Tooltip("Plastic stool the red tea rack stands on behind the counter. Optional.")]
         [SerializeField] private GameObject _teaRackStoolPrefab;
         [SerializeField] private GameObject _vehiclePointPrefab;
@@ -319,6 +327,7 @@ namespace TramChanh.App
             Teleport(spawn.position, spawn.rotation);
             CreateHelperVisual(spawn);
             _animators = _runtime.GetComponentsInChildren<Animator>(true);
+            SetUpCourseFeatures(anchors);
             _runtime.SetActive(true);
             // The takeaway customer arrives by motorbike (see UpdateVehicleSeat); only walking-in seats are served immediately.
             foreach (CustomerSeat seat in _seats)
@@ -654,6 +663,10 @@ namespace TramChanh.App
         private readonly HashSet<OrderId> _waitingForHelper = new HashSet<OrderId>();
         private readonly HashSet<OrderId> _readyForHelper = new HashSet<OrderId>();
         private GameObject _helperVisual;
+        private AudioManager _audio;
+        private NightEffectsController _fx;
+        private DiscardedPropSpawner _debris;
+        private StreetAnimalContext _animalContext;
         private PersonView _helperView;
         private Vector3 _helperHome;
         private Quaternion _helperHomeRotation;
@@ -704,6 +717,139 @@ namespace TramChanh.App
             }
         }
 
+        /// <summary>
+        /// The features the Advanced Game Development course asks for, each optional so the game still runs without its prefab:
+        /// particles (lesson 7), physics props (lessons 4 and 6) and the animal AI context (AI).
+        /// </summary>
+        private void SetUpCourseFeatures(StallAnchorSet anchors)
+        {
+            if (_debrisSpawnerPrefab != null)
+            {
+                _debris = Instantiate(_debrisSpawnerPrefab, _runtime.transform).GetComponent<DiscardedPropSpawner>();
+                if (_debris != null)
+                {
+                    _debris.Initialize(_events);
+                    ItemDiscardHook.Discarded += OnItemDiscarded;
+                }
+            }
+            SetUpPuddleTriggers();
+            // Hanging props sit beside the stall, outside its 1.8 x 0.8 m footprint and above head height.
+            if (_hangingSignPrefab != null)
+            {
+                GameObject sign = Instantiate(_hangingSignPrefab, anchors.transform.TransformPoint(new Vector3(1.5f, 2.4f, 0f)), anchors.transform.rotation, _runtime.transform);
+                HangingSwayDriver swayDriver = sign.GetComponentInChildren<HangingSwayDriver>(true);
+                if (swayDriver != null) { swayDriver.Initialize(_events); }
+            }
+            if (_hangingBulbPrefab != null)
+            {
+                GameObject bulb = Instantiate(_hangingBulbPrefab, anchors.transform.TransformPoint(new Vector3(-1.5f, 2.4f, 0f)), anchors.transform.rotation, _runtime.transform);
+                HangingSwayDriver swayDriver = bulb.GetComponentInChildren<HangingSwayDriver>(true);
+                if (swayDriver != null) { swayDriver.Initialize(_events); }
+            }
+            if (_nightEffectsPrefab != null)
+            {
+                _fx = Instantiate(_nightEffectsPrefab, _runtime.transform).GetComponent<NightEffectsController>();
+                if (_fx != null)
+                {
+                    _fx.SetCameraTarget(_player.transform);
+                    if (People != null) { _fx.SetVehicleRoot(People.transform); }
+                    if (anchors.TryGet(StallAnchorId.Grill, out StallAnchor grill)) { _fx.SetGrillAnchor(grill.transform); }
+                    if (anchors.TryGet(StallAnchorId.TeaRack, out StallAnchor cup)) { _fx.SetCupAnchor(cup.transform); }
+                    _fx.SetStallRoot(anchors.transform);
+                    _fx.BindEvents(_events);
+                    _fx.SetNightEvent(_night);
+                }
+            }
+            BindAnimalContext();
+        }
+
+        /// <summary>A trigger volume over every puddle mesh (OnTriggerEnter): walking or riding through it splashes.</summary>
+        private void SetUpPuddleTriggers()
+        {
+            EnsurePuddles();
+            foreach (MeshFilter filter in _runtime.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null || filter.name.IndexOf("Puddle", StringComparison.OrdinalIgnoreCase) < 0) { continue; }
+                if (filter.transform.Find("PuddleTrigger") != null) { continue; }
+                var volume = new GameObject("PuddleTrigger");
+                volume.transform.SetParent(filter.transform, false);
+                Bounds meshBounds = filter.sharedMesh.bounds;
+                volume.transform.localPosition = meshBounds.center;
+                var box = volume.AddComponent<BoxCollider>();
+                box.isTrigger = true;
+                float lossyY = Mathf.Max(0.01f, Mathf.Abs(filter.transform.lossyScale.y));
+                box.size = new Vector3(meshBounds.size.x, Mathf.Max(meshBounds.size.y, 0.4f / lossyY), meshBounds.size.z);
+                var body = volume.AddComponent<Rigidbody>();
+                body.isKinematic = true;
+                body.useGravity = false;
+                volume.AddComponent<PuddleSplashTrigger>().Initialize(_events);
+            }
+        }
+
+        /// <summary>The street has no puddle meshes of its own, so a few shallow puddles are laid on the pavement in front of the stall.</summary>
+        private void EnsurePuddles()
+        {
+            if (_puddleMesh == null || _puddleMaterial == null) { return; }
+            foreach (MeshFilter existing in _runtime.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (existing.name.IndexOf("Puddle", StringComparison.OrdinalIgnoreCase) >= 0) { return; }
+            }
+            Transform stall = RequireAnchor(StallRootAnchor);
+            Vector3[] spots = { new Vector3(1.4f, 0.015f, 2.0f), new Vector3(2.9f, 0.015f, 3.2f), new Vector3(0.3f, 0.015f, 3.5f), new Vector3(-1.1f, 0.015f, 2.7f) };
+            for (int i = 0; i < spots.Length; i++)
+            {
+                var puddle = new GameObject("Puddle_" + (i + 1));
+                puddle.transform.SetParent(_runtime.transform, false);
+                puddle.transform.SetPositionAndRotation(stall.TransformPoint(spots[i]), stall.rotation * Quaternion.Euler(0f, 47f * i, 0f));
+                puddle.AddComponent<MeshFilter>().sharedMesh = _puddleMesh;
+                MeshRenderer renderer = puddle.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial = _puddleMaterial;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+            }
+        }
+
+        private void OnItemDiscarded(GameObject item)
+        {
+            if (_debris == null || item == null) { return; }
+            Vector3 forward = _player != null ? _player.transform.forward : Vector3.forward;
+            _debris.SpawnCopyOf(item, item.transform.position, item.transform.rotation, forward * 1.5f);
+        }
+
+        /// <summary>The animals' view of the street: the waypoint graph, the player and the tables where somebody is eating.</summary>
+        private void BindAnimalContext()
+        {
+            if (_animals.Count == 0) { return; }
+            _animalContext = new StreetAnimalContext
+            {
+                Graph = People != null ? People.Graph : null,
+                Player = _player != null ? _player.transform : null,
+                Food = new TableFoodSource(this)
+            };
+            foreach (StreetAnimalWander animal in _animals) { if (animal != null) { animal.Bind(_animalContext); } }
+        }
+
+        private sealed class TableFoodSource : TramChanh.People.IAnimalFoodSource
+        {
+            private readonly TramChanhMainBootstrap _owner;
+            public TableFoodSource(TramChanhMainBootstrap owner) { _owner = owner; }
+
+            public bool TryFindFood(Vector3 from, float range, out Vector3 position)
+            {
+                position = default;
+                bool found = false;
+                float best = range * range;
+                foreach (TableOrderPoint table in _owner._tables)
+                {
+                    if (table == null || !table.ActiveOrder.IsValid) { continue; }
+                    Vector3 spot = table.transform.position;
+                    float distance = (spot - from).sqrMagnitude;
+                    if (distance < best) { best = distance; position = spot; found = true; }
+                }
+                return found;
+            }
+        }
+
         /// <summary>Street dogs, cats and chickens (instances named PF_Street_Dog/Cat/Chicken...) wander near where they were placed.</summary>
         private void SetUpStreetAnimals()
         {
@@ -731,7 +877,8 @@ namespace TramChanh.App
             library.SetEntry(AudioCue.TicketBell, Resources.Load<AudioClip>("Audio/sfx_ready"));
             library.SetEntry(AudioCue.OrderServed, Resources.Load<AudioClip>("Audio/sfx_served"));
             library.SetEntry(AudioCue.OrderFailed, Resources.Load<AudioClip>("Audio/sfx_failed"));
-            AudioManager.Create(_events, library);
+            _audio = AudioManager.Create(_events, library, AudioMixerBridge.LoadDefaultMixer());
+            ApplySettings(); // now that the manager exists, push the saved effect and ambient volumes into the mixer
         }
 
         private void OnOrderStatus(OrderStatusChanged change)
@@ -1042,6 +1189,7 @@ namespace TramChanh.App
             _goal = DailyGoal.ForDay(_progress.Day, _difficulty);
             _goalAnnounced = false;
             _combo.NewNight();
+            if (_fx != null) { _fx.SetNightEvent(_night); _fx.ResetNight(); }
             _helper.Clear();
             _helperDelivery.Clear();
             _waitingForHelper.Clear();
@@ -1189,7 +1337,11 @@ namespace TramChanh.App
 
         private void ApplySettings()
         {
-            AudioListener.volume = _settings.MasterVolume;
+            // With the Audio Mixer the three volumes go to its exposed parameters and the listener stays at 1 (no double attenuation);
+            // without the mixer asset the master volume falls back to the listener as before.
+            if (_audio != null) { _audio.ApplySettings(_settings.MasterVolume, _settings.SfxVolume, _settings.AmbientVolume); }
+            AudioListener.volume = _audio != null && _audio.UsesMixer ? 1f : _settings.MasterVolume;
+            GraphicsQuality.Apply(_settings.QualityLevel);
             _player.LookScale = _settings.LookScale;
         }
 
@@ -1222,6 +1374,8 @@ namespace TramChanh.App
 
         private void OnDestroy()
         {
+            ItemDiscardHook.Discarded -= OnItemDiscarded;
+            if (_fx != null) { _fx.UnbindEvents(); }
             if (Customers != null)
             {
                 Customers.CustomerSeated -= OnCustomerSeated;

@@ -56,6 +56,7 @@ namespace TramChanh.Cakes
         public void ExecuteUse(InteractionContext context)
         {
             if (!QueryUse(context).Availability.IsAvailable) { return; }
+            ItemDiscardHook.Raise(gameObject);
             context.Hands.TryRelease(); Destroy(gameObject);
         }
         public void Apply()

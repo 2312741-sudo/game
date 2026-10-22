@@ -13,7 +13,9 @@
     "TramChanh.Customers",
     "TramChanh.People",
     "TramChanh.UI",
-    "TramChanh.Audio"
+    "TramChanh.Audio",
+    "TramChanh.Effects",
+    "TramChanh.Props"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

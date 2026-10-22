@@ -52,7 +52,7 @@ namespace TramChanh.Props
         private void OnTriggerEnter(Collider other)
         {
             if (!Accepts(other)) { return; }
-            _lastPosition[other.GetInstanceID()] = other.transform.position;
+            _lastPosition[other.GetEntityId().GetHashCode()] = other.transform.position;
             // Entering: use the real velocity when there is one. Scripted vehicles have none, so assume they are moving.
             float speed = KnownSpeed(other, out bool known);
             TrySplash(other, known ? speed : _minSpeed);
@@ -61,7 +61,7 @@ namespace TramChanh.Props
         private void OnTriggerStay(Collider other)
         {
             if (!Accepts(other)) { return; }
-            int key = other.GetInstanceID();
+            int key = other.GetEntityId().GetHashCode();
             float speed = KnownSpeed(other, out bool known);
             Vector3 now = other.transform.position;
             if (!known)
@@ -80,7 +80,7 @@ namespace TramChanh.Props
         private void OnTriggerExit(Collider other)
         {
             if (!Accepts(other)) { return; }
-            int key = other.GetInstanceID();
+            int key = other.GetEntityId().GetHashCode();
             _lastPosition.Remove(key);
             _policy.Exit(key);
         }
@@ -107,7 +107,7 @@ namespace TramChanh.Props
 
         private void TrySplash(Collider other, float speed)
         {
-            if (!_policy.ShouldSplash(other.GetInstanceID(), Time.timeAsDouble, speed, out float intensity))
+            if (!_policy.ShouldSplash(other.GetEntityId().GetHashCode(), Time.timeAsDouble, speed, out float intensity))
             {
                 return;
             }
