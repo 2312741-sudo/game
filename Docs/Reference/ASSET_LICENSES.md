@@ -127,3 +127,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | TerrainData and Terrain Layer assets (heights, splat map, tree and detail placement from noise functions) | Project Original (procedurally generated) | Editor tool `Assets/TramChanh/Scripts/Editor/TerrainBuilder.cs` (menu Tram Chanh > Terrain), pure logic in `TerrainBuilderMath.cs` | CC0 1.0 | `Assets/TramChanh/Art/Terrain/TD_StreetEnd_*.asset`, `TL_Terrain_*.terrainlayer` (created when the menu is run) |
 
 Terrain trees reuse the existing `PF_StreetTree` prefab (already in the project); no new third-party asset.
+
+## Particle Effects Textures (generated 2026-10-22)
+| Asset | Author | Source | Licence | Paths |
+|---|---|---|---|---|
+| Particle textures: raindrop streak, splash, steam puff, soft glow, trail band | Project Original (procedurally generated) | `ArtSource/Scripts/generate_particle_textures.py` (numpy + PIL, deterministic, no third-party source material) | CC0 1.0 | `Assets/TramChanh/Art/Textures/Effects/T_FX_Raindrop.png`, `T_FX_Splash.png`, `T_FX_Steam.png`, `T_FX_Glow.png`, `T_FX_Trail.png` |

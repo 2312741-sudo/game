@@ -15,6 +15,7 @@
     "TramChanh.UI",
     "TramChanh.App",
     "TramChanh.DevTools",
+    "TramChanh.Effects",
     "Unity.RenderPipelines.Universal.Runtime",
     "Unity.RenderPipelines.Core.Runtime",
     "Unity.InputSystem"

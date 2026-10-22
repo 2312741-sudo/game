@@ -1,0 +1,26 @@
+{
+  "name": "TramChanh.Tests.EditMode.Effects",
+  "rootNamespace": "TramChanh.Tests.EditMode.Effects",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Cakes",
+    "TramChanh.Effects",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
