@@ -1,0 +1,17 @@
+{
+  "name": "TramChanh.Effects",
+  "rootNamespace": "TramChanh.Effects",
+  "references": [
+    "TramChanh.Core",
+    "TramChanh.Cakes"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -119,3 +119,8 @@ Commercial copyrighted assets, restrictive licenses prohibiting video game use, 
 | Asset | Author | Source | Licence | Paths |
 |---|---|---|---|---|
 | Detail normal maps and animal atlas mask map (cloth weave, skin micro, fur micro, hair strand, leather grain, rubber sole, `T_Animal_Atlas_Mask_v2`) | Project Original (procedurally generated) | `ArtSource/Scripts/generate_character_pbr_v2.py` (numpy + PIL, deterministic, no third-party source material) | CC0 1.0 | `Assets/TramChanh/Art/Textures/Characters/T_Cloth_Weave_Normal_v2.png`, `T_Skin_Micro_Normal_v2.png`, `T_Fur_Micro_Normal_v2.png`, `T_Hair_Strand_Normal_v2.png`, `T_Leather_Grain_Normal_v2.png`, `T_Rubber_Sole_Normal_v2.png`, `T_Animal_Atlas_Mask_v2.png` |
+
+## Particle Effects Textures (generated 2026-10-22)
+| Asset | Author | Source | Licence | Paths |
+|---|---|---|---|---|
+| Particle textures: raindrop streak, splash, steam puff, soft glow, trail band | Project Original (procedurally generated) | `ArtSource/Scripts/generate_particle_textures.py` (numpy + PIL, deterministic, no third-party source material) | CC0 1.0 | `Assets/TramChanh/Art/Textures/Effects/T_FX_Raindrop.png`, `T_FX_Splash.png`, `T_FX_Steam.png`, `T_FX_Glow.png`, `T_FX_Trail.png` |
