@@ -1,0 +1,1298 @@
+#!/usr/bin/env python3
+"""
+Drink + tool pass 2 (v2) procedural meshes for Tram Chanh.  numpy + PIL only, deterministic.
+
+Writes NEW files with the suffix _v2 next to the old ones (old OBJ files are never touched):
+  Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Closed_v2.obj   submeshes Film, Seal
+  Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Pouch_Open_v2.obj     submeshes Film, Seal
+  Assets/TramChanh/Art/Models/DrinkStation/SM_TeaBag_Liquid_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_CoconutJellyCubes_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_Topping_LemonJelly_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_Ice_Cubes_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_LemonSlice_v2.obj            (extra, not placed anywhere)
+  Assets/TramChanh/Art/Models/DrinkStation/SM_IceScoop_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_RedTeaRack_v2.obj
+  Assets/TramChanh/Art/Models/DrinkStation/SM_ToppingBin_v2.obj            (optional, see manifest)
+  Assets/TramChanh/Art/Models/Tools/SM_WipeCloth_v2.obj
+  Assets/TramChanh/Art/Models/Props/SM_BatterMeasureCup_500ml_v2.obj
+  Assets/TramChanh/Art/Textures/Drink_v2/T_*_v2.png
+  ArtSource/Export/drink_pass2_manifest.json
+
+Conventions (docs/Design/ART_PIPELINE.md): metres, pivot at the bottom centre (the tea bag family
+shares the bag origin so the existing PlacementPoint/HandGrip anchors stay valid), +Y up, the OBJ is
+authored exactly like the old files (Unity mirrors OBJ on X on import; front of the bag = -Z; UV u is
+mirrored in X the same way the old bag UVs were, so the existing Tram logo texture keeps reading right).
+
+Usage:
+  python3 ArtSource/Scripts/generate_drink_meshes_v2.py            # meshes + textures + manifest
+  python3 ArtSource/Scripts/generate_drink_meshes_v2.py --verify   # only the stats table / footprint checks
+"""
+import json
+import math
+import os
+import sys
+
+import numpy as np
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DRINK = "Assets/TramChanh/Art/Models/DrinkStation"
+TOOLS = "Assets/TramChanh/Art/Models/Tools"
+PROPS = "Assets/TramChanh/Art/Models/Props"
+TEX = "Assets/TramChanh/Art/Textures/Drink_v2"
+GEN = "generate_drink_meshes_v2.py"
+
+
+# ----------------------------------------------------------------------------------------------
+# Mesh container: welded smooth normals, per-material submeshes, OBJ writer, stats
+# ----------------------------------------------------------------------------------------------
+class Mesh:
+    def __init__(self, name):
+        self.name = name
+        self.P, self.UV, self.key = [], [], []
+        self.tris = {}          # material -> [(a, b, c)]
+        self.mats = []
+
+    def v(self, p, uv=(0.0, 0.0), hard=False):
+        i = len(self.P)
+        p = (float(p[0]), float(p[1]), float(p[2]))
+        self.P.append(p)
+        self.UV.append((float(uv[0]), float(uv[1])))
+        self.key.append(("h", i) if hard else tuple(int(round(c * 1e6)) for c in p))
+        return i
+
+    def tri(self, mat, a, b, c):
+        if mat not in self.tris:
+            self.tris[mat] = []
+            self.mats.append(mat)
+        self.tris[mat].append((a, b, c))
+
+    def quad(self, mat, a, b, c, d):
+        self.tri(mat, a, b, c)
+        self.tri(mat, a, c, d)
+
+    def mark(self):
+        return {m: len(t) for m, t in self.tris.items()}
+
+    def _since(self, mk):
+        out = []
+        for m, t in self.tris.items():
+            out += [(m, i) for i in range(mk.get(m, 0), len(t))]
+        return out
+
+    def volume_since(self, mk):
+        P = np.array(self.P)
+        vol = 0.0
+        for m, i in self._since(mk):
+            a, b, c = self.tris[m][i]
+            vol += np.dot(P[a], np.cross(P[b], P[c])) / 6.0
+        return vol
+
+    def orient_since(self, mk, outward=True):
+        """Flip every triangle added since mk when the closed solid has negative signed volume."""
+        vol = self.volume_since(mk)
+        if (vol < 0) == outward:
+            for m, i in self._since(mk):
+                a, b, c = self.tris[m][i]
+                self.tris[m][i] = (a, c, b)
+
+    # ---- output -------------------------------------------------------------------------------
+    def normals(self):
+        P = np.array(self.P)
+        acc = {}
+        for m in self.mats:
+            for a, b, c in self.tris[m]:
+                n = np.cross(P[b] - P[a], P[c] - P[a])
+                for i in (a, b, c):
+                    acc[self.key[i]] = acc.get(self.key[i], 0) + n
+        N = np.zeros((len(P), 3))
+        for i in range(len(P)):
+            n = acc.get(self.key[i], np.zeros(3))
+            L = np.linalg.norm(n)
+            N[i] = n / L if L > 1e-18 else (0, 1, 0)
+        return N
+
+    def write(self, rel_path):
+        path = os.path.join(ROOT, rel_path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        N = self.normals()
+        lines = ["# Wavefront OBJ: %s (generated by %s, deterministic, CC0 project original)" % (self.name, GEN),
+                 "o %s" % self.name]
+        lines += ["v %.6f %.6f %.6f" % p for p in self.P]
+        lines += ["vt %.5f %.5f" % uv for uv in self.UV]
+        lines += ["vn %.5f %.5f %.5f" % tuple(n) for n in N]
+        lines.append("s 1")
+        for m in self.mats:
+            lines.append("usemtl %s" % m)
+            for a, b, c in self.tris[m]:
+                lines.append("f %d/%d/%d %d/%d/%d %d/%d/%d" % (a + 1, a + 1, a + 1, b + 1, b + 1, b + 1, c + 1, c + 1, c + 1))
+        with open(path, "w") as f:
+            f.write("\n".join(lines) + "\n")
+
+    def stats(self):
+        P = np.array(self.P)
+        used = sorted({i for t in self.tris.values() for tr in t for i in tr})
+        Pu = P[used]
+        tris = sum(len(t) for t in self.tris.values())
+        edges = {}
+        wid = {}
+        for m in self.mats:
+            for tr in self.tris[m]:
+                ids = [wid.setdefault(tuple(int(round(c * 1e5)) for c in P[i]), len(wid)) for i in tr]
+                if len(set(ids)) < 3:
+                    continue
+                for k in range(3):
+                    e = (ids[k], ids[(k + 1) % 3])
+                    edges[e] = edges.get(e, 0) + 1
+        bad = 0
+        for (a, b), c in edges.items():
+            if c != 1 or edges.get((b, a), 0) != 1:
+                bad += 1
+        vol = 0.0
+        for m in self.mats:
+            for a, b, c in self.tris[m]:
+                vol += np.dot(P[a], np.cross(P[b], P[c])) / 6.0
+        return dict(verts=len(self.P), tris=tris, mn=Pu.min(0), mx=Pu.max(0), open_edges=bad, volume=vol,
+                    submeshes=len(self.mats))
+
+
+# ----------------------------------------------------------------------------------------------
+# Geometry helpers
+# ----------------------------------------------------------------------------------------------
+def rotm(ax, ay, az):
+    cx, sx, cy, sy, cz, sz = math.cos(ax), math.sin(ax), math.cos(ay), math.sin(ay), math.cos(az), math.sin(az)
+    Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+    Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+    Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+    return Rz @ Ry @ Rx
+
+
+def smoothstep(a, b, x):
+    t = np.clip((np.asarray(x, float) - a) / (b - a), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
+
+
+def box(m, mat, x0, x1, y0, y1, z0, z1, uvs=2.0):
+    """Hard-edged axis aligned box, outward faces, planar UVs (uvs tiles per metre)."""
+    mk = m.mark()
+    P = lambda x, y, z: (x, y, z)
+    faces = [((x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1), lambda p: (p[0], p[1])),
+             ((x1, y0, z0), (x0, y0, z0), (x0, y1, z0), (x1, y1, z0), lambda p: (p[0], p[1])),
+             ((x0, y1, z1), (x1, y1, z1), (x1, y1, z0), (x0, y1, z0), lambda p: (p[0], p[2])),
+             ((x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1), lambda p: (p[0], p[2])),
+             ((x1, y0, z1), (x1, y0, z0), (x1, y1, z0), (x1, y1, z1), lambda p: (p[2], p[1])),
+             ((x0, y0, z0), (x0, y0, z1), (x0, y1, z1), (x0, y1, z0), lambda p: (p[2], p[1]))]
+    for a, b, c, d, f in faces:
+        ids = [m.v(p, (f(p)[0] * uvs, f(p)[1] * uvs), hard=True) for p in (a, b, c, d)]
+        m.quad(mat, *ids)
+    m.orient_since(mk)
+
+
+def ring_loft(m, mat, rings, uvs, closed_u=False, reverse=False):
+    """rings (L,N,3), uvs (L,N,2); quad strips between consecutive levels. Winding is fixed by the caller."""
+    L, N = rings.shape[:2]
+    ids = np.zeros((L, N), int)
+    for j in range(L):
+        for i in range(N):
+            ids[j, i] = m.v(rings[j, i], uvs[j, i])
+    last = N if closed_u else N - 1
+    for j in range(L - 1):
+        for i in range(last):
+            i2 = (i + 1) % N
+            if reverse:
+                m.quad(mat, ids[j, i], ids[j, i2], ids[j + 1, i2], ids[j + 1, i])
+            else:
+                m.quad(mat, ids[j, i], ids[j + 1, i], ids[j + 1, i2], ids[j, i2])
+    return ids
+
+
+def cap_fan(m, mat, center, ring_pts, ring_uv, center_uv, closed=True, hard=False, top=False):
+    c = m.v(center, center_uv, hard)
+    ids = [m.v(p, u, hard) for p, u in zip(ring_pts, ring_uv)]
+    n = len(ids)
+    for i in range(n if closed else n - 1):
+        if top:
+            m.tri(mat, c, ids[(i + 1) % n], ids[i])
+        else:
+            m.tri(mat, c, ids[i], ids[(i + 1) % n])
+    return c, ids
+
+
+def superring(a, d, n, y, N, t0=0.0, full=True):
+    t = t0 + np.linspace(0, 2 * math.pi, N, endpoint=not full) if full else np.linspace(t0, t0 + math.pi, N)
+    c, s = np.cos(t), np.sin(t)
+    x = a * np.sign(c) * np.abs(c) ** (2.0 / n)
+    z = d * np.sign(s) * np.abs(s) ** (2.0 / n)
+    return np.stack([x, np.full_like(x, y), z], 1), t
+
+
+def rounded_box(m, mat, center, half, r, R=np.eye(3), jitter=None, uvscale=40.0, tess=(-45, -22, 0, 0, 22, 45)):
+    """Cube with rounded edges (cube-sphere method). tess = angle (deg) per sample; 0,0 pairs are the flat
+    inner corners (inner coord -h+r / +h-r)."""
+    mk = m.mark()
+    half = np.array(half, float)
+    cen = np.array(center, float)
+    ang = [math.radians(a) for a in tess]
+    side = [-1, -1, -1, 1, 1, 1]
+    for k in range(3):
+        for s in (-1, 1):
+            i, j = (k + 1) % 3, (k + 2) % 3
+            grid = []
+            for ja in range(6):
+                row = []
+                for ia in range(6):
+                    inner = np.zeros(3)
+                    vec = np.zeros(3)
+                    inner[k] = s * (half[k] - r)
+                    vec[k] = s
+                    inner[i] = side[ia] * (half[i] - r)
+                    vec[i] = math.tan(ang[ia])
+                    inner[j] = side[ja] * (half[j] - r)
+                    vec[j] = math.tan(ang[ja])
+                    p = inner + r * vec / np.linalg.norm(vec)
+                    if jitter is not None:
+                        p = p + jitter(p)
+                    uv = ((p[i] + 0.5) * uvscale * 0.02 + 0.5 * (k + (s > 0)) / 3.0, (p[j] + 0.5) * uvscale * 0.02)
+                    row.append(m.v(cen + R @ p, uv))
+                grid.append(row)
+            for ja in range(5):
+                for ia in range(5):
+                    if s > 0:
+                        m.quad(mat, grid[ja][ia], grid[ja][ia + 1], grid[ja + 1][ia + 1], grid[ja + 1][ia])
+                    else:
+                        m.quad(mat, grid[ja][ia], grid[ja + 1][ia], grid[ja + 1][ia + 1], grid[ja][ia + 1])
+    m.orient_since(mk)
+
+
+def tube(m, mat, path, rx, ry, N=10, ref=(0, 1, 0), caps=True, uvs=(0, 0, 1, 1)):
+    """Closed tube along path (K,3) with elliptical section radii rx (width) / ry (height) per station."""
+    mk = m.mark()
+    path = np.asarray(path, float)
+    K = len(path)
+    rx = np.broadcast_to(np.asarray(rx, float), (K,))
+    ry = np.broadcast_to(np.asarray(ry, float), (K,))
+    ref = np.asarray(ref, float)
+    rings = np.zeros((K, N, 3))
+    uv = np.zeros((K, N, 2))
+    for k in range(K):
+        T = path[min(k + 1, K - 1)] - path[max(k - 1, 0)]
+        T /= np.linalg.norm(T)
+        U = np.cross(T, ref)
+        if np.linalg.norm(U) < 1e-6:
+            U = np.cross(T, (1, 0, 0))
+        U /= np.linalg.norm(U)
+        V = np.cross(T, U)
+        for i in range(N):
+            a = 2 * math.pi * i / N
+            rings[k, i] = path[k] + U * rx[k] * math.cos(a) + V * ry[k] * math.sin(a)
+            uv[k, i] = (uvs[0] + (uvs[2] - uvs[0]) * i / N, uvs[1] + (uvs[3] - uvs[1]) * k / (K - 1))
+    ring_loft(m, mat, rings, uv, closed_u=True)
+    if caps:
+        for k, rev in ((0, False), (K - 1, True)):
+            cc = m.v(path[k], (0.5, 0.5))
+            ids = [m.v(rings[k, i], (0.5, 0.5)) for i in range(N)]
+            for i in range(N):
+                a, b = ids[i], ids[(i + 1) % N]
+                m.tri(mat, cc, b, a) if rev else m.tri(mat, cc, a, b)
+    m.orient_since(mk)
+
+
+def torus(m, mat, center, R, r, axis=0, nu=24, nv=8):
+    c = np.asarray(center, float)
+    pts = []
+    for i in range(nu):
+        a = 2 * math.pi * i / nu
+        pts.append(c + R * np.array([0.0, math.cos(a), math.sin(a)]) if axis == 0 else c + R * np.array([math.cos(a), math.sin(a), 0.0]))
+    pts = np.array(pts)
+    mk = m.mark()
+    rings = np.zeros((nu + 1, nv, 3))
+    uv = np.zeros((nu + 1, nv, 2))
+    for i in range(nu + 1):
+        a = 2 * math.pi * (i % nu) / nu
+        if axis == 0:
+            rad = np.array([0.0, math.cos(a), math.sin(a)])
+            up = np.array([1.0, 0, 0])
+        else:
+            rad = np.array([math.cos(a), math.sin(a), 0.0])
+            up = np.array([0, 0, 1.0])
+        for j in range(nv):
+            b = 2 * math.pi * j / nv
+            rings[i, j] = c + rad * (R + r * math.cos(b)) + up * r * math.sin(b)
+            uv[i, j] = (i / nu, j / nv)
+    ring_loft(m, mat, rings, uv, closed_u=True)
+    m.orient_since(mk)
+
+
+# ----------------------------------------------------------------------------------------------
+# 2D plate with holes (heat-sealed header with the die-cut handle: one slot + two round holes)
+# ----------------------------------------------------------------------------------------------
+def _ccw(t):
+    a, b, c = (np.array(p) for p in t)
+    area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (tuple(a), tuple(b), tuple(c)) if area > 0 else (tuple(a), tuple(c), tuple(b))
+
+
+def _area(t):
+    a, b, c = (np.array(p) for p in t)
+    return 0.5 * abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]))
+
+
+def _insert(poly, extras):
+    out = []
+    n = len(poly)
+    for i in range(n):
+        a = np.array(poly[i])
+        b = np.array(poly[(i + 1) % n])
+        out.append(tuple(a))
+        ab = b - a
+        L2 = float(ab @ ab)
+        hits = []
+        for e in extras:
+            e = np.array(e)
+            t = float((e - a) @ ab) / L2
+            if 1e-6 < t < 1 - 1e-6 and np.linalg.norm(e - (a + t * ab)) < 1e-7:
+                hits.append((t, tuple(e)))
+        out += [p for _, p in sorted(hits)]
+    return out
+
+
+def _fan(poly):
+    return [_ccw((poly[0], poly[i], poly[i + 1])) for i in range(1, len(poly) - 1) if _area((poly[0], poly[i], poly[i + 1])) > 1e-12]
+
+
+def hole(cx, cy, hx, r, seg=6):
+    """stadium hole: centre, half length of the straight part, cap radius. Returns loop (CCW), quadrant chains, box."""
+    right = [(cx + hx + r * math.cos(t), cy + r * math.sin(t)) for t in np.linspace(-math.pi / 2, math.pi / 2, 2 * seg + 1)]
+    left = [(cx - hx + r * math.cos(t), cy + r * math.sin(t)) for t in np.linspace(math.pi / 2, 3 * math.pi / 2, 2 * seg + 1)]
+    loop = right + left
+    ded = [loop[0]]
+    for p in loop[1:]:
+        if np.linalg.norm(np.array(p) - np.array(ded[-1])) > 1e-9:
+            ded.append(p)
+    if np.linalg.norm(np.array(ded[0]) - np.array(ded[-1])) < 1e-9:
+        ded.pop()
+    chains = {"TR": (right[seg:][::-1][:seg + 1], (cx + hx + r, cy + r)),
+              "BR": (right[:seg + 1][::-1][::-1], (cx + hx + r, cy - r)),
+              "TL": (left[:seg + 1], (cx - hx - r, cy + r)),
+              "BL": (left[seg:], (cx - hx - r, cy - r))}
+    # TR: from (cx+hx, cy+r) (top) to (cx+hx+r, cy): right[2seg] .. right[seg]
+    chains["TR"] = (right[seg:][::-1], chains["TR"][1])
+    # BR: from (cx+hx+r, cy) to (cx+hx, cy-r): right[seg] .. right[0]
+    chains["BR"] = (right[:seg + 1][::-1], chains["BR"][1])
+    return dict(loop=ded, chains=chains, box=(cx - hx - r, cx + hx + r, cy - r, cy + r))
+
+
+def _cfan(poly):
+    c = tuple(np.mean(np.array(poly), 0))
+    return [_ccw((c, poly[i], poly[(i + 1) % len(poly)])) for i in range(len(poly))
+            if _area((c, poly[i], poly[(i + 1) % len(poly)])) > 1e-12]
+
+
+def plate_2d(hw, y0, y1, holes):
+    """Triangulate rectangle [-hw,hw]x[y0,y1] minus holes. Returns CCW 2D triangles, outer loop, hole loops."""
+    tris = []
+    extras = []
+    for h in holes:
+        x0, x1, yb0, yb1 = h["box"]
+        extras += [(x0, yb0), (x1, yb0), (x0, yb1), (x1, yb1)]
+        for p in h["loop"]:
+            if min(abs(p[0] - x0), abs(p[0] - x1), abs(p[1] - yb0), abs(p[1] - yb1)) < 1e-9:
+                extras.append(p)
+        for q, (chain, corner) in h["chains"].items():
+            tris += _fan([corner] + list(chain))
+    yb0 = min(h["box"][2] for h in holes)
+    yb1 = max(h["box"][3] for h in holes)
+    hs = sorted(holes, key=lambda h: h["box"][0])
+    xs = [-hw]
+    for h in hs:
+        xs += [h["box"][0], h["box"][1]]
+    xs.append(hw)
+    cells = [[(-hw, y0), (hw, y0), (hw, yb0), (-hw, yb0)], [(-hw, yb1), (hw, yb1), (hw, y1), (-hw, y1)]]
+    for k in range(0, len(xs), 2):
+        cells.append([(xs[k], yb0), (xs[k + 1], yb0), (xs[k + 1], yb1), (xs[k], yb1)])
+    for c in cells:
+        tris += _cfan(_insert(c, extras))
+    outer = _insert([(-hw, y0), (hw, y0), (hw, y1), (-hw, y1)], [(-hw, yb0), (-hw, yb1), (hw, yb0), (hw, yb1)])
+    return tris, outer, [h["loop"] for h in holes]
+
+
+def header_holes():
+    # die-cut handle read from the owner's tea bag photo: centre slot + two round punches
+    cy = 0.196
+    return [hole(-0.0417, cy, 0.0, 0.006), hole(0.0, cy, 0.0278, 0.006), hole(0.0417, cy, 0.0, 0.006)]
+
+
+FILM_UV_FRONT = (0.4556, 0.4116)   # u at x=-0.07 (frac 0), span, as measured on the existing albedo
+FILM_UV_BACK = (0.956, 0.413)
+BAG_W = 0.14
+BAG_H = 0.22
+
+
+def bag_uv(x, y, front):
+    frac = (x + BAG_W / 2) / BAG_W
+    u0, span = FILM_UV_FRONT if front else FILM_UV_BACK
+    return (u0 - frac * span, float(np.clip(y / BAG_H, 0, 1)))
+
+
+def add_plate(m, mat, xf, y0, y1, t, holes, front_sign):
+    """Closed slab with holes. xf maps local (x,y,z) -> world. front_sign=-1: the printed face looks to -Z."""
+    hw = 0.07
+    tris2, outer, hloops = plate_2d(hw, y0, y1, holes)
+    mk = m.mark()
+    zf, zb = -t / 2, t / 2
+    wall_uv = (0.22, 0.86)
+    for tr in tris2:
+        for face, z, flip in (("b", zb, False), ("f", zf, True)):
+            is_front = (face == "f")
+            ids = []
+            for (x, y) in tr:
+                uvx = bag_uv(x, y, is_front if front_sign < 0 else not is_front)
+                ids.append(m.v(xf((x, y, z)), uvx))
+            m.tri(mat, ids[0], ids[2], ids[1]) if flip else m.tri(mat, *ids)
+    def wall(loop, inward):
+        n = len(loop)
+        for i in range(n):
+            a, b = loop[i], loop[(i + 1) % n]
+            pa_f = m.v(xf((a[0], a[1], zf)), wall_uv, True)
+            pb_f = m.v(xf((b[0], b[1], zf)), wall_uv, True)
+            pb_b = m.v(xf((b[0], b[1], zb)), wall_uv, True)
+            pa_b = m.v(xf((a[0], a[1], zb)), wall_uv, True)
+            if inward:
+                m.tri(mat, pa_f, pb_b, pb_f)
+                m.tri(mat, pa_f, pa_b, pb_b)
+            else:
+                m.tri(mat, pa_f, pb_f, pb_b)
+                m.tri(mat, pa_f, pb_b, pa_b)
+    wall(outer, False)
+    for lp in hloops:
+        wall(lp, True)
+    m.orient_since(mk)
+
+
+# ----------------------------------------------------------------------------------------------
+# 1. Tea bag family
+# ----------------------------------------------------------------------------------------------
+YS = np.array([0, .0015, .004, .01, .02, .032, .045, .06, .075, .09, .105, .12, .133, .145, .155, .1625, .1655, .167, .1685, .170, .1715])
+D_CLOSED = np.array([.019, .0235, .0262, .0288, .0303, .0309, .0312, .0312, .0308, .030, .0285, .026, .0225, .0175, .011, .0045, .0028, .0020, .0015, .0013, .0012])
+A_BAG = np.array([.0615, .0655, .068, .0695, .0699, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07, .07])
+N_CLOSED = np.array([2.2, 2.3, 2.5, 2.7, 2.9, 3.0, 3.0, 3.0, 3.1, 3.2, 3.4, 3.7, 4.2, 4.8, 5.5, 6.5, 7, 7, 7, 7, 7])
+D_OPEN = np.array([.019, .0235, .0262, .0288, .0303, .0309, .0312, .0312, .0311, .0309, .0306, .0303, .0300, .0298, .0296, .0295, .0295, .0295, .0295, .0295, .0295])
+N_OPEN = np.array([2.2, 2.3, 2.5, 2.7, 2.9, 3.0, 3.0, 3.0, 3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4])
+ZIP_Y = 0.1672
+
+
+def wrinkle(x, y, side, seed):
+    """Gentle, deterministic film wrinkles in metres (<= ~0.9 mm). side=-1 front, +1 back."""
+    rs = np.random.RandomState(seed + (0 if side < 0 else 97))
+    w = np.zeros_like(x)
+    for _ in range(5):
+        fx, fy, ph = rs.uniform(25, 70), rs.uniform(18, 50), rs.uniform(0, 6.28)
+        w += rs.uniform(0.00012, 0.00032) * np.sin(fx * x + fy * y + ph + 3.0 * np.sin(18 * y))
+    crease = smoothstep(0.08, 0.15, y)
+    for _ in range(4):
+        fx, ph = rs.uniform(150, 260), rs.uniform(0, 6.28)
+        w += crease * rs.uniform(0.00010, 0.00028) * np.sin(fx * x * (1.0 + 4.0 * np.maximum(y - 0.12, 0)) + ph)
+    pillow = np.cos(np.clip(x / 0.07, -1, 1) * math.pi / 2) ** 2 * smoothstep(0.0, 0.05, y)
+    return w + 0.0003 * pillow
+
+
+def bag_rings(d_knots, n_knots, M, wrink=True, zip_bump=True, ys=YS):
+    """Two half rings (front z<0 then back z>0) per level, duplicated seams so UVs can differ."""
+    L = len(ys)
+    out = np.zeros((L, 2 * (M + 1), 3))
+    uv = np.zeros((L, 2 * (M + 1), 2))
+    for j, y in enumerate(ys):
+        a, d, n = A_BAG[j], D_CLOSED[j] if d_knots is None else d_knots[j], n_knots[j]
+        if zip_bump:
+            d = d + 0.0014 * math.exp(-((y - ZIP_Y) / 0.0018) ** 2)
+        for half, (t0, front) in enumerate(((math.pi, True), (2 * math.pi, False))):
+            t = t0 + np.linspace(0, math.pi, M + 1)
+            c, s = np.cos(t), np.sin(t)
+            x = a * np.sign(c) * np.abs(c) ** (2.0 / n)
+            z = d * np.sign(s) * np.abs(s) ** (2.0 / n)
+            if wrink:
+                g = np.clip(d / 0.012, 0, 1) * np.abs(np.sin(t)) ** 0.6
+                z = z + (-1 if front else 1) * wrinkle(x, y, -1 if front else 1, 11) * g * np.sign(1.0)
+            for i in range(M + 1):
+                k = half * (M + 1) + i
+                out[j, k] = (x[i], y, z[i])
+                uv[j, k] = bag_uv(x[i], y, front)
+    return out, uv
+
+
+def build_bag(is_open):
+    name = "SM_TeaBag_Pouch_%s_v2" % ("Open" if is_open else "Closed")
+    m = Mesh(name)
+    M = 24
+    ys = YS
+    d_k = D_OPEN if is_open else D_CLOSED
+    n_k = N_OPEN if is_open else N_CLOSED
+    rings, uv = bag_rings(d_k, n_k, M, wrink=True, zip_bump=not is_open)
+    mk = m.mark()
+    # outer film: two half strips (front, back) so the u coordinate can restart at the side seals
+    L = rings.shape[0]
+    half = M + 1
+    for h in range(2):
+        sub = rings[:, h * half:(h + 1) * half]
+        suv = uv[:, h * half:(h + 1) * half]
+        ring_loft(m, "Film", sub, suv, closed_u=False)
+    # bottom cap (flat stand-up base)
+    bottom = np.concatenate([rings[0, :half], rings[0, half:]])
+    cap_fan(m, "Film", (0, 0.0, 0), bottom, [(0.5, 0.02)] * len(bottom), (0.5, 0.0), closed=False)
+    # the two seam edges: connect ring end of the front strip to the start of the back strip
+    # (seam vertices are duplicates, they weld by position so the surface stays closed)
+    if not is_open:
+        # closed bag: top is a thin lens closed by a fan, header plate sits on it
+        top = np.concatenate([rings[-1, :half], rings[-1, half:]])
+        cap_fan(m, "Film", (0, ys[-1], 0), top, [(0.5, 0.78)] * len(top), (0.5, 0.78), closed=False, top=True)
+        # seam closure of the fan at the two ring joints
+        # (fan above is open between last-front and first-back points; they are the same position -> welded)
+        m.orient_since(mk)
+        hdr = header_holes()
+        add_plate(m, "Seal", lambda p: p, 0.1715, BAG_H, 0.0024, hdr, -1)
+    else:
+        # open mouth: rolled rim + inner wall + inner floor => thick walled bag
+        inner_a, inner_d = 0.0008, 0.0008
+        in_rings = rings.copy()
+        in_uv = uv.copy()
+        in_rings[:, :, 0] = rings[:, :, 0] * (1 - inner_a / np.maximum(np.abs(A_BAG[:, None]), 1e-6))
+        in_rings[:, :, 2] = np.sign(rings[:, :, 2]) * np.maximum(np.abs(rings[:, :, 2]) - inner_d, 0.0)
+        start = 2  # inner floor at y=0.004
+        for h in range(2):
+            sub = in_rings[start:, h * half:(h + 1) * half]
+            suv = in_uv[start:, h * half:(h + 1) * half]
+            ring_loft(m, "Film", sub, suv, closed_u=False, reverse=True)
+        floor = np.concatenate([in_rings[start, :half], in_rings[start, half:]])
+        cap_fan(m, "Film", (0, ys[start], 0), floor, [(0.5, 0.02)] * len(floor), (0.5, 0.02), closed=False, top=True)
+        # rim strip between outer and inner top rings
+        for h in range(2):
+            ro = rings[-1, h * half:(h + 1) * half]
+            ri = in_rings[-1, h * half:(h + 1) * half]
+            ids_o = [m.v(p, (0.5, 0.78)) for p in ro]
+            ids_i = [m.v(p, (0.5, 0.78)) for p in ri]
+            for i in range(half - 1):
+                m.quad("Film", ids_o[i], ids_i[i], ids_i[i + 1], ids_o[i + 1])
+        # the seam between front half and back half of the rim is covered by the duplicated seam vertices
+        m.orient_since(mk)
+        hdr = header_holes()
+        phi = math.radians(12.0)
+        y0 = 0.1715
+        for sgn in (-1, 1):
+            hinge_z = sgn * (D_OPEN[-1] + 0.0003)
+            def xf(p, sgn=sgn, hinge_z=hinge_z):
+                yl = p[1] - y0
+                th = -sgn * phi * -1.0
+                # rotate about the x axis at the hinge: front plate leans to -Z, back plate to +Z
+                z = sgn * yl * math.sin(phi) + p[2] * math.cos(phi)
+                y = y0 + yl * math.cos(phi) - sgn * p[2] * math.sin(phi)
+                return (p[0], y, z + hinge_z)
+            add_plate(m, "Seal", xf, y0, BAG_H, 0.0012, hdr, sgn)
+    return m
+
+
+def build_liquid():
+    m = Mesh("SM_TeaBag_Liquid_v2")
+    ys = np.array([.0045, .01, .02, .032, .045, .06, .075, .09, .105, .12, .128])
+    a = np.interp(ys, YS, A_BAG) - 0.0030
+    d = np.minimum(np.interp(ys, YS, D_CLOSED) - 0.0022, 0.0272)
+    n = np.interp(ys, YS, N_CLOSED) * 0.9
+    rings = np.zeros((len(ys), 40, 3))
+    uv = np.zeros((len(ys), 40, 2))
+    for j, y in enumerate(ys):
+        pts, t = superring(a[j], d[j], n[j], y, 40)
+        rings[j] = pts
+        uv[j] = np.stack([(pts[:, 0] + 0.07) / 0.14, np.full(40, y / 0.13)], 1)
+    mk = m.mark()
+    ring_loft(m, "Liquid", rings, uv, closed_u=True)
+    cap_fan(m, "Liquid", (0, ys[0], 0), rings[0], uv[0], (0.5, 0.03))
+    # concave meniscus: the middle is a little lower than the wall contact line
+    cap_fan(m, "Liquid", (0, ys[-1] - 0.0014, 0), rings[-1], uv[-1], (0.5, 1.0), top=True)
+    m.orient_since(mk)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 2. Contents: jelly, ice, lemon
+# ----------------------------------------------------------------------------------------------
+def build_coconut_jelly():
+    m = Mesh("SM_Topping_CoconutJellyCubes_v2")
+    rs = np.random.RandomState(2024)
+    pos = [(-0.035, 0.040, 0.005), (-0.015, 0.065, -0.008), (0.020, 0.050, 0.006), (0.038, 0.075, -0.004),
+           (-0.025, 0.095, 0.003), (0.010, 0.105, -0.005), (-0.005, 0.030, -0.006), (0.030, 0.092, 0.007),
+           (0.004, 0.072, 0.004)]
+    for i, p in enumerate(pos):
+        s = rs.uniform(0.0105, 0.0135) / 2
+        half = (s * rs.uniform(0.92, 1.08), s * rs.uniform(0.9, 1.1), s * rs.uniform(0.92, 1.08))
+        R = rotm(rs.uniform(-0.4, 0.4), rs.uniform(0, 6.28), rs.uniform(-0.4, 0.4))
+        rounded_box(m, "Jelly", p, half, 0.0024, R)
+    return m
+
+
+def build_lemon_jelly():
+    m = Mesh("SM_Topping_LemonJelly_v2")
+    rs = np.random.RandomState(7781)
+    pos = [(-0.028, 0.050, -0.003), (-0.005, 0.080, 0.004), (0.028, 0.040, -0.004), (0.040, 0.100, 0.002),
+           (-0.038, 0.082, 0.001), (0.015, 0.098, -0.006), (-0.012, 0.047, 0.007), (0.030, 0.066, 0.008)]
+    for p in pos:
+        s = rs.uniform(0.0085, 0.0115) / 2
+        half = (s * rs.uniform(0.95, 1.3), s * rs.uniform(0.8, 1.0), s * rs.uniform(0.85, 1.15))
+        R = rotm(rs.uniform(-0.5, 0.5), rs.uniform(0, 6.28), rs.uniform(-0.5, 0.5))
+        rounded_box(m, "Jelly", p, half, 0.0022, R)
+    return m
+
+
+def ice_jitter(seed):
+    rs = np.random.RandomState(seed)
+    k = rs.uniform(250, 520, (3, 3))
+    ph = rs.uniform(0, 6.28, (3, 3))
+    return lambda p: 0.0011 * np.array([sum(math.sin(k[a, b] * p[b] + ph[a, b]) for b in range(3)) / 3.0 for a in range(3)])
+
+
+def build_ice():
+    m = Mesh("SM_Ice_Cubes_v2")
+    rs = np.random.RandomState(515)
+    pos = [(-0.030, 0.117, 0.003), (0.020, 0.121, -0.004), (-0.003, 0.111, -0.002), (0.034, 0.114, 0.004),
+           (-0.034, 0.107, -0.003), (0.008, 0.123, 0.003)]
+    for i, p in enumerate(pos):
+        half = (rs.uniform(0.0105, 0.0128), rs.uniform(0.010, 0.0118), rs.uniform(0.0085, 0.0098))
+        R = rotm(rs.uniform(-0.25, 0.25), rs.uniform(0, 6.28), rs.uniform(-0.25, 0.25))
+        rounded_box(m, "Ice", p, half, rs.uniform(0.0028, 0.0042), R, jitter=ice_jitter(100 + i))
+    return m
+
+
+def build_lemon_slice():
+    m = Mesh("SM_LemonSlice_v2")
+    R0, Rin, th = 0.0235, 0.0207, 0.0045
+    mk = m.mark()
+    # rind: a ring with rounded section
+    nu, nv = 40, 8
+    rings = np.zeros((nu, nv, 3))
+    uv = np.zeros((nu, nv, 2))
+    rings = np.zeros((nu + 1, nv, 3))
+    uv = np.zeros((nu + 1, nv, 2))
+    for i in range(nu + 1):
+        a = 2 * math.pi * (i % nu) / nu
+        for j in range(nv):
+            b = 2 * math.pi * j / nv
+            rr = (R0 + Rin) / 2 + (R0 - Rin) / 2 * math.cos(b)
+            rings[i, j] = (rr * math.cos(a), th / 2 + th / 2 * math.sin(b) * 0.98, rr * math.sin(a))
+            uv[i, j] = (0.62 + 0.36 * (j / nv), 0.2 + 0.6 * (i / nu))
+    ring_loft(m, "Rind", rings, uv, closed_u=True)
+    m.orient_since(mk)
+    # pith disc (white) under the flesh + central core
+    mk = m.mark()
+    disc = [(Rin * math.cos(2 * math.pi * i / 40), 0.0, Rin * math.sin(2 * math.pi * i / 40)) for i in range(40)]
+    top = [(p[0], th - 0.0014, p[2]) for p in disc]
+    bot = [(p[0], 0.0014, p[2]) for p in disc]
+    uvp = [(0.5 + 0.1 * math.cos(2 * math.pi * i / 40), 0.5 + 0.1 * math.sin(2 * math.pi * i / 40)) for i in range(40)]
+    cap_fan(m, "Pith", (0, th - 0.0014, 0), top, uvp, (0.5, 0.5), top=True)
+    cap_fan(m, "Pith", (0, 0.0014, 0), bot, uvp, (0.5, 0.5))
+    for i in range(40):
+        a, b = i, (i + 1) % 40
+        va = [m.v(top[a], uvp[a], True), m.v(top[b], uvp[b], True), m.v(bot[b], uvp[b], True), m.v(bot[a], uvp[a], True)]
+        m.quad("Pith", *va)
+    m.orient_since(mk)
+    # 9 flesh segments (juice sacs), slightly domed on both sides, separated by pith membranes
+    nseg = 9
+    gap = math.radians(5.0)
+    r0, r1 = 0.0030, Rin - 0.0018
+    for s in range(nseg):
+        a0 = 2 * math.pi * s / nseg + gap / 2
+        a1 = 2 * math.pi * (s + 1) / nseg - gap / 2
+        mk = m.mark()
+        nr, na = 4, 5
+        top_ids = np.zeros((nr + 1, na + 1), int)
+        bot_ids = np.zeros((nr + 1, na + 1), int)
+        for i in range(nr + 1):
+            for j in range(na + 1):
+                r = r0 + (r1 - r0) * i / nr
+                a = a0 + (a1 - a0) * j / na
+                # soft dome: higher in the middle of the segment, tapering at edges
+                tt = (1 - abs(2 * j / na - 1) ** 2) * (1 - (2 * i / nr - 1) ** 2 * 0.5)
+                dome = 0.0012 * tt
+                x, z = r * math.cos(a), r * math.sin(a)
+                top_ids[i, j] = m.v((x, th - 0.0010 + dome, z), (0.05 + 0.3 * (x / Rin * 0.5 + 0.5), 0.3 + 0.4 * (z / Rin * 0.5 + 0.5)), True)
+                bot_ids[i, j] = m.v((x, 0.0010 - dome, z), (0.05 + 0.3 * (x / Rin * 0.5 + 0.5), 0.3 + 0.4 * (z / Rin * 0.5 + 0.5)), True)
+        for i in range(nr):
+            for j in range(na):
+                m.quad("Flesh", top_ids[i, j], top_ids[i, j + 1], top_ids[i + 1, j + 1], top_ids[i + 1, j])
+                m.quad("Flesh", bot_ids[i, j], bot_ids[i + 1, j], bot_ids[i + 1, j + 1], bot_ids[i, j + 1])
+        # side walls
+        for j in range(na):
+            m.quad("Flesh", top_ids[nr, j], top_ids[nr, j + 1], bot_ids[nr, j + 1], bot_ids[nr, j])
+            m.quad("Flesh", top_ids[0, j + 1], top_ids[0, j], bot_ids[0, j], bot_ids[0, j + 1])
+        for i in range(nr):
+            m.quad("Flesh", top_ids[i, 0], top_ids[i + 1, 0], bot_ids[i + 1, 0], bot_ids[i, 0])
+            m.quad("Flesh", top_ids[i + 1, na], top_ids[i, na], bot_ids[i, na], bot_ids[i + 1, na])
+        m.orient_since(mk)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 3. Ice scoop with a real hollow bowl
+# ----------------------------------------------------------------------------------------------
+def build_scoop():
+    m = Mesh("SM_IceScoop_v2")
+    cz = 0.040
+    # bowl profile (r, y) outer from the bottom centre up to the rim; wall 1.2 mm
+    outer = [(0.0, 0.0), (0.012, 0.0004), (0.021, 0.0025), (0.029, 0.008), (0.036, 0.017), (0.0415, 0.029), (0.045, 0.042)]
+    wall = 0.0013
+    segs = 28
+    mk = m.mark()
+    def lip_scale(ang, y):
+        # open scooping lip toward +Z: the wall is lowered there so ice slides in
+        d = abs(((ang - math.pi / 2 + math.pi) % (2 * math.pi)) - math.pi)
+        return 1.0 - 0.20 * math.exp(-(d / 0.55) ** 2) * (y / 0.042) ** 2
+    rings_o = np.zeros((len(outer), segs, 3))
+    rings_i = np.zeros((len(outer), segs, 3))
+    uvo = np.zeros((len(outer), segs, 2))
+    for j, (r, y) in enumerate(outer):
+        for i in range(segs):
+            a = 2 * math.pi * i / segs
+            ls = lip_scale(a, y)
+            rings_o[j, i] = (r * math.cos(a), y * ls, cz + r * math.sin(a))
+            ri = max(r - wall * (0.4 + 0.6 * min(1.0, y / 0.01)), 0.0)
+            yi = y * ls + wall if j > 0 else wall
+            if j == len(outer) - 1:
+                yi = y * ls
+            rings_i[j, i] = (ri * math.cos(a), yi, cz + ri * math.sin(a))
+            uvo[j, i] = (0.55 + 0.4 * i / segs, 0.1 + 0.35 * j / (len(outer) - 1))
+    ring_loft(m, "Steel", rings_o, uvo, closed_u=True)
+    cap_fan(m, "Steel", (0, 0.0, cz), rings_o[0], uvo[0], (0.7, 0.1))
+    ring_loft(m, "Steel", rings_i, uvo, closed_u=True, reverse=True)
+    cap_fan(m, "Steel", (0, wall, cz), rings_i[0], uvo[0], (0.7, 0.1), top=True)
+    # rim: round bead joining outer and inner top rings
+    for i in range(segs):
+        i2 = (i + 1) % segs
+        a = m.v(rings_o[-1, i], (0.8, 0.45)); b = m.v(rings_o[-1, i2], (0.8, 0.45))
+        c = m.v(rings_i[-1, i2], (0.8, 0.45)); d = m.v(rings_i[-1, i], (0.8, 0.45))
+        m.quad("Steel", a, d, c, b)
+    m.orient_since(mk)
+    # handle: tapered, slightly sagging tube with a flattened thumb rest, ends in a hanging loop
+    K = 16
+    t = np.linspace(0, 1, K)
+    path = np.stack([np.zeros(K), 0.031 - 0.011 * smoothstep(0, 1, t) * 0.6 - 0.0 * t, -0.002 - 0.139 * t], 1)
+    rx = 0.0085 + 0.0030 * np.sin(math.pi * np.clip(t * 1.25, 0, 1)) ** 2
+    ry = 0.0080 + 0.0022 * np.sin(math.pi * np.clip(t * 1.25, 0, 1)) ** 2
+    tube(m, "Steel", path, rx, ry, N=12, ref=(1, 0, 0))
+    # hanging loop: torus ring in the YZ plane, partly overlapping the handle end
+    torus(m, "Steel", (0.0, 0.0235, -0.1415), 0.0095, 0.0033, axis=0, nu=20, nv=8)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 4. Red tea rack (perforated molded crate)
+# ----------------------------------------------------------------------------------------------
+def build_rack():
+    m = Mesh("SM_RedTeaRack_v2")
+    X, Z, H = 0.232, 0.175, 0.22
+    xo, zo = 0.228, 0.171       # wall outer faces (the rim and posts stand 4 mm proud)
+    t = 0.007
+    fl0, fl1 = 0.010, 0.018
+    mat = "Plastic"
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            box(m, mat, sx * 0.17 - 0.02, sx * 0.17 + 0.02, 0, fl0, sz * 0.12 - 0.02, sz * 0.12 + 0.02)
+    box(m, mat, -0.19, 0.19, 0.0, fl0, -0.012, 0.012)
+    # floor slats along Z
+    n = 9
+    pitch = 2 * (xo - t) / n
+    for i in range(n):
+        xc = -(xo - t) + pitch * (i + 0.5)
+        box(m, mat, xc - pitch * 0.38, xc + pitch * 0.38, fl0, fl1, -(zo - t), zo - t)
+    # front/back walls with 7 vent slots
+    post, bar = 0.025, 0.02
+    slot = (2 * xo - 2 * post - 6 * bar) / 7
+    for sz in (-1, 1):
+        z0, z1 = (zo - t, zo) if sz > 0 else (-zo, -(zo - t))
+        box(m, mat, -xo, xo, fl1, 0.042, z0, z1)
+        box(m, mat, -xo, xo, 0.19, 0.205, z0, z1)
+        x = -xo
+        pieces = [post] + [slot, bar] * 6 + [slot, post]
+        # build vertical bars between slots
+        cur = x
+        for k, w in enumerate(pieces):
+            if k % 2 == 0:
+                box(m, mat, cur, cur + w, 0.042, 0.19, z0, z1)
+            cur += w
+    # end walls with a hand hole
+    for sx in (-1, 1):
+        x0, x1 = (xo - t, xo) if sx > 0 else (-xo, -(xo - t))
+        zz = zo - t
+        box(m, mat, x0, x1, fl1, 0.14, -zz, zz)
+        box(m, mat, x0, x1, 0.14, 0.19, -zz, -0.055)
+        box(m, mat, x0, x1, 0.14, 0.19, 0.055, zz)
+        box(m, mat, x0, x1, 0.19, 0.205, -zz, zz)
+    # rim lip (proud by 4 mm) and corner posts
+    box(m, mat, -X, X, 0.205, H, Z - 0.0105, Z)
+    box(m, mat, -X, X, 0.205, H, -Z, -Z + 0.0105)
+    box(m, mat, X - 0.0105, X, 0.205, H, -Z, Z)
+    box(m, mat, -X, -X + 0.0105, 0.205, H, -Z, Z)
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            xa, xb = sorted((sx * X, sx * (X - 0.024)))
+            za, zb = sorted((sz * Z, sz * (Z - 0.024)))
+            box(m, mat, xa, xb, fl0, 0.205, za, zb)
+    # low divider between the two bag slots
+    box(m, mat, -0.003, 0.003, fl1, 0.12, -(zo - t), zo - t)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 5. Topping bin (hollow pan with rolled rim, matches the 0.14 x 0.26 x 0.07 placeholder)
+# ----------------------------------------------------------------------------------------------
+def build_bin():
+    m = Mesh("SM_ToppingBin_v2")
+    H = 0.070
+    ys = np.array([0.0, 0.003, 0.012, 0.025, 0.040, 0.055, 0.064, 0.0675, 0.070])
+    f = smoothstep(0, H, ys)
+    a = 0.061 + 0.009 * f
+    d = 0.121 + 0.009 * f
+    bead = np.array([0, 0, 0, 0, 0, 0, 0.0007, 0.0017, 0.0014])
+    a, d = a + bead, d + bead
+    N = 56
+    ro = np.zeros((len(ys), N, 3))
+    uv = np.zeros((len(ys), N, 2))
+    for j in range(len(ys)):
+        pts, _ = superring(a[j], d[j], 9.0, ys[j], N)
+        ro[j] = pts
+        uv[j] = np.stack([np.linspace(0, 3, N), np.full(N, ys[j] * 8)], 1)
+    w = 0.0016
+    ri = ro.copy()
+    ri[:, :, 0] *= (a - w)[:, None] / a[:, None]
+    ri[:, :, 2] *= (d - w)[:, None] / d[:, None]
+    ri[:, :, 1] = np.maximum(ri[:, :, 1], 0) + 0.0
+    mk = m.mark()
+    ring_loft(m, "Steel", ro, uv, closed_u=True)
+    cap_fan(m, "Steel", (0, 0.0, 0), ro[0], uv[0], (0.5, 0.0))
+    ri2 = ri[1:].copy()
+    ring_loft(m, "Steel", ri2, uv[1:], closed_u=True, reverse=True)
+    cap_fan(m, "Steel", (0, ys[1] + 0.0003, 0), ri2[0], uv[1], (0.5, 0.0), top=True)
+    for i in range(N):
+        i2 = (i + 1) % N
+        p = [m.v(ro[-1, i], (0, 0)), m.v(ro[-1, i2], (0, 0)), m.v(ri[-1, i2], (0, 0)), m.v(ri[-1, i], (0, 0))]
+        m.quad("Steel", p[0], p[3], p[2], p[1])
+    m.orient_since(mk)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 6. Wipe cloth (soft folded, hemmed)
+# ----------------------------------------------------------------------------------------------
+def build_cloth():
+    m = Mesh("SM_WipeCloth_v2")
+    hx, hz = 0.078, 0.068
+    nx, nz = 38, 34
+    xs = np.linspace(-hx, hx, nx)
+    zs = np.linspace(-hz, hz, nz)
+    H = np.zeros((nz, nx))
+    for j, z in enumerate(zs):
+        for i, x in enumerate(xs):
+            e = min(hx - abs(x), hz - abs(z))
+            edge = math.sqrt(max(0.0, 1 - (1 - min(e / 0.0045, 1.0)) ** 2))
+            fold = 0.0042 * max(0.0, math.sin(2 * math.pi * (x * 0.8 + z * 0.55) / 0.095 + 0.6)) ** 1.4
+            fold += 0.0030 * max(0.0, math.sin(2 * math.pi * (x * -0.4 + z * 1.0) / 0.070 + 2.0)) ** 2
+            flap = 0.0045 * float(smoothstep(0.05, 0.11, x + z * 0.8))
+            hem = 0.0006 * math.exp(-((e - 0.007) / 0.0014) ** 2)
+            wob = 0.0007 * math.sin(60 * x + 4 * math.sin(40 * z)) * math.sin(55 * z)
+            h = 0.0058 + fold + flap + hem + wob
+            H[j, i] = max(min(h, 0.0178) * edge, 0.0004)
+    top = np.zeros((nz, nx), int)
+    bot = np.zeros((nz, nx), int)
+    for j in range(nz):
+        for i in range(nx):
+            u, v = (xs[i] + hx) / (2 * hx) * 3.0, (zs[j] + hz) / (2 * hz) * 3.0
+            top[j, i] = m.v((xs[i], H[j, i], zs[j]), (u, v))
+            bot[j, i] = m.v((xs[i], 0.0, zs[j]), (u, v))
+    mk = m.mark()
+    for j in range(nz - 1):
+        for i in range(nx - 1):
+            m.quad("Cloth", top[j, i], top[j + 1, i], top[j + 1, i + 1], top[j, i + 1])
+            m.quad("Cloth", bot[j, i], bot[j, i + 1], bot[j + 1, i + 1], bot[j + 1, i])
+    loop = [(j, 0) for j in range(nz)] + [(nz - 1, i) for i in range(1, nx)] + [(j, nx - 1) for j in range(nz - 2, -1, -1)] + [(0, i) for i in range(nx - 2, 0, -1)]
+    for k in range(len(loop)):
+        (j0, i0), (j1, i1) = loop[k], loop[(k + 1) % len(loop)]
+        m.quad("Cloth", top[j0, i0], bot[j0, i0], bot[j1, i1], top[j1, i1])
+    m.orient_since(mk)
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# 7. Measuring cup / shaker cup (batter cup) : lip, base ring, spout, handle, graduation ridges
+# ----------------------------------------------------------------------------------------------
+def build_cup():
+    m = Mesh("SM_BatterMeasureCup_500ml_v2")
+    h = 0.125
+    segs = 44
+    ys = sorted(set([0.0, 0.0012, 0.0032, 0.005, 0.0075, 0.012] + [round(y, 4) for y in np.linspace(0.02, 0.112, 20)]
+                    + [0.1175, 0.121, 0.1235, 0.125]
+                    + [g + o for g in (0.028, 0.052, 0.076, 0.100) for o in (-0.0009, 0.0, 0.0009)]))
+    ys = np.array(ys)
+    def r_out(y):
+        base = 0.040 + 0.012 * smoothstep(0.004, h, y)
+        foot = 0.0355 + 0.0045 * smoothstep(0.0, 0.0048, y)          # recessed base ring
+        r = np.where(y < 0.005, foot, base)
+        lip = 0.0022 * np.exp(-((y - 0.1228) / 0.0030) ** 2)          # rolled lip bead
+        return r + lip
+    rim_y = h
+    mk = m.mark()
+    rings = np.zeros((len(ys), segs, 3))
+    uvs = np.zeros((len(ys), segs, 2))
+    rin = np.zeros_like(rings)
+    for j, y in enumerate(ys):
+        for i in range(segs):
+            ang = 2 * math.pi * i / segs
+            diff = abs(((ang - math.pi + math.pi) % (2 * math.pi)) - math.pi)   # angle away from -Z
+            diff = abs(((ang - math.pi) + math.pi) % (2 * math.pi) - math.pi)
+            dd = abs(ang - math.pi)
+            sp = math.cos(dd / 0.40 * math.pi / 2) if dd < 0.40 else 0.0
+            ramp = float(smoothstep(0.085, h, y))
+            r = float(r_out(y)) + 0.013 * sp * ramp
+            ry = y + 0.007 * sp * float(smoothstep(0.118, h, y)) * (y / h)
+            # graduation ridges on the front-right quadrant (where the printed scale is)
+            for g in (0.028, 0.052, 0.076, 0.100):
+                if 0.94 < ang / math.pi < 1.0 + 0.0 or (0.3 < ang / math.pi < 0.95):
+                    r += 0.00035 * math.exp(-((y - g) / 0.0007) ** 2) * (1.0 if 0.3 < ang / math.pi < 0.95 else 0.0)
+            rings[j, i] = (r * math.sin(ang), ry, r * math.cos(ang))
+            uvs[j, i] = (i / segs, y / h)
+    ring_loft(m, "Cup", rings, uvs, closed_u=True)
+    cap_fan(m, "Cup", (0, 0.0, 0), rings[0], uvs[0], (0.5, 0.5))
+    # inner wall (hollow)
+    wall = 0.0018
+    for j, y in enumerate(ys):
+        for i in range(segs):
+            r = math.hypot(rings[j, i, 0], rings[j, i, 2])
+            ri = max(r - wall, 0.0)
+            ang = 2 * math.pi * i / segs
+            if j == 0:
+                continue
+            rin[j, i] = (rings[j, i, 0] * ri / r, rings[j, i, 1] if j < len(ys) - 1 else rings[j, i, 1], rings[j, i, 2] * ri / r)
+    sel = [j for j in range(len(ys)) if ys[j] >= 0.005]
+    inner = rin[sel]
+    # lift the bottom of the inner ring to the inner floor level
+    inner[0, :, 1] = 0.0055
+    ring_loft(m, "Cup", inner, uvs[sel], closed_u=True, reverse=True)
+    cap_fan(m, "Cup", (0, 0.0055, 0), inner[0], uvs[sel][0], (0.5, 0.5), top=True)
+    # rim top: join outer and inner top rings
+    for i in range(segs):
+        i2 = (i + 1) % segs
+        a = m.v(rings[-1, i], (0.5, 1.0)); b = m.v(rings[-1, i2], (0.5, 1.0))
+        c = m.v(rin[-1, i2], (0.5, 1.0)); d = m.v(rin[-1, i], (0.5, 1.0))
+        m.quad("Cup", a, d, c, b)
+    m.orient_since(mk)
+    # handle: oval section loop on +Z, same silhouette as before (rim -> 0.083 out -> back to the body low down)
+    K = 14
+    t = np.linspace(0, 1, K)
+    hz = 0.049 + (0.083 - 0.049) * np.sin(math.pi * np.clip(t * 1.0, 0, 1)) ** 0.9
+    hz = hz * (1 - t) + (0.0585 + 0.0100 * t) * 0.0 + hz * 0.0
+    hz = 0.0495 + 0.0310 * np.sin(math.pi * t) ** 0.85
+    hy = 0.112 - 0.082 * t
+    hz[0] = 0.048
+    hz[-1] = 0.0475
+    path = np.stack([np.zeros(K), hy, hz], 1)
+    rxw = 0.0072 + 0.0010 * np.sin(math.pi * t)
+    ryw = 0.0040 + 0.0015 * np.sin(math.pi * t)
+    tube(m, "Cup", path, ryw, rxw, N=10, ref=(1, 0, 0))
+    return m
+
+
+# ----------------------------------------------------------------------------------------------
+# Textures (PIL + numpy)
+# ----------------------------------------------------------------------------------------------
+def _noise(sz, seed, octaves=4, base=4):
+    rs = np.random.RandomState(seed)
+    out = np.zeros((sz, sz))
+    for o in range(octaves):
+        n = base * 2 ** o
+        g = rs.rand(n, n)
+        up = np.kron(g, np.ones((sz // n + 1, sz // n + 1)))[:sz, :sz]
+        # smooth by repeated box blur via FFT-free separable pass
+        k = max(1, sz // n // 2)
+        c = np.cumsum(np.pad(up, ((k, k), (0, 0)), mode="wrap"), 0)
+        up = (c[2 * k:] - c[:-2 * k]) / (2 * k)
+        c = np.cumsum(np.pad(up, ((0, 0), (k, k)), mode="wrap"), 1)
+        up = (c[:, 2 * k:] - c[:, :-2 * k]) / (2 * k)
+        out += up[:sz, :sz] / 2 ** o
+    out -= out.min()
+    return out / max(out.max(), 1e-9)
+
+
+def _normal_from_height(h, strength):
+    gy, gx = np.gradient(h)
+    nx, ny = -gx * strength, gy * strength
+    nz = np.ones_like(h)
+    L = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+    n = np.stack([nx / L, ny / L, nz / L], -1)
+    return ((n * 0.5 + 0.5) * 255).astype(np.uint8)
+
+
+def make_textures():
+    from PIL import Image
+    out_dir = os.path.join(ROOT, TEX)
+    os.makedirs(out_dir, exist_ok=True)
+    made = []
+    # --- tea bag albedo: the owner's sticker artwork already in T_TeaBag_Pouch_BaseColor.png, resampled to 1024
+    src = os.path.join(ROOT, "Assets/TramChanh/Art/Textures/T_TeaBag_Pouch_BaseColor.png")
+    S = 1024
+    if os.path.exists(src):
+        im = Image.open(src).convert("RGBA").resize((S, S), Image.LANCZOS)
+        a = np.array(im)
+        # slightly frost the empty film so the translucent material still reads as plastic on a bright counter
+        film = a[..., 3] < 255
+        a[..., 3] = np.where(film, np.clip(a[..., 3].astype(int) * 0.9, 0, 255), 255).astype(np.uint8)
+        Image.fromarray(a).save(os.path.join(out_dir, "T_TeaBag_Pouch_v2_BaseColor.png"))
+        made.append("T_TeaBag_Pouch_v2_BaseColor.png")
+    # --- tea bag normal: film wrinkles, zipper ridges, crimped heat-seal on the header edge
+    rs = np.random.RandomState(31)
+    h = np.zeros((S, S))
+    y = np.linspace(0, 1, S)[:, None]       # image row 0 = v 1 (top of bag)
+    x = np.linspace(0, 1, S)[None, :]
+    h += 0.5 * _noise(S, 5, 4, 4)
+    for half_u0, half_u1 in ((0.044, 0.4556), (0.543, 0.956)):
+        for _ in range(26):
+            cx, cy = rs.uniform(half_u0, half_u1), rs.uniform(0.05, 0.75)
+            ang, L, wd = rs.uniform(0, math.pi), rs.uniform(0.03, 0.12), rs.uniform(0.004, 0.012)
+            dx, dy = x - cx, y - cy
+            along = dx * math.cos(ang) + dy * math.sin(ang)
+            across = -dx * math.sin(ang) + dy * math.cos(ang)
+            h += rs.uniform(0.3, 0.9) * np.exp(-(across / wd) ** 2) * np.exp(-(along / L) ** 2)
+    zip_row = 1.0 - ZIP_Y / BAG_H
+    h += 1.6 * np.exp(-((y - zip_row) / 0.007) ** 2) + 0.9 * np.exp(-((y - zip_row - 0.012) / 0.003) ** 2)
+    seal = 1.0 - 0.215 / BAG_H
+    h += 0.8 * (y < 0.03) * (0.5 + 0.5 * np.sin(y * 900.0))   # crimped top strip
+    hn = h / 8.0
+    base_n = None
+    old = os.path.join(ROOT, "Assets/TramChanh/Art/Textures/T_TeaBag_Pouch_Normal.png")
+    nrm = _normal_from_height(hn, 14.0)
+    if os.path.exists(old):
+        o = np.array(Image.open(old).convert("RGB").resize((S, S), Image.LANCZOS)).astype(int)
+        nrm = np.clip(nrm.astype(int) + (o - np.array([127, 127, 255])), 0, 255).astype(np.uint8)   # keep old droplets
+    Image.fromarray(nrm).save(os.path.join(out_dir, "T_TeaBag_Pouch_v2_Normal.png"))
+    made.append("T_TeaBag_Pouch_v2_Normal.png")
+    # --- jelly: soft cloudy normal + albedo tint ramp
+    n = _noise(256, 8, 4, 4)
+    Image.fromarray(_normal_from_height(n, 5.0)).save(os.path.join(out_dir, "T_Jelly_v2_Normal.png"))
+    made.append("T_Jelly_v2_Normal.png")
+    # --- ice: cracks + frost
+    ice = _noise(256, 9, 5, 4)
+    cracks = np.zeros((256, 256))
+    rs2 = np.random.RandomState(77)
+    yy, xx = np.mgrid[0:256, 0:256] / 256.0
+    for _ in range(14):
+        cx, cy, ang = rs2.rand(), rs2.rand(), rs2.uniform(0, math.pi)
+        d = np.abs(-(xx - cx) * math.sin(ang) + (yy - cy) * math.cos(ang))
+        al = ((xx - cx) * math.cos(ang) + (yy - cy) * math.sin(ang))
+        cracks += np.exp(-(d / 0.004) ** 2) * np.exp(-(al / rs2.uniform(0.08, 0.25)) ** 2)
+    Image.fromarray(_normal_from_height(ice * 0.6 + cracks * 0.8, 6.0)).save(os.path.join(out_dir, "T_Ice_v2_Normal.png"))
+    made.append("T_Ice_v2_Normal.png")
+    # --- lemon slice albedo atlas: flesh (u 0..0.4), pith (0.4..0.6), rind (0.6..1)
+    T = 512
+    lem = np.zeros((T, T, 4), np.uint8)
+    nz = _noise(T, 12, 5, 8)
+    yy, xx = np.mgrid[0:T, 0:T] / float(T)
+    flesh = np.stack([250 - 25 * nz, 214 - 30 * nz, 70 - 30 * nz], -1)
+    streak = 0.5 + 0.5 * np.sin(yy * 300 + nz * 12)
+    flesh += (streak[..., None] * np.array([6, 8, 10]))
+    lem[..., :3] = np.clip(flesh, 0, 255).astype(np.uint8)
+    pith = np.array([248, 240, 205]) - nz[..., None] * np.array([8, 10, 18])
+    rind = np.array([236, 200, 40]) - nz[..., None] * np.array([20, 30, 15])
+    lem[:, int(T * 0.4):int(T * 0.6), :3] = np.clip(pith[:, int(T * 0.4):int(T * 0.6)], 0, 255).astype(np.uint8)
+    lem[:, int(T * 0.6):, :3] = np.clip(rind[:, int(T * 0.6):], 0, 255).astype(np.uint8)
+    lem[..., 3] = 255
+    Image.fromarray(lem).save(os.path.join(out_dir, "T_LemonSlice_v2_BaseColor.png"))
+    made.append("T_LemonSlice_v2_BaseColor.png")
+    # --- wipe cloth weave (tileable): thread pattern in albedo (grey, tinted by material colour) + normal
+    T = 512
+    yy, xx = np.mgrid[0:T, 0:T]
+    period = 8
+    warp = 0.5 + 0.5 * np.sin(2 * math.pi * xx / period)
+    weft = 0.5 + 0.5 * np.sin(2 * math.pi * yy / period)
+    cell = ((xx // (period // 2)) + (yy // (period // 2))) % 2
+    weave = np.where(cell == 0, warp, weft)
+    fuzz = _noise(T, 21, 3, 16)
+    hgt = weave * 0.7 + fuzz * 0.5
+    g = (205 + 40 * (weave - 0.5) + 14 * (fuzz - 0.5)).clip(0, 255).astype(np.uint8)
+    Image.fromarray(np.stack([g, g, g, np.full_like(g, 255)], -1)).save(os.path.join(out_dir, "T_WipeCloth_v2_BaseColor.png"))
+    Image.fromarray(_normal_from_height(hgt, 3.5)).save(os.path.join(out_dir, "T_WipeCloth_v2_Normal.png"))
+    made += ["T_WipeCloth_v2_BaseColor.png", "T_WipeCloth_v2_Normal.png"]
+    return made
+
+
+# ----------------------------------------------------------------------------------------------
+# Manifest
+# ----------------------------------------------------------------------------------------------
+def tex(n):
+    return "%s/%s" % (TEX, n)
+
+
+MAT_DIR = "Assets/TramChanh/Art/Materials"
+OLD_STEEL = MAT_DIR + "/MAT_Steel_Brushed.mat"
+
+
+def materials_manifest():
+    P = "Universal Render Pipeline/Lit"
+    return [
+        dict(name="MAT_TeaBag_Film_v2", path=MAT_DIR + "/MAT_TeaBag_Film_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[1, 1, 1, 0.92], baseMap=tex("T_TeaBag_Pouch_v2_BaseColor.png"), normalMap=tex("T_TeaBag_Pouch_v2_Normal.png"),
+             normalScale=0.8, metallic=0.0, smoothness=0.88, cull="Off", zWrite=False, receiveShadows=False, queue=3000,
+             note="outer plastic film: transparent so the contents show; sticker is opaque in the albedo alpha"),
+        dict(name="MAT_TeaBag_Seal_v2", path=MAT_DIR + "/MAT_TeaBag_Seal_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[0.95, 0.97, 1, 0.62], baseMap=tex("T_TeaBag_Pouch_v2_BaseColor.png"), normalMap=tex("T_TeaBag_Pouch_v2_Normal.png"),
+             normalScale=1.0, metallic=0.0, smoothness=0.55, cull="Off", zWrite=False, receiveShadows=False, queue=3001,
+             note="frosted heat sealed header with the die-cut handle holes (real holes in the mesh)"),
+        dict(name="MAT_TeaLiquid_v2", path=MAT_DIR + "/MAT_TeaLiquid_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[0.85, 0.42, 0.08, 0.80], baseMap=None, normalMap=None, normalScale=1.0, metallic=0.0, smoothness=0.95,
+             cull="Back", zWrite=False, receiveShadows=False, queue=2995, note="same amber as MAT_TeaLiquid_Amber, slightly more transparent"),
+        dict(name="MAT_CoconutJelly_v2", path=MAT_DIR + "/MAT_CoconutJelly_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[0.96, 0.97, 0.98, 0.78], baseMap=None, normalMap=tex("T_Jelly_v2_Normal.png"), normalScale=0.6, metallic=0.0,
+             smoothness=0.8, cull="Back", zWrite=False, receiveShadows=False, queue=2998, note="colour taken from MAT_CoconutJelly"),
+        dict(name="MAT_LemonJelly_v2", path=MAT_DIR + "/MAT_LemonJelly_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[0.98, 0.9, 0.35, 0.78], baseMap=None, normalMap=tex("T_Jelly_v2_Normal.png"), normalScale=0.6, metallic=0.0,
+             smoothness=0.8, cull="Back", zWrite=False, receiveShadows=False, queue=2998, note="pale lemon yellow jelly"),
+        dict(name="MAT_Ice_v2", path=MAT_DIR + "/MAT_Ice_v2.mat", shader=P, surface="Transparent", blend="Alpha",
+             baseColor=[0.9, 0.95, 1, 0.45], baseMap=None, normalMap=tex("T_Ice_v2_Normal.png"), normalScale=0.8, metallic=0.0,
+             smoothness=0.92, cull="Back", zWrite=False, receiveShadows=False, queue=2999, note="same tint as MAT_Ice_Cubes"),
+        dict(name="MAT_LemonSlice_v2", path=MAT_DIR + "/MAT_LemonSlice_v2.mat", shader=P, surface="Opaque", baseColor=[1, 1, 1, 1],
+             baseMap=tex("T_LemonSlice_v2_BaseColor.png"), normalMap=None, normalScale=1.0, metallic=0.0, smoothness=0.5, cull="Back",
+             note="submeshes Rind, Pith, Flesh share this atlas"),
+        dict(name="MAT_WipeCloth_v2", path=MAT_DIR + "/MAT_WipeCloth_v2.mat", shader=P, surface="Opaque", baseColor=[0.08, 0.28, 0.55, 1],
+             baseMap=tex("T_WipeCloth_v2_BaseColor.png"), normalMap=tex("T_WipeCloth_v2_Normal.png"), normalScale=0.9, metallic=0.0,
+             smoothness=0.15, cull="Back", tiling=[1, 1], note="blue is the colour of the existing MAT_WipeCloth"),
+    ]
+
+
+def manifest(stats):
+    M = DRINK
+    mats = materials_manifest()
+    existing = lambda n: MAT_DIR + "/" + n
+    entries = [
+        dict(mesh=M + "/SM_TeaBag_Pouch_Closed_v2.obj", oldMesh=M + "/SM_TeaBag_Pouch_Closed.obj",
+             footprintReference=M + "/SM_TeaBag_Pouch_Closed.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/Bag_Closed",
+                           materials=["MAT_TeaBag_Film_v2", "MAT_TeaBag_Seal_v2"])]),
+        dict(mesh=M + "/SM_TeaBag_Pouch_Open_v2.obj", oldMesh=M + "/SM_TeaBag_Pouch_Open.obj",
+             footprintReference=M + "/SM_TeaBag_Pouch_Open.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/Bag_Open",
+                           materials=["MAT_TeaBag_Film_v2", "MAT_TeaBag_Seal_v2"])]),
+        dict(mesh=M + "/SM_TeaBag_Liquid_v2.obj", oldMesh=M + "/SM_TeaBag_Liquid.obj", footprintReference=M + "/SM_TeaBag_Liquid.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/TeaLiquid",
+                           materials=["MAT_TeaLiquid_v2"], replaceBuiltinPrimitive=True,
+                           localPosition=[0, 0, 0], localScale=[1, 1, 1],
+                           note="the node is a scaled builtin Cube today (pos y -0.125); the v2 mesh is authored in bag space, so position resets to 0 and scale to 1")]),
+        dict(mesh=M + "/SM_Topping_CoconutJellyCubes_v2.obj", oldMesh=M + "/SM_Topping_CoconutJellyCubes.obj",
+             footprintReference=M + "/SM_Topping_CoconutJellyCubes.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/Contents/CoconutJelly",
+                           materials=["MAT_CoconutJelly_v2"])]),
+        dict(mesh=M + "/SM_Topping_LemonJelly_v2.obj", oldMesh=M + "/SM_Topping_CoconutJellyCubes.obj",
+             footprintReference=M + "/SM_Topping_CoconutJellyCubes.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/Contents/LemonJelly",
+                           materials=["MAT_LemonJelly_v2"])]),
+        dict(mesh=M + "/SM_Ice_Cubes_v2.obj", oldMesh=M + "/SM_Ice_Cubes.obj", footprintReference=M + "/SM_Ice_Cubes.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Items/PF_TeaBag_PrePortioned.prefab", node="Visual/Contents/Ice",
+                           materials=["MAT_Ice_v2"])]),
+        dict(mesh=M + "/SM_LemonSlice_v2.obj", oldMesh=None, footprintReference=None, prefabs=[],
+             note="extra prop (fresh lemon slice with visible segments). Not placed on any prefab: the owner has not asked for it on the bag."),
+        dict(mesh=M + "/SM_IceScoop_v2.obj", oldMesh=M + "/SM_IceScoop.obj", footprintReference=M + "/SM_IceScoop.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Tools/PF_IceScoop.prefab", node="",
+                           materials=["@existing:" + existing("MAT_Steel_Brushed.mat")],
+                           note="the mesh lives on the prefab root today; the animated Visual cube is left alone")]),
+        dict(mesh=M + "/SM_RedTeaRack_v2.obj", oldMesh="Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
+             footprintReference="Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Workstations/PF_RedTeaRack.prefab", node="Rack",
+                           materials=["@existing:" + existing("MAT_TeaRack_RedPlastic.mat")],
+                           note="base prefab (the DrinkWave variant inherits it). Replaces the third party fruit crate on the Rack node.")]),
+        dict(mesh=M + "/SM_ToppingBin_v2.obj", oldMesh=None, footprintReference=None,
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Workstations/PF_ToppingStation.prefab", node="LemonJellyBin/Bin",
+                           addChild="BinVisual_v2", optional=True, materials=["@existing:" + OLD_STEEL]),
+                      dict(prefab="Assets/TramChanh/Prefabs/Workstations/PF_ToppingStation.prefab", node="CoconutJellyBin/Bin",
+                           addChild="BinVisual_v2", optional=True, materials=["@existing:" + OLD_STEEL])],
+             note="the bins are cubes with renderers disabled, so there is no mesh to swap. The applier only adds the BinVisual_v2 child when the 'Include optional' toggle is passed; colliders are untouched."),
+        dict(mesh=TOOLS + "/SM_WipeCloth_v2.obj", oldMesh=TOOLS + "/SM_WipeCloth.obj", footprintReference=TOOLS + "/SM_WipeCloth.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Tools/PF_WipeCloth.prefab", node="Visual", materials=["MAT_WipeCloth_v2"])]),
+        dict(mesh=PROPS + "/SM_BatterMeasureCup_500ml_v2.obj", oldMesh=PROPS + "/SM_BatterMeasureCup_500ml.obj",
+             footprintReference=PROPS + "/SM_BatterMeasureCup_500ml.obj",
+             prefabs=[dict(prefab="Assets/TramChanh/Prefabs/Tools/PF_BatterMeasureCup_500ml.prefab", node="Visual",
+                           materials=["@existing:" + existing("MAT_MeasuringCup_Translucent.mat")],
+                           note="same cylindrical UV as the old cup, so T_BatterMeasureCup_BaseColor graduations still line up")]),
+    ]
+    for e in entries:
+        name = os.path.basename(e["mesh"])[:-4]
+        s = stats.get(name)
+        if s:
+            e["stats"] = dict(vertices=s["verts"], triangles=s["tris"], submeshes=s["submeshes"],
+                              boundsMin=[round(float(v), 4) for v in s["mn"]], boundsMax=[round(float(v), 4) for v in s["mx"]])
+    return dict(version=1, generator="ArtSource/Scripts/" + GEN, license="Project Original (procedurally generated, %s), CC0" % GEN,
+                importer=dict(globalScale=1, materialImportMode="None", generateSecondaryUV=False, isReadable=False, meshCompression="Off"),
+                textures=[dict(path=tex(n), type="NormalMap" if "Normal" in n else "Default", sRGB="Normal" not in n)
+                          for n in sorted(os.listdir(os.path.join(ROOT, TEX))) if n.endswith(".png")],
+                materials=mats, meshes=entries)
+
+
+# ----------------------------------------------------------------------------------------------
+BUILDERS = [
+    (DRINK, build_bag, False), (DRINK, build_bag, True), (DRINK, build_liquid, None), (DRINK, build_coconut_jelly, None),
+    (DRINK, build_lemon_jelly, None), (DRINK, build_ice, None), (DRINK, build_lemon_slice, None), (DRINK, build_scoop, None),
+    (DRINK, build_rack, None), (DRINK, build_bin, None), (TOOLS, build_cloth, None), (PROPS, build_cup, None),
+]
+
+# watertight is required for solids, not for the open-shell ones listed here (documented in the report)
+FOOTPRINT_REF = {}
+
+
+def obj_bounds(path):
+    V = []
+    with open(path) as f:
+        for l in f:
+            if l.startswith("v "):
+                V.append([float(c) for c in l.split()[1:4]])
+    V = np.array(V)
+    return V.min(0), V.max(0)
+
+
+def main():
+    verify_only = "--verify" in sys.argv
+    stats = {}
+    meshes = {}
+    for folder, fn, arg in BUILDERS:
+        m = fn(arg) if arg is not None else fn()
+        meshes[m.name] = (folder, m)
+        stats[m.name] = m.stats()
+        if not verify_only:
+            m.write("%s/%s.obj" % (folder, m.name))
+    if not verify_only:
+        make_textures()
+        mf = manifest(stats)
+        os.makedirs(os.path.join(ROOT, "ArtSource/Export"), exist_ok=True)
+        with open(os.path.join(ROOT, "ArtSource/Export/drink_pass2_manifest.json"), "w") as f:
+            json.dump(mf, f, indent=2)
+            f.write("\n")
+    # table
+    refs = {"SM_TeaBag_Pouch_Closed_v2": DRINK + "/SM_TeaBag_Pouch_Closed.obj", "SM_TeaBag_Pouch_Open_v2": DRINK + "/SM_TeaBag_Pouch_Open.obj",
+            "SM_TeaBag_Liquid_v2": DRINK + "/SM_TeaBag_Liquid.obj", "SM_Topping_CoconutJellyCubes_v2": DRINK + "/SM_Topping_CoconutJellyCubes.obj",
+            "SM_Topping_LemonJelly_v2": DRINK + "/SM_Topping_CoconutJellyCubes.obj", "SM_Ice_Cubes_v2": DRINK + "/SM_Ice_Cubes.obj",
+            "SM_IceScoop_v2": DRINK + "/SM_IceScoop.obj", "SM_RedTeaRack_v2": "Assets/TramChanh/Art/Models/Environment/SM_PlasticCrate_Street.obj",
+            "SM_WipeCloth_v2": TOOLS + "/SM_WipeCloth.obj", "SM_BatterMeasureCup_500ml_v2": PROPS + "/SM_BatterMeasureCup_500ml.obj",
+            "SM_ToppingBin_v2": None, "SM_LemonSlice_v2": None}
+    print("%-34s %6s %6s %3s  %-22s %-22s %7s %7s  %s" % ("mesh", "verts", "tris", "sub", "min xyz (m)", "max xyz (m)", "open", "volume", "footprint vs old (+-10%)"))
+    fails = 0
+    for name, (folder, m) in meshes.items():
+        s = stats[name]
+        ref = refs.get(name)
+        verdict = "n/a (new)"
+        if ref:
+            omn, omx = obj_bounds(os.path.join(ROOT, ref))
+            sz = omx - omn
+            tol = 0.10 * sz + 0.0005
+            ok = np.all(s["mn"] >= omn - tol) and np.all(s["mx"] <= omx + tol)
+            verdict = "PASS" if ok else "FAIL old[%s .. %s]" % (np.round(omn, 3), np.round(omx, 3))
+            fails += 0 if ok else 1
+        oe = "box-set" if name == "SM_RedTeaRack_v2" else str(s["open_edges"])
+        print("%-34s %6d %6d %3d  %-22s %-22s %7s %7.2e  %s" % (name, s["verts"], s["tris"], s["submeshes"], np.round(s["mn"], 3),
+                                                              np.round(s["mx"], 3), oe, s["volume"], verdict))
+        if s["tris"] > 50000:
+            print("  FAIL triangle budget")
+            fails += 1
+    return fails
+
+
+if __name__ == "__main__":
+    sys.exit(1 if main() else 0)
