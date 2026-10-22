@@ -266,7 +266,8 @@ namespace TramChanh.Tests.EditMode.Lobby
             Assert.That(_shelf.PlaceReady(t3Drink).IsSuccess, Is.True);
             var t8Drink = Prepare(ItemKind.Drink, t8);
             Assert.That(_shelf.PlaceReady(t8Drink).ReasonKey, Is.EqualTo("ready.slot_full"), "One drink on the shelf at a time.");
-            Assert.That(_pickup.Query(_context).BlockedReasonKey, Is.EqualTo("ready.no_ready_order"), "Partial table 3 is not pickable.");
+            Assert.That(_shelf.NextReadyOrder.IsValid, Is.False, "Table 3 is not complete, so there is no whole order to pick up.");
+            Assert.That(_pickup.Query(_context).Availability.IsAvailable, Is.True, "Table 3's finished drink can be carried out as a partial bundle.");
             var t3Cake = Prepare(ItemKind.Cake, t3);
             Assert.That(_shelf.PlaceReady(t3Cake).IsSuccess, Is.True);
             Assert.That(_orders.Get(t3).Status, Is.EqualTo(OrderStatus.Ready));

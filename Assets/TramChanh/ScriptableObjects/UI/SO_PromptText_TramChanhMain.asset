@@ -514,6 +514,15 @@ MonoBehaviour:
   - _key: order.item.status.Ready
     _en: Done
     _vi: Xong
+  - _key: order.item.status.PickedUp
+    _en: On the way
+    _vi: 'Đang mang ra'
+  - _key: order.item.status.Delivered
+    _en: Served
+    _vi: 'Đã giao'
+  - _key: ready.nothing_to_serve
+    _en: Nothing ready to serve
+    _vi: 'Chưa có món nào xong'
   - _key: hud.origin.table
     _en: 'Table {0}'
     _vi: "B\xE0n {0}"

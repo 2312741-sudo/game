@@ -140,12 +140,21 @@ namespace TramChanh.Tests.EditMode.Ready
         }
 
         [Test]
-        public void B3_PartialOrderCannotBePickedUp()
+        public void B3_PartialOrderIsNotWholeButItsReadyItemsCanBeCarried()
         {
-            NewOrder(1, "cake", "drink");
-            PlaceFromHand(NewBag(ItemKind.Drink));
-            Assert.That(_shelf.NextReadyOrder.IsValid, Is.False);
-            Assert.That(_pickup.Query(_context).Availability.IsAvailable, Is.False);
+            OrderId id = NewOrder(1, "cake", "drink");
+            Bag bag = NewBag(ItemKind.Drink);
+            PlaceFromHand(bag);
+            Assert.That(_shelf.NextReadyOrder.IsValid, Is.False, "The order is not complete.");
+            Assert.That(_shelf.PickUp(id, new ActorRef(1)).ReasonKey, Is.EqualTo("ready.no_complete_order"), "Whole-order pickup is unchanged.");
+            Assert.That(_pickup.Query(_context).Availability.IsAvailable, Is.True, "The finished drink can be served while the cake is missing.");
+            _pickup.Execute(_context);
+            var bundle = _hands.Current as ServedOrder;
+            Assert.That(bundle, Is.Not.Null);
+            Assert.That(bundle.IsPartial, Is.True);
+            Assert.That(bundle.OrderId, Is.EqualTo(id));
+            Assert.That(bundle.Items, Is.EqualTo(new IPreparedItem[] { bag }));
+            Assert.That(_orders.Get(id).Status, Is.EqualTo(OrderStatus.InPreparation), "The order stays open for the cake.");
         }
 
         [Test]

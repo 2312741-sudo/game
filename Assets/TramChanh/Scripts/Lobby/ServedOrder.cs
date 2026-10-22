@@ -18,6 +18,9 @@ namespace TramChanh.Lobby
         private IDisposable _status;
         private bool _retired;
         public bool IsRetired => _retired;
+        /// <summary>True when the bundle holds only the items that were ready while the rest of the order is still being made.</summary>
+        public bool IsPartial { get; private set; }
+        public void MarkPartial() { IsPartial = true; }
         public string PreparationStateKey => "order.status.PickedUpByLobby";
         public string NextActionKey => "hud.next.delivery";
         public OrderId OrderId { get; private set; }

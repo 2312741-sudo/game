@@ -23,6 +23,7 @@ namespace TramChanh.Lobby
         [SerializeField] private Transform _interactionPoint;
         private IOrderService _orders;
         private IOrderDelivery _delivery;
+        private IOrderPartialDelivery _partialDelivery;
         private LobbyOrderController _controller;
         private OrderId _active;
 
@@ -40,6 +41,7 @@ namespace TramChanh.Lobby
             _interactionPoint = interactionPoint != null ? interactionPoint : throw new ArgumentNullException(nameof(interactionPoint));
             _orders = orders ?? throw new ArgumentNullException(nameof(orders));
             _delivery = orders as IOrderDelivery;
+            _partialDelivery = orders as IOrderPartialDelivery;
             _controller = controller != null ? controller : throw new ArgumentNullException(nameof(controller));
             _active = default;
         }
@@ -71,7 +73,7 @@ namespace TramChanh.Lobby
                 else if (IsObsoleteBundle(bundle)) { delivery = Availability.Available; }
                 else if (_delivery == null) { delivery = Availability.Blocked("order.delivery.not_configured"); }
                 else if (order == null) { delivery = Availability.Blocked("order.delivery.no_customer"); }
-                else if (bundle.IsRetired || _orders.Get(bundle.OrderId)?.Status != OrderStatus.PickedUpByLobby) { delivery = Availability.Blocked("order.transition.invalid"); }
+                else if (bundle.IsRetired || (bundle.IsPartial ? _partialDelivery == null : _orders.Get(bundle.OrderId)?.Status != OrderStatus.PickedUpByLobby)) { delivery = Availability.Blocked("order.transition.invalid"); }
                 else { delivery = Availability.Available; }
                 return new InteractionQuery(delivery, DeliverPromptKey);
             }
@@ -134,6 +136,14 @@ namespace TramChanh.Lobby
         {
             OrderId id = bundle.OrderId;
             IReadOnlyOrder target = LiveOrder();
+            if (bundle.IsPartial)
+            {
+                // Part of the order: hand it over and keep the order open for the items still being made.
+                Result served = _partialDelivery.DeliverPartial(id, context.Actor, new DeliveryTarget(Origin, target.CustomerId));
+                if (served.IsSuccess) { bundle.ReleaseAndRetire(); }
+                else { context.Events.Publish(new ActionBlocked(Id, served.ReasonKey)); }
+                return;
+            }
             Result delivered = _delivery.Deliver(id, context.Actor, new DeliveryTarget(Origin, target.CustomerId));
             IReadOnlyOrder order = _orders.Get(id);
             bool committed = order != null && (order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Completed);

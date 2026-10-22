@@ -6,7 +6,7 @@ using TramChanh.Core;
 namespace TramChanh.Orders
 {
     /// <summary>Canonical Lobby intake; preparation mutation is internal to ticket/shelf use cases.</summary>
-    public sealed class OrderService : IOrderService, IOrderDelivery
+    public sealed class OrderService : IOrderService, IOrderDelivery, IOrderPartialDelivery
     {
         private readonly IGameClock _clock;
         private readonly IIdGenerator _ids;
@@ -161,6 +161,7 @@ namespace TramChanh.Orders
                 item.Quality = 0;
             }
             order.FailureReason = reason;
+            order.PartialCarried = false;
             SetStatus(order, OrderStatus.Failed);
             _tickets.Remove(id);
             _active.Remove(order);
@@ -232,7 +233,8 @@ namespace TramChanh.Orders
             item.Quality = quality;
             foreach (OrderItem candidate in order.MutableItems)
             {
-                if (candidate.Status != OrderItemStatus.Ready) { return false; }
+                // Items already handed over (or being carried to the customer) no longer wait on the shelf.
+                if (candidate.Status != OrderItemStatus.Ready && candidate.Status != OrderItemStatus.PickedUp && candidate.Status != OrderItemStatus.Delivered) { return false; }
             }
             SetStatus(order, OrderStatus.Ready);
             _tickets.Remove(order.Id);
@@ -250,8 +252,56 @@ namespace TramChanh.Orders
         {
             Order order = Find(id);
             if (actor.Value <= 0) { return Result.Fail("order.actor.invalid"); }
-            if (order == null || order.Status != OrderStatus.Ready) { return Result.Fail("order.transition.invalid"); }
+            if (order == null || order.Status != OrderStatus.Ready || order.PartialCarried) { return Result.Fail("order.transition.invalid"); }
             SetStatus(order, OrderStatus.PickedUpByLobby);
+            return Result.Success();
+        }
+
+        /// <summary>
+        /// Partial pickup (shelf use case): the Ready items of an order that is still InPreparation leave the shelf with the Lobby.
+        /// Returns the bindings taken, or an empty list when nothing can be carried.
+        /// </summary>
+        internal List<OrderItemRef> BeginPartialPickup(OrderId id, IReadOnlyCollection<OrderItemId> readyOnShelf)
+        {
+            var taken = new List<OrderItemRef>();
+            Order order = Find(id);
+            if (order == null || order.Status != OrderStatus.InPreparation || order.PartialCarried) { return taken; }
+            foreach (OrderItem item in order.MutableItems)
+            {
+                bool onShelf = false;
+                foreach (OrderItemId shelved in readyOnShelf) { if (shelved == item.Id) { onShelf = true; break; } }
+                if (!onShelf || item.Status != OrderItemStatus.Ready) { continue; }
+                item.Status = OrderItemStatus.PickedUp;
+                taken.Add(new OrderItemRef(order.Id, item.Id, item.PreparationId));
+            }
+            if (taken.Count == 0) { return taken; }
+            order.PartialCarried = true;
+            foreach (OrderItemRef binding in taken) { Enqueue(new OrderItemStatusChanged(binding, OrderItemStatus.PickedUp)); }
+            FlushOutbox();
+            return taken;
+        }
+
+        public Result DeliverPartial(OrderId id, ActorRef actor, DeliveryTarget target)
+        {
+            if (actor.Value <= 0) { return Result.Fail("order.actor.invalid"); }
+            if (!target.IsValid) { return Result.Fail("order.delivery.invalid_target"); }
+            Order order = Find(id);
+            if (order == null || !order.PartialCarried || order.Status == OrderStatus.Failed || order.Status == OrderStatus.Completed) { return Result.Fail("order.transition.invalid"); }
+            if (!order.Origin.Equals(target.Origin) || order.CustomerId != target.Customer)
+            {
+                order.DeliveryAttempts++;
+                Enqueue(new DeliveryRejected(id, target, "order.delivery.wrong_target"));
+                FlushOutbox();
+                return Result.Fail("order.delivery.wrong_target");
+            }
+            order.PartialCarried = false;
+            foreach (OrderItem item in order.MutableItems)
+            {
+                if (item.Status != OrderItemStatus.PickedUp) { continue; }
+                item.Status = OrderItemStatus.Delivered;
+                Enqueue(new OrderItemStatusChanged(new OrderItemRef(order.Id, item.Id, item.PreparationId), OrderItemStatus.Delivered));
+            }
+            FlushOutbox();
             return Result.Success();
         }
 

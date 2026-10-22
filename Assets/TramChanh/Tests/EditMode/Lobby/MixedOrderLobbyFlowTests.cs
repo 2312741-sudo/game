@@ -92,11 +92,11 @@ namespace TramChanh.Tests.EditMode.Lobby
             TakeOrder(_vehicle, takeaway);
             Assert.That(_queue.Tickets, Is.EqualTo(new[] { dineIn, takeaway }));
 
-            // Cake station and drink station work independently; partial readiness never opens pickup.
+            // Cake station and drink station work independently; a finished item can be served before the rest of its order is ready.
             var tableCake = Prepare(ItemKind.Cake, dineIn);
             Assert.That(_shelf.PlaceReady(tableCake).IsSuccess, Is.True);
             Assert.That(_orders.Get(dineIn).Status, Is.EqualTo(OrderStatus.InPreparation));
-            Assert.That(_pickup.Query(_context).BlockedReasonKey, Is.EqualTo("ready.no_ready_order"));
+            Assert.That(_pickup.Query(_context).Availability.IsAvailable, Is.True, "The cake is ready, so it can be carried out now.");
             var tableDrink = Prepare(ItemKind.Drink, dineIn);
             Assert.That(_shelf.PlaceReady(tableDrink).IsSuccess, Is.True);
             Assert.That(_orders.Get(dineIn).Status, Is.EqualTo(OrderStatus.Ready));

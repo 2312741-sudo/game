@@ -1,4 +1,4 @@
 namespace TramChanh.Orders
 {
-    public enum OrderItemStatus { Pending, InPreparation, Ready }
+    public enum OrderItemStatus { Pending, InPreparation, Ready, PickedUp, Delivered }
 }

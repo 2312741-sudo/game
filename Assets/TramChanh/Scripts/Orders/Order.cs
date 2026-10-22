@@ -17,6 +17,8 @@ namespace TramChanh.Orders
         public FailureReason? FailureReason { get; internal set; }
         public int DeliveryAttempts { get; internal set; }
         public int QualityScore { get; internal set; }
+        /// <summary>True while a partial bundle (some items, not the whole order) is carried by the Lobby.</summary>
+        internal bool PartialCarried { get; set; }
         internal List<OrderItem> MutableItems { get; } = new List<OrderItem>();
 
         public Order(OrderId id, OrderOrigin origin, CustomerId customer, IReadOnlyList<ItemRequest> requested, double createdAt)

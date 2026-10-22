@@ -173,7 +173,7 @@ namespace TramChanh.UI.Hud
                 foreach (IReadOnlyOrderItem item in items)
                 {
                     ids.Add(item.ItemDefinitionId);
-                    if (item.Status == OrderItemStatus.Ready) { ready++; }
+                    if (item.Status >= OrderItemStatus.Ready) { ready++; } // carried and served items count as done
                     lines.Add(HudText.Of(HudKeys.OrderItemStatus, HudText.Of(HudKeys.ItemName(item.ItemDefinitionId)), HudText.Of(HudKeys.Status(item.Status))));
                 }
             }

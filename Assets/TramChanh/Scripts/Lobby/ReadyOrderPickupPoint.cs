@@ -12,6 +12,7 @@ namespace TramChanh.Lobby
         [SerializeField] private int _id;
         [SerializeField] private Transform _interactionPoint;
         private IReadyShelfPickup _shelf;
+        private IReadyShelfPartialPickup _partial;
         private IOrderService _orders;
         private IEventBus _events;
         public InteractableId Id => new InteractableId(_id);
@@ -23,6 +24,7 @@ namespace TramChanh.Lobby
             if (orders == null) { throw new ArgumentNullException(nameof(orders)); }
             if (events == null) { throw new ArgumentNullException(nameof(events)); }
             _shelf = shelf;
+            _partial = shelf as IReadyShelfPartialPickup; // fakes without it keep whole-order pickup only
             _orders = orders;
             _events = events;
         }
@@ -47,7 +49,8 @@ namespace TramChanh.Lobby
             }
             else
             {
-                available = _shelf.NextReadyOrder.IsValid ? Availability.Available : Availability.Blocked("ready.no_ready_order");
+                available = _shelf.NextReadyOrder.IsValid || (_partial != null && _partial.NextPartialOrder.IsValid)
+                    ? Availability.Available : Availability.Blocked("ready.no_ready_order");
             }
             return new InteractionQuery(available, "ready.pick_up_order");
         }
@@ -61,6 +64,9 @@ namespace TramChanh.Lobby
                 return;
             }
             OrderId orderId = _shelf.NextReadyOrder;
+            // No complete order yet: serve the finished items now (a drink while the cake is still being made).
+            bool partial = !orderId.IsValid && _partial != null;
+            if (partial) { orderId = _partial.NextPartialOrder; }
             var reservation = new GameObject("ServedOrder");
             SceneManager.MoveGameObjectToScene(reservation, gameObject.scene);
             var bundle = reservation.AddComponent<ServedOrder>();
@@ -68,6 +74,7 @@ namespace TramChanh.Lobby
             try
             {
                 bundle.Initialize(orderId);
+                if (partial) { bundle.MarkPartial(); }
                 bundle.BindDelivery(_orders, _events);
                 if (bundle == null || bundle.IsRetired)
                 {
@@ -80,12 +87,12 @@ namespace TramChanh.Lobby
                     context.Events.Publish(new ActionBlocked(Id, "hands.full"));
                     return;
                 }
-                if (context.Clock.IsPaused || _shelf.NextReadyOrder != orderId)
+                if (context.Clock.IsPaused || (partial ? _partial.NextPartialOrder != orderId : _shelf.NextReadyOrder != orderId))
                 {
                     context.Events.Publish(new ActionBlocked(Id, context.Clock.IsPaused ? "interaction.paused" : "ready.no_ready_order"));
                     return;
                 }
-                var result = _shelf.PickUp(orderId, context.Actor);
+                var result = partial ? _partial.PickUpPartial(orderId, context.Actor) : _shelf.PickUp(orderId, context.Actor);
                 if (!result.IsSuccess)
                 {
                     context.Events.Publish(new ActionBlocked(Id, result.ReasonKey));
@@ -93,7 +100,7 @@ namespace TramChanh.Lobby
                 }
                 // Shelf observers may fail or deliver the order before the reservation can adopt visuals.
                 if (bundle == null || bundle.IsRetired || !ReferenceEquals(context.Hands.Current, bundle) ||
-                    _orders.Get(orderId)?.Status != OrderStatus.PickedUpByLobby)
+                    (!partial && _orders.Get(orderId)?.Status != OrderStatus.PickedUpByLobby))
                 {
                     context.Events.Publish(new ActionBlocked(Id, "ready.no_complete_order"));
                     return;

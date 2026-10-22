@@ -5,7 +5,7 @@ using TramChanh.Core;
 namespace TramChanh.Orders
 {
     /// <summary>Ready placement transaction; event observers see item, order and shelf fully committed.</summary>
-    public sealed class ReadyShelf : IReadyShelf, IDisposable
+    public sealed class ReadyShelf : IReadyShelf, IReadyShelfPartialPickup, IDisposable
     {
         private readonly OrderService _orders;
         private readonly IStallTicketQueue _queue;
@@ -37,7 +37,7 @@ namespace TramChanh.Orders
                         IPreparedItem item = _slots[kind][slot];
                         if (item == null) { continue; }
                         Order order = _orders.Find(_bindings[kind][slot].OrderId);
-                        if (order == null || order.Status != OrderStatus.Ready) { continue; }
+                        if (order == null || order.Status != OrderStatus.Ready || order.PartialCarried) { continue; }
                         if (oldest == null || order.StatusEnteredAt < oldest.StatusEnteredAt ||
                             (order.StatusEnteredAt == oldest.StatusEnteredAt && order.Id.Value < oldest.Id.Value))
                         {
@@ -93,7 +93,7 @@ namespace TramChanh.Orders
         {
             if (actor.Value <= 0) { return Result<IReadOnlyList<IPreparedItem>>.Fail("order.actor.invalid"); }
             Order order = _orders.Find(orderId);
-            if (order == null || order.Status != OrderStatus.Ready || orderId != NextReadyOrder)
+            if (order == null || order.Status != OrderStatus.Ready || order.PartialCarried || orderId != NextReadyOrder)
             {
                 return Result<IReadOnlyList<IPreparedItem>>.Fail("ready.no_complete_order");
             }
@@ -106,12 +106,64 @@ namespace TramChanh.Orders
                     if (item != null && _bindings[kind][slot].OrderId == orderId) { items.Add(item); }
                 }
             }
-            if (items.Count != order.Items.Count) { throw new InvalidOperationException("A Ready order must have every item on the shelf."); }
+            int stillToServe = 0;
+            foreach (IReadOnlyOrderItem orderItem in order.Items) { if (orderItem.Status == OrderItemStatus.Ready) { stillToServe++; } }
+            if (items.Count != stillToServe) { throw new InvalidOperationException("A Ready order must have every item that was not already served on the shelf."); }
             items.Sort((first, second) => first.BoundItem.OrderItemId.Value.CompareTo(second.BoundItem.OrderItemId.Value));
             Result pickup = _orders.PickUp(orderId, actor);
             if (!pickup.IsSuccess) { throw new InvalidOperationException("A validated ready order changed before pickup commit."); }
             ReleaseOrderSlots(orderId);
             _orders.PublishStatus(order);
+            return Result<IReadOnlyList<IPreparedItem>>.Success(items.AsReadOnly());
+        }
+
+        public OrderId NextPartialOrder
+        {
+            get
+            {
+                Order oldest = null;
+                for (int kind = 0; kind < _slots.Length; kind++)
+                {
+                    for (int slot = 0; slot < _slots[kind].Length; slot++)
+                    {
+                        if (_slots[kind][slot] == null) { continue; }
+                        Order order = _orders.Find(_bindings[kind][slot].OrderId);
+                        if (order == null || order.Status != OrderStatus.InPreparation || order.PartialCarried) { continue; }
+                        OrderItem bound = _orders.BoundItem(_bindings[kind][slot]);
+                        if (bound == null || bound.Status != OrderItemStatus.Ready) { continue; }
+                        if (oldest == null || order.StatusEnteredAt < oldest.StatusEnteredAt ||
+                            (order.StatusEnteredAt == oldest.StatusEnteredAt && order.Id.Value < oldest.Id.Value))
+                        {
+                            oldest = order;
+                        }
+                    }
+                }
+                return oldest?.Id ?? default;
+            }
+        }
+
+        public Result<IReadOnlyList<IPreparedItem>> PickUpPartial(OrderId orderId, ActorRef actor)
+        {
+            if (actor.Value <= 0) { return Result<IReadOnlyList<IPreparedItem>>.Fail("order.actor.invalid"); }
+            Order order = _orders.Find(orderId);
+            if (order == null || order.Status != OrderStatus.InPreparation || order.PartialCarried || orderId != NextPartialOrder)
+            {
+                return Result<IReadOnlyList<IPreparedItem>>.Fail("ready.nothing_to_serve");
+            }
+            var items = new List<IPreparedItem>();
+            var ids = new List<OrderItemId>();
+            for (int kind = 0; kind < _slots.Length; kind++)
+            {
+                for (int slot = 0; slot < _slots[kind].Length; slot++)
+                {
+                    IPreparedItem item = _slots[kind][slot];
+                    if (item != null && _bindings[kind][slot].OrderId == orderId) { items.Add(item); ids.Add(_bindings[kind][slot].OrderItemId); }
+                }
+            }
+            List<OrderItemRef> taken = _orders.BeginPartialPickup(orderId, ids);
+            if (taken.Count == 0) { return Result<IReadOnlyList<IPreparedItem>>.Fail("ready.nothing_to_serve"); }
+            ReleaseOrderSlots(orderId);
+            items.Sort((first, second) => first.BoundItem.OrderItemId.Value.CompareTo(second.BoundItem.OrderItemId.Value));
             return Result<IReadOnlyList<IPreparedItem>>.Success(items.AsReadOnly());
         }
 
